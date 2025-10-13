@@ -199,7 +199,7 @@ def generate_schemas_from_json(schema_dir: Path, output_file: Path):
             "3.12",
         ]
 
-        result = subprocess.run(cmd, capture_output=True, text=True)
+        result = subprocess.run(cmd, capture_output=True, text=True, check=False)
 
         if result.returncode != 0:
             print("❌ Generation failed:", file=sys.stderr)

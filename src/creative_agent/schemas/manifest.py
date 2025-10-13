@@ -4,16 +4,8 @@ from typing import Any
 
 from pydantic import BaseModel
 
-from .assets import Asset
-
-
-class CreativeManifest(BaseModel):
-    """Creative manifest structure."""
-
-    format_id: str
-    promoted_offering: str | None = None  # Product being advertised
-    assets: dict[str, Asset]  # Keyed by asset_role
-    metadata: dict[str, Any] | None = None
+# CreativeManifest is imported from AdCP schemas via __init__.py
+# (uses CreativeAsset from AdCP as the base)
 
 
 class PreviewInput(BaseModel):
@@ -28,7 +20,7 @@ class PreviewCreativeRequest(BaseModel):
     """Request for preview_creative task."""
 
     format_id: str
-    creative_manifest: CreativeManifest
+    creative_manifest: dict[str, Any]  # AdCP CreativeAsset structure
     inputs: list[PreviewInput] | None = None
     template_id: str | None = None
     brand_card: dict[str, Any] | None = None

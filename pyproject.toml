@@ -114,6 +114,11 @@ ignore = [
     "ANN",     # type annotations (less strict in tests)
     "PLR2004", # magic values (ok in tests)
 ]
+"scripts/*" = [
+    "PTH123",  # open() is acceptable in scripts
+    "S603",    # subprocess with list is safe
+    "ANN201",  # type annotations less critical in scripts
+]
 
 [tool.ruff.format]
 quote-style = "double"

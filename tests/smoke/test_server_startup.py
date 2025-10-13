@@ -54,9 +54,9 @@ def test_preview_creative_logic():
     # Verify display format exists
     fmt = get_format_by_id("display_300x250_image")
     assert fmt is not None
-    assert fmt.type == "display"
+    assert fmt.type.value == "display"
 
     # Verify video format exists
     fmt = get_format_by_id("video_standard_15s")
     assert fmt is not None
-    assert fmt.type == "video"
+    assert fmt.type.value == "video"
