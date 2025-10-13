@@ -57,6 +57,16 @@ def download_missing_schema(ref: str, schema_dir: Path) -> bool:
 
     Returns True if download successful, False otherwise.
     """
+    # Validate ref starts with /schemas/v1/
+    if not ref.startswith("/schemas/v1/"):
+        print(f"   ⚠️  Invalid schema ref (must start with /schemas/v1/): {ref}", file=sys.stderr)
+        return False
+
+    # Prevent path traversal
+    if ".." in ref or ref.count("//") > 0:
+        print(f"   ⚠️  Invalid schema ref (contains path traversal): {ref}", file=sys.stderr)
+        return False
+
     base_url = "https://adcontextprotocol.org"
     schema_url = f"{base_url}{ref}"
     ref_filename = ref.replace("/", "_").replace(".", "_") + ".json"

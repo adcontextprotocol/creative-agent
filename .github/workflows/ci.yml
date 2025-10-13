@@ -35,6 +35,15 @@ jobs:
       - name: Run mypy type checker
         run: uv run mypy src/
 
+      - name: Check AdCP schemas are up to date
+        run: |
+          uv run python scripts/generate_schemas.py
+          if ! git diff --exit-code src/creative_agent/schemas_generated/; then
+            echo "❌ Generated schemas are out of sync!"
+            echo "Run: python scripts/generate_schemas.py"
+            exit 1
+          fi
+
       - name: Run smoke tests
         run: uv run pytest tests/smoke/ -v --no-cov -m smoke
 

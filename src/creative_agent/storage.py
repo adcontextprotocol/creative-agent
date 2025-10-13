@@ -1,5 +1,6 @@
 """Tigris storage for preview HTML and assets."""
 
+import html as html_module
 import os
 from typing import Any
 
@@ -54,6 +55,14 @@ def upload_preview_html(preview_id: str, variant_name: str, html_content: str) -
     # For public buckets, use virtual-hosted-style URL format
     # Format: https://{bucket}.fly.storage.tigris.dev/{key}
     return f"https://{BUCKET_NAME}.fly.storage.tigris.dev/{key}"
+
+
+def sanitize_url(url: str) -> str:
+    """Sanitize URL for safe HTML insertion."""
+    # Block javascript: and data: URIs
+    if url.lower().startswith(("javascript:", "data:", "vbscript:")):
+        return "#"
+    return html_module.escape(url)
 
 
 def generate_preview_html(format_obj: Any, manifest: Any, input_set: Any) -> str:
@@ -133,18 +142,23 @@ def generate_preview_html(format_obj: Any, manifest: Any, input_set: Any) -> str
 """
 
     if image_url:
-        html += f'        <img src="{image_url}" alt="{format_obj.name}">\n'
+        safe_image_url = sanitize_url(image_url)
+        safe_format_name = html_module.escape(format_obj.name)
+        html += f'        <img src="{safe_image_url}" alt="{safe_format_name}">\n'
     else:
-        html += f'        <div style="background: #f0f0f0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #666;">{format_obj.name}</div>\n'
+        safe_format_name = html_module.escape(format_obj.name)
+        html += f'        <div style="background: #f0f0f0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #666;">{safe_format_name}</div>\n'
 
-    html += f"""        <div class="preview-label">{input_set.name}</div>
+    safe_input_name = html_module.escape(input_set.name)
+    html += f"""        <div class="preview-label">{safe_input_name}</div>
     </div>
     <script>
         function handleClick() {{
 """
 
     if click_url:
-        html += f'            window.open("{click_url}", "_blank");\n'
+        safe_click_url = sanitize_url(click_url)
+        html += f'            window.open("{safe_click_url}", "_blank");\n'
     else:
         html += '            console.log("Click registered - no URL configured");\n'
 

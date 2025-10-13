@@ -64,14 +64,20 @@ def list_creative_formats(
             CreativeAgent,
             Status,
         )
+        from .schemas_generated._schemas_v1_media_buy_list_creative_formats_response_json import (
+            Format as ResponseFormat,
+        )
 
         # Convert capability strings to Capability enum
         capabilities_enum = [Capability(cap) for cap in AGENT_CAPABILITIES]
 
+        # Convert core Format objects to response Format objects
+        response_formats = [ResponseFormat(**fmt.model_dump(exclude_unset=True)) for fmt in formats]
+
         response = ListCreativeFormatsResponse(
             adcp_version="1.0.0",
             status=Status.completed,
-            formats=formats,  # type: ignore[arg-type]  # Core Format and Response Format are structurally identical
+            formats=response_formats,
             creative_agents=[
                 CreativeAgent(
                     agent_url=AGENT_URL,
@@ -82,8 +88,12 @@ def list_creative_formats(
         )
 
         return response.model_dump_json(indent=2)
+    except ValueError as e:
+        return json.dumps({"error": f"Invalid input: {e}"}, indent=2)
     except Exception as e:
-        return json.dumps({"error": str(e)})
+        import traceback
+
+        return json.dumps({"error": f"Server error: {e}", "traceback": traceback.format_exc()[-500:]}, indent=2)
 
 
 @mcp.tool()
@@ -191,8 +201,15 @@ def preview_creative(
         )
 
         return response.model_dump_json(indent=2)
+    except ValueError as e:
+        return json.dumps({"error": f"Invalid input: {e}"}, indent=2)
     except Exception as e:
-        return json.dumps({"error": str(e)}, indent=2)
+        import traceback
+
+        return json.dumps(
+            {"error": f"Preview generation failed: {e}", "traceback": traceback.format_exc()[-500:]},
+            indent=2,
+        )
 
 
 def _generate_preview_variant(
@@ -281,6 +298,13 @@ def build_creative(
         JSON string with build response containing creative manifest
     """
     try:
+        # Validate message length
+        if not message or len(message) > 10000:
+            return json.dumps(
+                {"error": "Message must be between 1 and 10000 characters"},
+                indent=2,
+            )
+
         # Validate API key is provided
         if not gemini_api_key:
             return json.dumps(
@@ -340,17 +364,11 @@ def build_creative(
                 indent=2,
             )
 
-<<<<<<< HEAD
-        # For universal/generative formats, get the output format for asset requirements
-        output_fmt = fmt
-        if fmt.type == "universal" and fmt.output_format_ids and len(fmt.output_format_ids) > 0:
-=======
         # For generative formats (identified by having output_format_ids),
         # get the output format for asset requirements
         output_fmt = fmt
         if fmt.output_format_ids and len(fmt.output_format_ids) > 0:
             # Use the first output format ID
->>>>>>> 30335ce (Fix server.py type errors after AdCP schema migration)
             output_fmt_result = get_format_by_id(fmt.output_format_ids[0])
             if not output_fmt_result:
                 return json.dumps(
@@ -366,25 +384,16 @@ def build_creative(
         client = genai.Client(api_key=request.gemini_api_key)
 
         # Build prompt for creative generation
-<<<<<<< HEAD
-        # For universal/generative formats, describe what we're generating (the output format)
-        target_format = output_fmt if fmt.type == "universal" else fmt
-=======
         # For generative formats, describe what we're generating (the output format)
         is_generative = fmt.output_format_ids and len(fmt.output_format_ids) > 0
         target_format = output_fmt if is_generative else fmt
->>>>>>> 30335ce (Fix server.py type errors after AdCP schema migration)
 
         format_spec = f"""Format: {fmt.name}
 Type: {fmt.type.value}
 Description: {fmt.description}
 """
 
-<<<<<<< HEAD
-        if fmt.type == "universal":
-=======
         if is_generative:
->>>>>>> 30335ce (Fix server.py type errors after AdCP schema migration)
             format_spec += f"\nThis will generate a: {output_fmt.name}\n"
             if output_fmt.requirements and output_fmt.requirements.get("dimensions"):
                 format_spec += f"Dimensions: {output_fmt.requirements['dimensions']}\n"
@@ -462,11 +471,7 @@ Description: {fmt.description}
             )
 
         # The format_id in the output manifest should be the OUTPUT format
-<<<<<<< HEAD
-        output_format_id = output_fmt.format_id if fmt.type == "universal" else request.format_id
-=======
         output_format_id = output_fmt.format_id if is_generative else request.format_id
->>>>>>> 30335ce (Fix server.py type errors after AdCP schema migration)
 
         if generate_images:
             prompt = f"""You are a creative generation AI for advertising.
@@ -520,7 +525,38 @@ Return ONLY the JSON manifest, no additional text."""
         contents: list[Any] = [prompt]
 
         # Add brand asset images if provided (from promoted_offerings or brand_card)
+        import ipaddress
+        from urllib.parse import urlparse
+
         import httpx
+
+        def is_safe_url(url: str) -> bool:
+            """Validate URL is safe to fetch (no localhost, private IPs, etc.)."""
+            try:
+                parsed = urlparse(url)
+                if parsed.scheme not in ["http", "https"]:
+                    return False
+
+                hostname = parsed.hostname
+                if not hostname:
+                    return False
+
+                # Block localhost
+                if hostname.lower() in ["localhost", "127.0.0.1", "::1"]:
+                    return False
+
+                # Block private IP ranges
+                try:
+                    ip = ipaddress.ip_address(hostname)
+                    if ip.is_private or ip.is_loopback or ip.is_link_local:
+                        return False
+                except ValueError:
+                    # Hostname is not an IP, that's fine
+                    pass
+
+                return True
+            except Exception:
+                return False
 
         # Collect all image assets from various sources
         image_assets = []
@@ -541,9 +577,12 @@ Return ONLY the JSON manifest, no additional text."""
             if isinstance(asset, dict) and asset.get("asset_type") == "image":
                 img_url = asset.get("url")
                 if img_url:
+                    if not is_safe_url(img_url):
+                        print(f"Warning: Blocked potentially unsafe URL: {img_url}")
+                        continue
                     try:
                         # Fetch image from URL
-                        img_response = httpx.get(img_url, timeout=10.0)
+                        img_response = httpx.get(img_url, timeout=10.0, follow_redirects=False)
                         img_response.raise_for_status()
                         img_bytes = img_response.content
 
@@ -629,8 +668,8 @@ Return ONLY the JSON manifest, no additional text."""
         else:
             status = "draft"
 
-        # Build output_format_ids list for universal/generative formats
-        output_format_ids_list = fmt.output_format_ids if fmt.type == "universal" else None
+        # Build output_format_ids list for generative formats
+        output_format_ids_list = fmt.output_format_ids if is_generative else None
 
         # Build response
         build_response = BuildCreativeResponse(
@@ -657,12 +696,22 @@ Return ONLY the JSON manifest, no additional text."""
 
     except json.JSONDecodeError as e:
         return json.dumps(
-            {"error": f"Failed to parse generated creative: {e!s}"},
+            {
+                "error": f"Failed to parse AI-generated creative: {e}",
+                "context": {"line": e.lineno, "column": e.colno, "format_id": format_id},
+            },
             indent=2,
         )
+    except ValueError as e:
+        return json.dumps({"error": f"Invalid input: {e}"}, indent=2)
     except Exception as e:
+        import traceback
+
         return json.dumps(
-            {"error": f"Creative generation failed: {e!s}"},
+            {
+                "error": f"Creative generation failed: {e}",
+                "context": {"format_id": format_id, "traceback": traceback.format_exc()[-500:]},
+            },
             indent=2,
         )
 
