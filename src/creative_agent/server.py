@@ -476,9 +476,7 @@ Return ONLY the JSON manifest, no additional text."""
                             mime_type = "image/png"
 
                         # Add image as Part
-                        contents.append(
-                            types.Part.from_bytes(data=img_bytes, mime_type=mime_type)
-                        )
+                        contents.append(types.Part.from_bytes(data=img_bytes, mime_type=mime_type))
                     except Exception as e:
                         # Log error but continue with other images
                         print(f"Warning: Failed to fetch brand asset image {img_url}: {e}")
@@ -569,7 +567,9 @@ Return ONLY the JSON manifest, no additional text."""
                 "Consider A/B testing different headlines",
                 "Test various CTA button colors",
                 "Try different image crops for mobile vs desktop",
-            ] if not request.finalize else [],
+            ]
+            if not request.finalize
+            else [],
         )
 
         return build_response.model_dump_json(indent=2)

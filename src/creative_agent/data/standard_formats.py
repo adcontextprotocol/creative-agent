@@ -1144,10 +1144,7 @@ def filter_formats(
         results = [
             fmt
             for fmt in results
-            if all(
-                any(req.asset_type == asset_type for req in fmt.assets_required)
-                for asset_type in asset_types
-            )
+            if all(any(req.asset_type == asset_type for req in fmt.assets_required) for asset_type in asset_types)
         ]
 
     return results

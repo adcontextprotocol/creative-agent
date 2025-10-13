@@ -1,4 +1,5 @@
 """Tigris storage for preview HTML and assets."""
+
 import os
 from typing import Any
 
@@ -53,7 +54,6 @@ def upload_preview_html(preview_id: str, variant_name: str, html_content: str) -
     # For public buckets, use virtual-hosted-style URL format
     # Format: https://{bucket}.fly.storage.tigris.dev/{key}
     return f"https://{BUCKET_NAME}.fly.storage.tigris.dev/{key}"
-
 
 
 def generate_preview_html(format_obj: Any, manifest: Any, input_set: Any) -> str:

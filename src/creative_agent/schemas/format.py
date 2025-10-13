@@ -53,9 +53,7 @@ class ListCreativeFormatsRequest(BaseModel):
     """Request for list_creative_formats task."""
 
     format_ids: list[str] | None = None
-    type: Literal["audio", "video", "display", "dooh", "native", "interactive"] | None = (
-        None
-    )
+    type: Literal["audio", "video", "display", "dooh", "native", "interactive"] | None = None
     asset_types: list[str] | None = None
     dimensions: str | None = None
     name_search: str | None = None
