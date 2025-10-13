@@ -31,4 +31,4 @@ ENV PORT=8080
 EXPOSE 8080
 
 # Run the spec-compliant MCP server
-CMD ["python", "-m", "creative_agent.server_v2"]
+CMD ["python", "-m", "creative_agent.server"]
