@@ -1,0 +1,41 @@
+# fly.toml app configuration file for AdCP Creative Agent
+
+app = "adcp-creative-agent"
+primary_region = "iad"
+
+[build]
+  dockerfile = "Dockerfile.fly"
+
+[[services]]
+  internal_port = 8080
+  protocol = "tcp"
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+  [services.concurrency]
+    type = "connections"
+    hard_limit = 100
+    soft_limit = 80
+
+  [[services.ports]]
+    port = 443
+    handlers = ["http", "tls"]
+
+  [[services.ports]]
+    port = 80
+    handlers = ["http"]
+
+  [[services.tcp_checks]]
+    interval = "30s"
+    grace_period = "60s"
+    timeout = "10s"
+
+[[vm]]
+  memory = "1gb"
+  cpu_kind = "shared"
+  cpus = 1
+
+[env]
+  PRODUCTION = "true"
+  PORT = "8080"

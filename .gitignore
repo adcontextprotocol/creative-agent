@@ -205,3 +205,8 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Local test files with secrets (should use .env instead)
+test_*.py
+test_*.json
+setup_bucket_policy.py
