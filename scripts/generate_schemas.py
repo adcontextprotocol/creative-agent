@@ -207,6 +207,7 @@ def generate_schemas_from_json(schema_dir: Path, output_file: Path):
             "--snake-case-field",
             "--target-python-version",
             "3.12",
+            "--disable-timestamp",
         ]
 
         result = subprocess.run(cmd, capture_output=True, text=True, check=False)

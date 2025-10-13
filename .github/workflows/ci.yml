@@ -38,14 +38,11 @@ jobs:
       - name: Check AdCP schemas are up to date
         run: |
           uv run python scripts/generate_schemas.py
-          # Ignore timestamp-only changes (timestamps are cosmetic comments)
-          if git diff src/creative_agent/schemas_generated/ | grep -v '^[+-]#   timestamp:' | grep -E '^[+-]' | grep -v '^[+-]{3}'; then
+          if ! git diff --exit-code src/creative_agent/schemas_generated/; then
             echo "❌ Generated schemas are out of sync!"
             echo "Run: python scripts/generate_schemas.py"
-            git diff src/creative_agent/schemas_generated/
             exit 1
           fi
-          echo "✅ Generated schemas are up to date"
 
       - name: Run smoke tests
         run: uv run pytest tests/smoke/ -v --no-cov -m smoke
