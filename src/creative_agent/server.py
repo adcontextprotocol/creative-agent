@@ -318,11 +318,11 @@ def build_creative(
 
         # For generative formats, get the output format for asset requirements
         output_fmt = fmt
-        if fmt.type == "generative" and fmt.output_format:
-            output_fmt_result = get_format_by_id(fmt.output_format)
+        if fmt.type == "generative" and fmt.output_format_ids and len(fmt.output_format_ids) > 0:
+            output_fmt_result = get_format_by_id(fmt.output_format_ids[0])
             if not output_fmt_result:
                 return json.dumps(
-                    {"error": f"Output format {fmt.output_format} not found"},
+                    {"error": f"Output format {fmt.output_format_ids[0]} not found"},
                     indent=2,
                 )
             output_fmt = output_fmt_result
@@ -553,9 +553,7 @@ Return ONLY the JSON manifest, no additional text."""
             status = "draft"
 
         # Build output_format_ids list for generative formats
-        output_format_ids_list = None
-        if fmt.type == "generative" and output_fmt.format_id != fmt.format_id:
-            output_format_ids_list = [output_fmt.format_id]
+        output_format_ids_list = fmt.output_format_ids if fmt.type == "generative" else None
 
         # Build response
         build_response = BuildCreativeResponse(

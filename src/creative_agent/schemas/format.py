@@ -46,7 +46,7 @@ class CreativeFormat(BaseModel):
     supported_macros: list[str] | None = None
     requirements: FormatRequirements | None = None
     assets_required: list[AssetRequirement]
-    output_format: str | None = None  # For generative formats: the format_id this produces
+    output_format_ids: list[str] | None = None  # For generative formats: the format_ids this produces
 
 
 class ListCreativeFormatsRequest(BaseModel):
