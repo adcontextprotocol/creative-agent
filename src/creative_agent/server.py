@@ -90,7 +90,6 @@ def list_creative_formats(
         response_formats = [ResponseFormat(**fmt.model_dump(exclude_unset=True)) for fmt in formats]
 
         response = ListCreativeFormatsResponse(
-            adcp_version="1.0.0",
             status=Status.completed,
             formats=response_formats,
             creative_agents=[

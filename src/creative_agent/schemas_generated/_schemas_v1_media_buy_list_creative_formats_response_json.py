@@ -244,20 +244,13 @@ class ListCreativeFormatsResponse(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    adcp_version: Annotated[
-        str,
-        Field(
-            description="AdCP schema version used for this response",
-            pattern="^\\d+\\.\\d+\\.\\d+$",
-        ),
-    ]
     status: Annotated[
         Optional[Status],
         Field(
             description="Standardized task status values based on A2A TaskState enum. Indicates the current state of any AdCP operation.",
             title="Task Status",
         ),
-    ] = Status.completed
+    ] = None
     formats: Annotated[
         list[Format],
         Field(
