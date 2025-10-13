@@ -1,0 +1,36 @@
+{
+  "name": "creative-agent",
+  "description": "AdCP Creative Agent - AI-powered creative generation and format management",
+  "setup": [
+    {
+      "name": "Install dependencies",
+      "command": "uv sync"
+    },
+    {
+      "name": "Install pre-commit hooks",
+      "command": "uv run pre-commit install"
+    }
+  ],
+  "tasks": {
+    "test": {
+      "description": "Run tests",
+      "command": "uv run pytest tests/"
+    },
+    "lint": {
+      "description": "Run linters",
+      "command": "uv run ruff check src/ && uv run mypy src/creative_agent/"
+    },
+    "format": {
+      "description": "Format code",
+      "command": "uv run ruff format src/ tests/"
+    },
+    "format-check": {
+      "description": "Check formatting",
+      "command": "uv run ruff format --check src/ tests/"
+    },
+    "pre-commit": {
+      "description": "Run pre-commit on all files",
+      "command": "uv run pre-commit run --all-files"
+    }
+  }
+}
