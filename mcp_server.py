@@ -116,6 +116,6 @@ def preview_creative(manifest_json: str) -> str:
         return json.dumps(response, indent=2)
 
     except json.JSONDecodeError as e:
-        return json.dumps({"error": f"Invalid JSON: {str(e)}"})
+        return json.dumps({"error": f"Invalid JSON: {e!s}"})
     except Exception as e:
         return json.dumps({"error": str(e)})
