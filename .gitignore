@@ -210,3 +210,6 @@ __marimo__/
 /test_*.py
 /test_*.json
 /setup_bucket_policy.py
+
+# Schema generation temporary files
+temp_resolved_schemas/

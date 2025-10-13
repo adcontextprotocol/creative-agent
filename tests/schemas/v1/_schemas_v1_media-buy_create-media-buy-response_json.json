@@ -1,0 +1,71 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "/schemas/v1/media-buy/create-media-buy-response.json",
+  "title": "Create Media Buy Response",
+  "description": "Response payload for create_media_buy task",
+  "type": "object",
+  "properties": {
+    "adcp_version": {
+      "type": "string",
+      "description": "AdCP schema version used for this response",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "default": "1.6.1"
+    },
+    "status": {
+      "$ref": "/schemas/v1/enums/task-status.json",
+      "description": "Current task state - 'completed' for immediate success, 'working' for operations under 120s, 'submitted' for long-running operations, 'input-required' if approval needed"
+    },
+    "task_id": {
+      "type": "string",
+      "description": "Unique identifier for tracking this async operation (present for submitted/working status)"
+    },
+    "media_buy_id": {
+      "type": "string",
+      "description": "Publisher's unique identifier for the created media buy"
+    },
+    "buyer_ref": {
+      "type": "string",
+      "description": "Buyer's reference identifier for this media buy"
+    },
+    "creative_deadline": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp for creative upload deadline"
+    },
+    "packages": {
+      "type": "array",
+      "description": "Array of created packages",
+      "items": {
+        "type": "object",
+        "properties": {
+          "package_id": {
+            "type": "string",
+            "description": "Publisher's unique identifier for the package"
+          },
+          "buyer_ref": {
+            "type": "string",
+            "description": "Buyer's reference identifier for the package"
+          }
+        },
+        "required": [
+          "package_id",
+          "buyer_ref"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "errors": {
+      "type": "array",
+      "description": "Task-specific errors and warnings (e.g., partial package creation failures)",
+      "items": {
+        "$ref": "/schemas/v1/core/error.json"
+      }
+    }
+  },
+  "required": [
+    "adcp_version",
+    "status",
+    "buyer_ref"
+  ],
+  "additionalProperties": false
+}

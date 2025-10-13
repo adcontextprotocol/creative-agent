@@ -1,0 +1,74 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "/schemas/v1/media-buy/get-products-request.json",
+  "title": "Get Products Request",
+  "description": "Request parameters for discovering available advertising products",
+  "type": "object",
+  "properties": {
+    "adcp_version": {
+      "type": "string",
+      "description": "AdCP schema version for this request",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "default": "1.6.0"
+    },
+    "brief": {
+      "type": "string",
+      "description": "Natural language description of campaign requirements"
+    },
+    "promoted_offering": {
+      "type": "string",
+      "description": "DEPRECATED: Use brand_manifest instead. Legacy field for describing what is being promoted."
+    },
+    "brand_manifest": {
+      "$ref": "/schemas/v1/core/brand-manifest-ref.json",
+      "description": "Brand information manifest providing brand context, assets, and product catalog. Can be provided inline or as a URL reference to a hosted manifest."
+    },
+    "filters": {
+      "type": "object",
+      "description": "Structured filters for product discovery",
+      "properties": {
+        "delivery_type": {
+          "$ref": "/schemas/v1/enums/delivery-type.json"
+        },
+        "is_fixed_price": {
+          "type": "boolean",
+          "description": "Filter for fixed price vs auction products"
+        },
+        "format_types": {
+          "type": "array",
+          "description": "Filter by format types",
+          "items": {
+            "type": "string",
+            "enum": ["video", "display", "audio"]
+          }
+        },
+        "format_ids": {
+          "type": "array",
+          "description": "Filter by specific format IDs",
+          "items": {
+            "type": "string"
+          }
+        },
+        "standard_formats_only": {
+          "type": "boolean",
+          "description": "Only return products accepting IAB standard formats"
+        },
+        "min_exposures": {
+          "type": "integer",
+          "description": "Minimum exposures/impressions needed for measurement validity",
+          "minimum": 1
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "oneOf": [
+    {
+      "required": ["promoted_offering"]
+    },
+    {
+      "required": ["brand_manifest"]
+    }
+  ],
+  "additionalProperties": false
+}

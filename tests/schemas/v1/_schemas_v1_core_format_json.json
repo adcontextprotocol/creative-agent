@@ -1,0 +1,222 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "/schemas/v1/core/format.json",
+  "title": "Format",
+  "description": "Represents a creative format with its requirements",
+  "type": "object",
+  "properties": {
+    "format_id": {
+      "type": "string",
+      "description": "Unique identifier for the format"
+    },
+    "agent_url": {
+      "type": "string",
+      "format": "uri",
+      "description": "Base URL of the agent that provides this format (authoritative source). E.g., 'https://reference.adcp.org', 'https://dco.example.com'"
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable format name"
+    },
+    "description": {
+      "type": "string",
+      "description": "Plain text explanation of what this format does and what assets it requires"
+    },
+    "preview_image": {
+      "type": "string",
+      "format": "uri",
+      "description": "Optional preview image URL for format browsing/discovery UI"
+    },
+    "example_url": {
+      "type": "string",
+      "format": "uri",
+      "description": "Optional URL to showcase page with examples and interactive demos of this format"
+    },
+    "type": {
+      "type": "string",
+      "description": "Media type of this format - determines rendering method and asset requirements",
+      "enum": [
+        "audio",
+        "video",
+        "display",
+        "native",
+        "dooh",
+        "rich_media",
+        "universal"
+      ]
+    },
+    "category": {
+      "type": "string",
+      "description": "Format category",
+      "enum": [
+        "standard",
+        "custom"
+      ]
+    },
+    "is_standard": {
+      "type": "boolean",
+      "description": "Whether this format follows IAB specifications or AdCP standard format definitions (found in /schemas/v1/standard-formats/)"
+    },
+    "requirements": {
+      "type": "object",
+      "description": "Technical specifications for this format (e.g., dimensions, duration, file size limits, codecs)",
+      "additionalProperties": true
+    },
+    "assets_required": {
+      "type": "array",
+      "description": "Array of required assets or asset groups for this format. Can contain individual assets or repeatable asset sequences (e.g., carousel products, slideshow frames).",
+      "items": {
+        "oneOf": [
+          {
+            "description": "Individual asset requirement",
+            "type": "object",
+            "properties": {
+              "asset_id": {
+                "type": "string",
+                "description": "Identifier for this asset in the format"
+              },
+              "asset_type": {
+                "type": "string",
+                "description": "Type of asset",
+                "enum": [
+                  "image",
+                  "video",
+                  "audio",
+                  "text",
+                  "html",
+                  "javascript",
+                  "url",
+                  "brand_manifest"
+                ]
+              },
+              "asset_role": {
+                "type": "string",
+                "description": "Purpose of this asset (e.g., 'hero_image', 'logo', 'headline', 'cta_button')"
+              },
+              "required": {
+                "type": "boolean",
+                "description": "Whether this asset is required"
+              },
+              "requirements": {
+                "type": "object",
+                "description": "Technical requirements for this asset (dimensions, file size, duration, etc.)",
+                "additionalProperties": true
+              }
+            },
+            "required": [
+              "asset_id",
+              "asset_type"
+            ]
+          },
+          {
+            "description": "Repeatable asset group (for carousels, slideshows, playlists, etc.)",
+            "type": "object",
+            "properties": {
+              "asset_group_id": {
+                "type": "string",
+                "description": "Identifier for this asset group (e.g., 'product', 'slide', 'card')"
+              },
+              "repeatable": {
+                "type": "boolean",
+                "description": "Indicates this is a repeatable asset group",
+                "enum": [
+                  true
+                ]
+              },
+              "min_count": {
+                "type": "integer",
+                "description": "Minimum number of repetitions required",
+                "minimum": 1
+              },
+              "max_count": {
+                "type": "integer",
+                "description": "Maximum number of repetitions allowed",
+                "minimum": 1
+              },
+              "assets": {
+                "type": "array",
+                "description": "Assets within each repetition of this group",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "asset_id": {
+                      "type": "string",
+                      "description": "Identifier for this asset within the group"
+                    },
+                    "asset_type": {
+                      "type": "string",
+                      "description": "Type of asset",
+                      "enum": [
+                        "image",
+                        "video",
+                        "audio",
+                        "text",
+                        "html",
+                        "javascript",
+                        "url",
+                        "brand_manifest"
+                      ]
+                    },
+                    "asset_role": {
+                      "type": "string",
+                      "description": "Purpose of this asset"
+                    },
+                    "required": {
+                      "type": "boolean",
+                      "description": "Whether this asset is required in each repetition"
+                    },
+                    "requirements": {
+                      "type": "object",
+                      "description": "Technical requirements for this asset",
+                      "additionalProperties": true
+                    }
+                  },
+                  "required": [
+                    "asset_id",
+                    "asset_type"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "asset_group_id",
+              "repeatable",
+              "min_count",
+              "max_count",
+              "assets"
+            ]
+          }
+        ]
+      }
+    },
+    "delivery": {
+      "type": "object",
+      "description": "Delivery method specifications (e.g., hosted, VAST, third-party tags)",
+      "additionalProperties": true
+    },
+    "accepts_3p_tags": {
+      "type": "boolean",
+      "description": "Whether this format can accept third-party served creative tags as an alternative to hosted assets"
+    },
+    "supported_macros": {
+      "type": "array",
+      "description": "List of universal macros supported by this format (e.g., MEDIA_BUY_ID, CACHEBUSTER, DEVICE_ID). Used for validation and developer tooling.",
+      "items": {
+        "type": "string"
+      }
+    },
+    "output_format_ids": {
+      "type": "array",
+      "description": "For generative formats: array of format IDs that this format can generate. When a format accepts inputs like brand_manifest and message, this specifies what concrete output formats can be produced (e.g., a generative banner format might output standard image banner formats).",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "format_id",
+    "name",
+    "type"
+  ],
+  "additionalProperties": false
+}
