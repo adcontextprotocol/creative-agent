@@ -9,8 +9,6 @@ from typing import Any
 from fastmcp import FastMCP
 
 from .data.standard_formats import (
-    AGENT_CAPABILITIES,
-    AGENT_NAME,
     AGENT_URL,
     filter_formats,
     get_format_by_id,
@@ -52,9 +50,6 @@ def list_creative_formats(
         )
 
         response = ListCreativeFormatsResponse(
-            agent_url=AGENT_URL,
-            agent_name=AGENT_NAME,
-            capabilities=AGENT_CAPABILITIES,
             formats=formats,
         )
 
@@ -316,9 +311,9 @@ def build_creative(
                 indent=2,
             )
 
-        # For generative formats, get the output format for asset requirements
+        # For universal/generative formats, get the output format for asset requirements
         output_fmt = fmt
-        if fmt.type == "generative" and fmt.output_format_ids and len(fmt.output_format_ids) > 0:
+        if fmt.type == "universal" and fmt.output_format_ids and len(fmt.output_format_ids) > 0:
             output_fmt_result = get_format_by_id(fmt.output_format_ids[0])
             if not output_fmt_result:
                 return json.dumps(
@@ -334,15 +329,15 @@ def build_creative(
         client = genai.Client(api_key=request.gemini_api_key)
 
         # Build prompt for creative generation
-        # For generative formats, describe what we're generating (the output format)
-        target_format = output_fmt if fmt.type == "generative" else fmt
+        # For universal/generative formats, describe what we're generating (the output format)
+        target_format = output_fmt if fmt.type == "universal" else fmt
 
         format_spec = f"""Format: {fmt.name}
 Type: {fmt.type}
 Description: {fmt.description}
 """
 
-        if fmt.type == "generative":
+        if fmt.type == "universal":
             format_spec += f"\nThis will generate a: {output_fmt.name}\n"
             if output_fmt.dimensions:
                 format_spec += f"Dimensions: {output_fmt.dimensions}\n"
@@ -389,7 +384,7 @@ Description: {fmt.description}
         )
 
         # The format_id in the output manifest should be the OUTPUT format
-        output_format_id = output_fmt.format_id if fmt.type == "generative" else request.format_id
+        output_format_id = output_fmt.format_id if fmt.type == "universal" else request.format_id
 
         if generate_images:
             prompt = f"""You are a creative generation AI for advertising.
@@ -552,8 +547,8 @@ Return ONLY the JSON manifest, no additional text."""
         else:
             status = "draft"
 
-        # Build output_format_ids list for generative formats
-        output_format_ids_list = fmt.output_format_ids if fmt.type == "generative" else None
+        # Build output_format_ids list for universal/generative formats
+        output_format_ids_list = fmt.output_format_ids if fmt.type == "universal" else None
 
         # Build response
         build_response = BuildCreativeResponse(
