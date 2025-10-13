@@ -87,7 +87,7 @@ def list_creative_formats(
         capabilities_enum = [Capability(cap) for cap in AGENT_CAPABILITIES]
 
         # Convert core Format objects to response Format objects
-        response_formats = [ResponseFormat(**fmt.model_dump(exclude_unset=True)) for fmt in formats]
+        response_formats = [ResponseFormat(**fmt.model_dump(mode="json", exclude_unset=True)) for fmt in formats]
 
         response = ListCreativeFormatsResponse(
             status=Status.completed,

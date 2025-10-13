@@ -30,7 +30,7 @@ def list_creative_formats() -> str:
     Returns:
         JSON array of creative format objects with format_id, name, type, dimensions, etc.
     """
-    formats_data = [fmt.model_dump() for fmt in STANDARD_FORMATS]
+    formats_data = [fmt.model_dump(mode="json") for fmt in STANDARD_FORMATS]
     return json.dumps(formats_data, indent=2)
 
 
