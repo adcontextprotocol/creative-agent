@@ -45,7 +45,9 @@ class CreativeFormat(BaseModel):
     description: str | None = None
     preview_image: HttpUrl | None = None  # Preview image URL for format browsing/discovery UI
     example_url: HttpUrl | None = None  # URL to showcase page with examples and demos
-    requirements: dict[str, Any] | FormatRequirements | None = None  # Technical specifications (dimensions, duration, file size, codecs)
+    requirements: dict[str, Any] | FormatRequirements | None = (
+        None  # Technical specifications (dimensions, duration, file size, codecs)
+    )
     assets_required: list[AssetRequirement]
     delivery: dict[str, Any] | None = None  # Delivery method specifications (hosted, VAST, third-party tags)
     accepts_3p_tags: bool | None = False
