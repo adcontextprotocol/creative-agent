@@ -9,6 +9,8 @@ from typing import Any
 from fastmcp import FastMCP
 
 from .data.standard_formats import (
+    AGENT_CAPABILITIES,
+    AGENT_NAME,
     AGENT_URL,
     filter_formats,
     get_format_by_id,
@@ -47,16 +49,36 @@ def list_creative_formats(
         JSON string with format list response
     """
     try:
+        # Cast asset_types to the expected type (filter_formats accepts str or AssetType)
         formats = filter_formats(
             format_ids=format_ids,
             type=type,
-            asset_types=asset_types,
+            asset_types=asset_types,  # type: ignore[arg-type]  # filter_formats accepts list[str]
             dimensions=dimensions,
             name_search=name_search,
         )
 
+        # Import required types
+        from .schemas_generated._schemas_v1_media_buy_list_creative_formats_response_json import (
+            Capability,
+            CreativeAgent,
+            Status,
+        )
+
+        # Convert capability strings to Capability enum
+        capabilities_enum = [Capability(cap) for cap in AGENT_CAPABILITIES]
+
         response = ListCreativeFormatsResponse(
-            formats=formats,
+            adcp_version="1.0.0",
+            status=Status.completed,
+            formats=formats,  # type: ignore[arg-type]  # Core Format and Response Format are structurally identical
+            creative_agents=[
+                CreativeAgent(
+                    agent_url=AGENT_URL,
+                    agent_name=AGENT_NAME,
+                    capabilities=capabilities_enum,
+                )
+            ],
         )
 
         return response.model_dump_json(indent=2)
@@ -90,20 +112,17 @@ def preview_creative(
     """
     try:
         # Import schema types
-        from .schemas.manifest import CreativeManifest, PreviewInput
-
-        # Parse manifest dict into CreativeManifest
-        manifest_obj = CreativeManifest(**creative_manifest)
+        from .schemas.manifest import PreviewInput
 
         # Parse inputs if provided
         inputs_obj: list[PreviewInput] | None = None
         if inputs:
             inputs_obj = [PreviewInput(**inp) for inp in inputs]
 
-        # Parse request
+        # Parse request (creative_manifest stays as dict)
         request = PreviewCreativeRequest(
             format_id=format_id,
-            creative_manifest=manifest_obj,
+            creative_manifest=creative_manifest,
             inputs=inputs_obj,
             template_id=template_id,
             brand_card=brand_card,
@@ -120,10 +139,11 @@ def preview_creative(
             )
 
         # Validate manifest format_id matches
-        if request.creative_manifest.format_id != request.format_id:
+        manifest_format_id = request.creative_manifest.get("format_id")
+        if manifest_format_id != request.format_id:
             return json.dumps(
                 {
-                    "error": f"Manifest format_id '{request.creative_manifest.format_id}' does not match request format_id '{request.format_id}'"
+                    "error": f"Manifest format_id '{manifest_format_id}' does not match request format_id '{request.format_id}'"
                 },
                 indent=2,
             )
@@ -188,17 +208,20 @@ def _generate_preview_variant(
     # Build hints based on format type
     hints = PreviewHints()
 
-    if format_obj.type == "video":
+    # Import Type enum for comparisons
+    from .schemas_generated._schemas_v1_core_format_json import Type
+
+    if format_obj.type == Type.video:
         hints.primary_media_type = "video"
         hints.contains_audio = True
-        if format_obj.requirements and format_obj.requirements.duration_seconds:
-            hints.estimated_duration_seconds = format_obj.requirements.duration_seconds
-    elif format_obj.type == "audio":
+        if format_obj.requirements and format_obj.requirements.get("duration_seconds"):
+            hints.estimated_duration_seconds = format_obj.requirements["duration_seconds"]
+    elif format_obj.type == Type.audio:
         hints.primary_media_type = "audio"
         hints.contains_audio = True
-        if format_obj.requirements and format_obj.requirements.duration_seconds:
-            hints.estimated_duration_seconds = format_obj.requirements.duration_seconds
-    elif format_obj.type in ["display", "native", "dooh"]:
+        if format_obj.requirements and format_obj.requirements.get("duration_seconds"):
+            hints.estimated_duration_seconds = format_obj.requirements["duration_seconds"]
+    elif format_obj.type in [Type.display, Type.native, Type.dooh]:
         hints.primary_media_type = "image"
         hints.contains_audio = False
     else:
@@ -214,7 +237,7 @@ def _generate_preview_variant(
     embedding = PreviewEmbedding(
         recommended_sandbox="allow-scripts allow-same-origin",
         requires_https=False,
-        supports_fullscreen=format_obj.type in ["video", "interactive"],
+        supports_fullscreen=format_obj.type in [Type.video, Type.rich_media],
     )
 
     return PreviewVariant(
@@ -317,9 +340,17 @@ def build_creative(
                 indent=2,
             )
 
+<<<<<<< HEAD
         # For universal/generative formats, get the output format for asset requirements
         output_fmt = fmt
         if fmt.type == "universal" and fmt.output_format_ids and len(fmt.output_format_ids) > 0:
+=======
+        # For generative formats (identified by having output_format_ids),
+        # get the output format for asset requirements
+        output_fmt = fmt
+        if fmt.output_format_ids and len(fmt.output_format_ids) > 0:
+            # Use the first output format ID
+>>>>>>> 30335ce (Fix server.py type errors after AdCP schema migration)
             output_fmt_result = get_format_by_id(fmt.output_format_ids[0])
             if not output_fmt_result:
                 return json.dumps(
@@ -335,26 +366,62 @@ def build_creative(
         client = genai.Client(api_key=request.gemini_api_key)
 
         # Build prompt for creative generation
+<<<<<<< HEAD
         # For universal/generative formats, describe what we're generating (the output format)
         target_format = output_fmt if fmt.type == "universal" else fmt
+=======
+        # For generative formats, describe what we're generating (the output format)
+        is_generative = fmt.output_format_ids and len(fmt.output_format_ids) > 0
+        target_format = output_fmt if is_generative else fmt
+>>>>>>> 30335ce (Fix server.py type errors after AdCP schema migration)
 
         format_spec = f"""Format: {fmt.name}
-Type: {fmt.type}
+Type: {fmt.type.value}
 Description: {fmt.description}
 """
 
+<<<<<<< HEAD
         if fmt.type == "universal":
+=======
+        if is_generative:
+>>>>>>> 30335ce (Fix server.py type errors after AdCP schema migration)
             format_spec += f"\nThis will generate a: {output_fmt.name}\n"
-            if output_fmt.dimensions:
-                format_spec += f"Dimensions: {output_fmt.dimensions}\n"
+            if output_fmt.requirements and output_fmt.requirements.get("dimensions"):
+                format_spec += f"Dimensions: {output_fmt.requirements['dimensions']}\n"
 
         format_spec += "\nRequired Assets:\n"
 
-        for asset_req in target_format.assets_required:
-            format_spec += f"- {asset_req.asset_role} ({asset_req.asset_type})"
-            if asset_req.width and asset_req.height:
-                format_spec += f" - {asset_req.width}x{asset_req.height}"
-            format_spec += f": {asset_req.description or 'N/A'}\n"
+        if target_format.assets_required:
+            from .schemas_generated._schemas_v1_core_format_json import AssetsRequired1
+
+            for asset_req in target_format.assets_required:
+                # Handle both AssetsRequired and AssetsRequired1 (repeatable groups)
+                if isinstance(asset_req, AssetsRequired1):
+                    # This is a repeatable group (AssetsRequired1)
+                    format_spec += f"- {asset_req.asset_group_id} (repeatable group, {asset_req.min_count}-{asset_req.max_count} items)\n"
+                    for asset in asset_req.assets:
+                        format_spec += f"  - {asset.asset_role or asset.asset_id} ({asset.asset_type.value})"
+                        if asset.requirements:
+                            width = asset.requirements.get("width")
+                            height = asset.requirements.get("height")
+                            if width and height:
+                                format_spec += f" - {width}x{height}"
+                            desc = asset.requirements.get("description")
+                            if desc:
+                                format_spec += f": {desc}"
+                        format_spec += "\n"
+                else:
+                    # This is a regular asset (AssetsRequired)
+                    format_spec += f"- {asset_req.asset_role or asset_req.asset_id} ({asset_req.asset_type.value})"
+                    if asset_req.requirements:
+                        width = asset_req.requirements.get("width")
+                        height = asset_req.requirements.get("height")
+                        if width and height:
+                            format_spec += f" - {width}x{height}"
+                        desc = asset_req.requirements.get("description")
+                        if desc:
+                            format_spec += f": {desc}"
+                    format_spec += "\n"
 
         # Add brand context if provided (support both promoted_offerings and deprecated brand_card)
         brand_data = promoted_offerings or brand_card
@@ -384,13 +451,22 @@ Description: {fmt.description}
             if "assets" in brand_data and len(brand_data["assets"]) > 0:
                 brand_context += f"- Available Brand Assets: {len(brand_data['assets'])} assets (logos, images, etc.)\n"
 
+        # Import Type and AssetType enums for comparisons
+        from .schemas_generated._schemas_v1_core_format_json import AssetType, Type
+
         # Check if we need to generate images (check target format, not input generative format)
-        generate_images = target_format.type == "display" and any(
-            req.asset_type == "image" for req in target_format.assets_required
-        )
+        generate_images = False
+        if target_format.assets_required:
+            generate_images = target_format.type == Type.display and any(
+                req.asset_type == AssetType.image for req in target_format.assets_required if hasattr(req, "asset_type")
+            )
 
         # The format_id in the output manifest should be the OUTPUT format
+<<<<<<< HEAD
         output_format_id = output_fmt.format_id if fmt.type == "universal" else request.format_id
+=======
+        output_format_id = output_fmt.format_id if is_generative else request.format_id
+>>>>>>> 30335ce (Fix server.py type errors after AdCP schema migration)
 
         if generate_images:
             prompt = f"""You are a creative generation AI for advertising.

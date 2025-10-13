@@ -258,7 +258,7 @@ class ListCreativeFormatsResponse(BaseModel):
             description="Standardized task status values based on A2A TaskState enum. Indicates the current state of any AdCP operation.",
             title="Task Status",
         ),
-    ] = "completed"
+    ] = Status.completed
     formats: Annotated[
         list[Format],
         Field(
