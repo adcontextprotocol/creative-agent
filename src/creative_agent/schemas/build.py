@@ -48,6 +48,7 @@ class CreativeOutput(BaseModel):
 
     type: Literal["creative_manifest", "creative_code"]
     format_id: str
+    output_format_ids: list[str] | None = None  # For generative formats: the output format IDs produced
     data: dict[str, Any]  # Manifest structure or code
 
 

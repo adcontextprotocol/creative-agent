@@ -552,6 +552,11 @@ Return ONLY the JSON manifest, no additional text."""
         else:
             status = "draft"
 
+        # Build output_format_ids list for generative formats
+        output_format_ids_list = None
+        if fmt.type == "generative" and output_fmt.format_id != fmt.format_id:
+            output_format_ids_list = [output_fmt.format_id]
+
         # Build response
         build_response = BuildCreativeResponse(
             message=f"Generated {fmt.name} creative based on your request. {'Finalized and ready to use.' if request.finalize else 'Review and refine as needed.'}",
@@ -560,6 +565,7 @@ Return ONLY the JSON manifest, no additional text."""
             creative_output=CreativeOutput(
                 type="creative_manifest",
                 format_id=output_format_id,
+                output_format_ids=output_format_ids_list,
                 data=manifest_data,
             ),
             preview=None,  # Could integrate with preview_creative here
