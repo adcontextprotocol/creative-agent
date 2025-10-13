@@ -34,6 +34,11 @@ def list_creative_formats(
     type: str | None = None,
     asset_types: list[str] | None = None,
     dimensions: str | None = None,
+    max_width: int | None = None,
+    max_height: int | None = None,
+    min_width: int | None = None,
+    min_height: int | None = None,
+    is_responsive: bool | None = None,
     name_search: str | None = None,
 ) -> str:
     """List all available AdCP creative formats with optional filtering.
@@ -42,7 +47,12 @@ def list_creative_formats(
         format_ids: Return only these specific format IDs
         type: Filter by format type (audio, video, display, dooh, native, interactive)
         asset_types: Filter to formats that include these asset types
-        dimensions: Filter to formats with specific dimensions (e.g., "300x250")
+        dimensions: (Deprecated) Filter to formats with specific dimensions (e.g., "300x250"). Use min/max filters instead.
+        max_width: Maximum width in pixels (inclusive). Returns formats with width <= this value.
+        max_height: Maximum height in pixels (inclusive). Returns formats with height <= this value.
+        min_width: Minimum width in pixels (inclusive). Returns formats with width >= this value.
+        min_height: Minimum height in pixels (inclusive). Returns formats with height >= this value.
+        is_responsive: Filter to responsive formats (adapt to container size)
         name_search: Search for formats by name (case-insensitive partial match)
 
     Returns:
@@ -55,6 +65,11 @@ def list_creative_formats(
             type=type,
             asset_types=asset_types,  # type: ignore[arg-type]  # filter_formats accepts list[str]
             dimensions=dimensions,
+            max_width=max_width,
+            max_height=max_height,
+            min_width=min_width,
+            min_height=min_height,
+            is_responsive=is_responsive,
             name_search=name_search,
         )
 

@@ -1288,6 +1288,11 @@ def filter_formats(
     type: Type | str | None = None,
     asset_types: list[AssetType | str] | None = None,
     dimensions: str | None = None,
+    max_width: int | None = None,
+    max_height: int | None = None,
+    min_width: int | None = None,
+    min_height: int | None = None,
+    is_responsive: bool | None = None,
     name_search: str | None = None,
 ) -> list[CreativeFormat]:
     """Filter formats based on criteria."""
@@ -1305,6 +1310,56 @@ def filter_formats(
 
     if dimensions:
         results = [fmt for fmt in results if fmt.requirements and fmt.requirements.get("dimensions") == dimensions]
+
+    # Dimension filtering - parse width and height from "WIDTHxHEIGHT" format
+    if any([max_width, max_height, min_width, min_height]):
+
+        def get_dimensions(fmt: CreativeFormat) -> tuple[int | None, int | None]:
+            """Extract width and height from format."""
+            if fmt.requirements and "dimensions" in fmt.requirements:
+                dims = fmt.requirements["dimensions"]
+                if isinstance(dims, str) and "x" in dims:
+                    parts = dims.split("x")
+                    if len(parts) == 2:
+                        try:
+                            return int(parts[0]), int(parts[1])
+                        except ValueError:
+                            pass
+            return None, None
+
+        filtered = []
+        for fmt in results:
+            width, height = get_dimensions(fmt)
+            if width is None or height is None:
+                continue  # Skip formats without dimensions
+
+            if max_width is not None and width > max_width:
+                continue
+            if max_height is not None and height > max_height:
+                continue
+            if min_width is not None and width < min_width:
+                continue
+            if min_height is not None and height < min_height:
+                continue
+
+            filtered.append(fmt)
+        results = filtered
+
+    if is_responsive is not None:
+        # Filter for responsive formats (those without fixed dimensions)
+        if is_responsive:
+            results = [
+                fmt
+                for fmt in results
+                if not (fmt.requirements and "dimensions" in fmt.requirements and fmt.requirements["dimensions"])
+            ]
+        else:
+            # Filter for non-responsive (fixed dimension) formats
+            results = [
+                fmt
+                for fmt in results
+                if fmt.requirements and "dimensions" in fmt.requirements and fmt.requirements["dimensions"]
+            ]
 
     if name_search:
         search_lower = name_search.lower()
