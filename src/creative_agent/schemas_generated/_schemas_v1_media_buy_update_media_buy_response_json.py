@@ -57,13 +57,6 @@ class UpdateMediaBuyResponse(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    adcp_version: Annotated[
-        str,
-        Field(
-            description="AdCP schema version used for this response",
-            pattern="^\\d+\\.\\d+\\.\\d+$",
-        ),
-    ]
     status: Annotated[
         Status,
         Field(

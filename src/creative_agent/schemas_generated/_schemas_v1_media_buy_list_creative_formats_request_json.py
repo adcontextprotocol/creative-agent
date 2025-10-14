@@ -30,13 +30,6 @@ class ListCreativeFormatsRequest(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    adcp_version: Annotated[
-        Optional[str],
-        Field(
-            description="AdCP schema version for this request",
-            pattern="^\\d+\\.\\d+\\.\\d+$",
-        ),
-    ] = "1.6.0"
     format_ids: Annotated[
         Optional[list[str]],
         Field(
@@ -55,10 +48,34 @@ class ListCreativeFormatsRequest(BaseModel):
             description="Filter to formats that include these asset types. For third-party tags, search for 'html' or 'javascript'. E.g., ['image', 'text'] returns formats with images and text, ['javascript'] returns formats accepting JavaScript tags."
         ),
     ] = None
-    dimensions: Annotated[
-        Optional[str],
+    max_width: Annotated[
+        Optional[int],
         Field(
-            description="Filter to formats with specific dimensions (e.g., '300x250', '728x90'). Useful with asset_types to find specific sizes like '300x250 JavaScript'"
+            description="Maximum width in pixels (inclusive). Returns formats with width <= this value. Omit for responsive/fluid formats."
+        ),
+    ] = None
+    max_height: Annotated[
+        Optional[int],
+        Field(
+            description="Maximum height in pixels (inclusive). Returns formats with height <= this value. Omit for responsive/fluid formats."
+        ),
+    ] = None
+    min_width: Annotated[
+        Optional[int],
+        Field(
+            description="Minimum width in pixels (inclusive). Returns formats with width >= this value."
+        ),
+    ] = None
+    min_height: Annotated[
+        Optional[int],
+        Field(
+            description="Minimum height in pixels (inclusive). Returns formats with height >= this value."
+        ),
+    ] = None
+    is_responsive: Annotated[
+        Optional[bool],
+        Field(
+            description="Filter for responsive formats that adapt to container size. When true, returns formats without fixed dimensions."
         ),
     ] = None
     name_search: Annotated[

@@ -30,13 +30,6 @@ class GetMediaBuyDeliveryRequest(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    adcp_version: Annotated[
-        Optional[str],
-        Field(
-            description="AdCP schema version for this request",
-            pattern="^\\d+\\.\\d+\\.\\d+$",
-        ),
-    ] = "1.6.0"
     media_buy_ids: Annotated[
         Optional[list[str]],
         Field(description="Array of publisher media buy IDs to get delivery data for"),

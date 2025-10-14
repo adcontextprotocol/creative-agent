@@ -22,13 +22,6 @@ class ListAuthorizedPropertiesRequest(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    adcp_version: Annotated[
-        Optional[str],
-        Field(
-            description="AdCP schema version for this request",
-            pattern="^\\d+\\.\\d+\\.\\d+$",
-        ),
-    ] = "1.0.0"
     tags: Annotated[
         Optional[list[Tag]],
         Field(description="Filter properties by specific tags (optional)"),

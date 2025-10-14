@@ -251,7 +251,7 @@ class BrandManifest(BaseModel):
     ] = None
 
 
-class Asset12(BaseModel):
+class Asset13(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
@@ -346,7 +346,7 @@ class BrandManifest8(BaseModel):
         None
     )
     assets: Annotated[
-        Optional[list[Asset12]],
+        Optional[list[Asset13]],
         Field(
             description="Brand asset library with explicit assets and tags. Assets are referenced inline with URLs pointing to CDN-hosted files."
         ),
@@ -425,13 +425,6 @@ class GetProductsRequest1(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    adcp_version: Annotated[
-        Optional[str],
-        Field(
-            description="AdCP schema version for this request",
-            pattern="^\\d+\\.\\d+\\.\\d+$",
-        ),
-    ] = "1.6.0"
     brief: Annotated[
         Optional[str],
         Field(description="Natural language description of campaign requirements"),
@@ -468,7 +461,7 @@ class GetProductsRequest1(BaseModel):
     ] = None
 
 
-class Asset13(BaseModel):
+class Asset14(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
@@ -563,7 +556,7 @@ class BrandManifest9(BaseModel):
         None
     )
     assets: Annotated[
-        Optional[list[Asset13]],
+        Optional[list[Asset14]],
         Field(
             description="Brand asset library with explicit assets and tags. Assets are referenced inline with URLs pointing to CDN-hosted files."
         ),
@@ -597,7 +590,7 @@ class BrandManifest9(BaseModel):
     ] = None
 
 
-class Asset14(BaseModel):
+class Asset15(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
@@ -692,7 +685,7 @@ class BrandManifest10(BaseModel):
         None
     )
     assets: Annotated[
-        Optional[list[Asset14]],
+        Optional[list[Asset15]],
         Field(
             description="Brand asset library with explicit assets and tags. Assets are referenced inline with URLs pointing to CDN-hosted files."
         ),
@@ -760,13 +753,6 @@ class GetProductsRequest2(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    adcp_version: Annotated[
-        Optional[str],
-        Field(
-            description="AdCP schema version for this request",
-            pattern="^\\d+\\.\\d+\\.\\d+$",
-        ),
-    ] = "1.6.0"
     brief: Annotated[
         Optional[str],
         Field(description="Natural language description of campaign requirements"),

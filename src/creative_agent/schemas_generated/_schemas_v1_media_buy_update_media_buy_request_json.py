@@ -89,7 +89,7 @@ class Packages(BaseModel):
     ] = None
 
 
-class TargetingOverlay6(BaseModel):
+class TargetingOverlay9(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
@@ -147,7 +147,7 @@ class Packages5(BaseModel):
         Optional[bool], Field(description="Pause/resume specific package")
     ] = None
     targeting_overlay: Annotated[
-        Optional[TargetingOverlay6],
+        Optional[TargetingOverlay9],
         Field(
             description="Optional geographic refinements for media buys. Most targeting should be expressed in the brief and handled by the publisher. These fields are primarily for geographic restrictions (RCT testing, regulatory compliance).",
             title="Targeting Overlay",
@@ -210,13 +210,6 @@ class UpdateMediaBuyRequest1(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    adcp_version: Annotated[
-        Optional[str],
-        Field(
-            description="AdCP schema version for this request",
-            pattern="^\\d+\\.\\d+\\.\\d+$",
-        ),
-    ] = "1.6.0"
     media_buy_id: Annotated[
         str, Field(description="Publisher's ID of the media buy to update")
     ]
@@ -258,7 +251,7 @@ class UpdateMediaBuyRequest1(BaseModel):
     ] = None
 
 
-class TargetingOverlay7(BaseModel):
+class TargetingOverlay10(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
@@ -314,7 +307,7 @@ class Packages6(BaseModel):
         Optional[bool], Field(description="Pause/resume specific package")
     ] = None
     targeting_overlay: Annotated[
-        Optional[TargetingOverlay7],
+        Optional[TargetingOverlay10],
         Field(
             description="Optional geographic refinements for media buys. Most targeting should be expressed in the brief and handled by the publisher. These fields are primarily for geographic restrictions (RCT testing, regulatory compliance).",
             title="Targeting Overlay",
@@ -325,7 +318,7 @@ class Packages6(BaseModel):
     ] = None
 
 
-class TargetingOverlay8(BaseModel):
+class TargetingOverlay11(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
@@ -383,7 +376,7 @@ class Packages7(BaseModel):
         Optional[bool], Field(description="Pause/resume specific package")
     ] = None
     targeting_overlay: Annotated[
-        Optional[TargetingOverlay8],
+        Optional[TargetingOverlay11],
         Field(
             description="Optional geographic refinements for media buys. Most targeting should be expressed in the brief and handled by the publisher. These fields are primarily for geographic restrictions (RCT testing, regulatory compliance).",
             title="Targeting Overlay",
@@ -441,13 +434,6 @@ class UpdateMediaBuyRequest2(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    adcp_version: Annotated[
-        Optional[str],
-        Field(
-            description="AdCP schema version for this request",
-            pattern="^\\d+\\.\\d+\\.\\d+$",
-        ),
-    ] = "1.6.0"
     media_buy_id: Annotated[
         Optional[str], Field(description="Publisher's ID of the media buy to update")
     ] = None

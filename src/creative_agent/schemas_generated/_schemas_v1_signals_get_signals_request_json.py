@@ -68,13 +68,6 @@ class GetSignalsRequest(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    adcp_version: Annotated[
-        Optional[str],
-        Field(
-            description="AdCP schema version for this request",
-            pattern="^\\d+\\.\\d+\\.\\d+$",
-        ),
-    ] = "1.5.0"
     signal_spec: Annotated[
         str, Field(description="Natural language description of the desired signals")
     ]

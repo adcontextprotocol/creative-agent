@@ -5,11 +5,6 @@
   "description": "Response from creative library query with filtered results, metadata, and optional enriched data",
   "type": "object",
   "properties": {
-    "adcp_version": {
-      "type": "string",
-      "description": "AdCP schema version used for this response",
-      "pattern": "^\\d+\\.\\d+\\.\\d+$"
-    },
     "message": {
       "type": "string",
       "description": "Human-readable result message"
@@ -112,9 +107,9 @@
             "type": "string",
             "description": "Human-readable creative name"
           },
-          "format": {
-            "type": "string",
-            "description": "Creative format type"
+          "format_id": {
+            "$ref": "/schemas/v1/core/format-id.json",
+            "description": "Format identifier specifying which format this creative conforms to"
           },
           "status": {
             "$ref": "/schemas/v1/enums/creative-status.json",
@@ -276,7 +271,7 @@
         "required": [
           "creative_id",
           "name",
-          "format",
+          "format_id",
           "status",
           "created_date",
           "updated_date"
@@ -325,7 +320,6 @@
     }
   },
   "required": [
-    "adcp_version",
     "message",
     "query_summary",
     "pagination",
@@ -336,7 +330,6 @@
     {
       "description": "Successful library query with results",
       "data": {
-        "adcp_version": "1.5.0",
         "message": "Found 3 creatives matching your query",
         "context_id": "ctx_list_456789",
         "query_summary": {
@@ -362,7 +355,10 @@
           {
             "creative_id": "hero_video_30s",
             "name": "Brand Hero Video 30s",
-            "format": "video_30s_vast",
+            "format_id": {
+              "agent_url": "https://creative.adcontextprotocol.org",
+              "id": "video_30s_vast"
+            },
             "status": "approved",
             "created_date": "2024-01-15T10:30:00Z",
             "updated_date": "2024-01-15T14:20:00Z",
@@ -394,7 +390,6 @@
     {
       "description": "Query with assignments and performance data",
       "data": {
-        "adcp_version": "1.5.0",
         "message": "Found 1 creative with performance data",
         "query_summary": {
           "total_matching": 1,
@@ -409,7 +404,10 @@
           {
             "creative_id": "hero_video_30s",
             "name": "Brand Hero Video 30s",
-            "format": "video_30s_vast",
+            "format_id": {
+              "agent_url": "https://creative.adcontextprotocol.org",
+              "id": "video_30s_vast"
+            },
             "status": "approved",
             "created_date": "2024-01-15T10:30:00Z",
             "updated_date": "2024-01-15T14:20:00Z",

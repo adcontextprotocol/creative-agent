@@ -19,14 +19,38 @@ class PropertyType(Enum):
     streaming_audio = "streaming_audio"
 
 
+class Type(Enum):
+    domain = "domain"
+    subdomain = "subdomain"
+    network_id = "network_id"
+    ios_bundle = "ios_bundle"
+    android_package = "android_package"
+    apple_app_store_id = "apple_app_store_id"
+    google_play_id = "google_play_id"
+    roku_store_id = "roku_store_id"
+    fire_tv_asin = "fire_tv_asin"
+    samsung_app_id = "samsung_app_id"
+    apple_tv_bundle = "apple_tv_bundle"
+    bundle_id = "bundle_id"
+    venue_id = "venue_id"
+    screen_id = "screen_id"
+    openooh_venue_type = "openooh_venue_type"
+    rss_url = "rss_url"
+    apple_podcast_id = "apple_podcast_id"
+    spotify_show_id = "spotify_show_id"
+    podcast_guid = "podcast_guid"
+
+
 class Identifier(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
     type: Annotated[
-        str,
+        Type,
         Field(
-            description="Type of identifier (e.g., 'domain', 'bundle_id', 'roku_store_id', 'podcast_guid')"
+            description="Valid identifier types for property identification across different media types",
+            examples=["domain", "ios_bundle", "venue_id", "apple_podcast_id"],
+            title="Property Identifier Types",
         ),
     ]
     value: Annotated[

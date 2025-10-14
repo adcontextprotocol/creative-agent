@@ -59,6 +59,25 @@ class Pagination(BaseModel):
     ] = None
 
 
+class FormatId(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    agent_url: Annotated[
+        AnyUrl,
+        Field(
+            description="URL of the agent that defines this format (e.g., 'https://creatives.adcontextprotocol.org' for standard formats, or 'https://publisher.com/.well-known/adcp/sales' for custom formats)"
+        ),
+    ]
+    id: Annotated[
+        str,
+        Field(
+            description="Format identifier within the agent's namespace (e.g., 'display_300x250', 'video_standard_30s')",
+            pattern="^[a-zA-Z0-9_-]+$",
+        ),
+    ]
+
+
 class Status(Enum):
     processing = "processing"
     approved = "approved"
@@ -75,7 +94,7 @@ class SnippetType(Enum):
     daast_url = "daast_url"
 
 
-class Status13(Enum):
+class Status14(Enum):
     active = "active"
     paused = "paused"
     ended = "ended"
@@ -92,7 +111,7 @@ class AssignedPackage(BaseModel):
     assigned_date: Annotated[
         AwareDatetime, Field(description="When this assignment was created")
     ]
-    status: Annotated[Status13, Field(description="Status of this specific assignment")]
+    status: Annotated[Status14, Field(description="Status of this specific assignment")]
 
 
 class Assignments(BaseModel):
@@ -191,7 +210,13 @@ class Creative(BaseModel):
     )
     creative_id: Annotated[str, Field(description="Unique identifier for the creative")]
     name: Annotated[str, Field(description="Human-readable creative name")]
-    format: Annotated[str, Field(description="Creative format type")]
+    format_id: Annotated[
+        FormatId,
+        Field(
+            description="Structured format identifier with agent URL and format name",
+            title="Format ID",
+        ),
+    ]
     status: Annotated[
         Status, Field(description="Status of a creative asset", title="Creative Status")
     ]
@@ -217,36 +242,12 @@ class Creative(BaseModel):
         Field(
             description="Types of third-party creative snippets supported by AdCP",
             examples=[
-                {
-                    "type": "vast_xml",
-                    "description": "Inline VAST XML",
-                    "snippet": '<VAST version="3.0"><Ad><InLine><AdTitle>Sample Ad</AdTitle>...</InLine></Ad></VAST>',
-                },
-                {
-                    "type": "vast_url",
-                    "description": "VAST endpoint URL",
-                    "snippet": "https://ads.example.com/vast?campaign=12345&placement=video",
-                },
-                {
-                    "type": "html",
-                    "description": "HTML display ad",
-                    "snippet": '<div style="width:300px;height:250px"><img src="banner.jpg" alt="Ad"/></div>',
-                },
-                {
-                    "type": "javascript",
-                    "description": "JavaScript ad tag",
-                    "snippet": '<script type="text/javascript" src="https://ads.example.com/tag.js"></script>',
-                },
-                {
-                    "type": "iframe",
-                    "description": "iFrame ad tag",
-                    "snippet": '<iframe src="https://ads.example.com/creative" width="300" height="250"></iframe>',
-                },
-                {
-                    "type": "daast_url",
-                    "description": "DAAST audio ad URL",
-                    "snippet": "https://audio-ads.example.com/daast?campaign=audio123",
-                },
+                "vast_xml",
+                "vast_url",
+                "html",
+                "javascript",
+                "iframe",
+                "daast_url",
             ],
             title="Snippet Type",
         ),
@@ -312,13 +313,6 @@ class ListCreativesResponse(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    adcp_version: Annotated[
-        str,
-        Field(
-            description="AdCP schema version used for this response",
-            pattern="^\\d+\\.\\d+\\.\\d+$",
-        ),
-    ]
     message: Annotated[str, Field(description="Human-readable result message")]
     context_id: Annotated[
         Optional[str], Field(description="Context ID for tracking related operations")

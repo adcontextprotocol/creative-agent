@@ -49,7 +49,7 @@ class Assets(BaseModel):
     ] = None
 
 
-class Assets30(BaseModel):
+class Assets93(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
@@ -72,7 +72,7 @@ class Assets30(BaseModel):
     ] = None
 
 
-class Assets31(BaseModel):
+class Assets94(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
@@ -89,7 +89,7 @@ class Assets31(BaseModel):
     ] = None
 
 
-class Assets32(BaseModel):
+class Assets95(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
@@ -103,7 +103,7 @@ class Assets32(BaseModel):
     ] = None
 
 
-class Assets33(BaseModel):
+class Assets96(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
@@ -114,7 +114,7 @@ class Assets33(BaseModel):
     ] = None
 
 
-class Assets34(BaseModel):
+class Assets97(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
@@ -132,7 +132,7 @@ class ModuleType(Enum):
     script = "script"
 
 
-class Assets35(BaseModel):
+class Assets98(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
@@ -149,7 +149,7 @@ class Colors(BaseModel):
     accent: Optional[str] = None
 
 
-class Assets36(BaseModel):
+class Assets99(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
@@ -165,7 +165,7 @@ class Assets36(BaseModel):
     tone: Annotated[Optional[str], Field(description="Brand tone/voice")] = None
 
 
-class Assets37(BaseModel):
+class Assets100(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
@@ -213,14 +213,14 @@ class Creative(BaseModel):
             str,
             Union[
                 Assets,
-                Assets30,
-                Assets31,
-                Assets32,
-                Assets33,
-                Assets34,
-                Assets35,
-                Assets36,
-                Assets37,
+                Assets93,
+                Assets94,
+                Assets95,
+                Assets96,
+                Assets97,
+                Assets98,
+                Assets99,
+                Assets100,
             ],
         ],
         Field(description="Assets required by the format, keyed by asset_role"),
@@ -300,13 +300,6 @@ class SyncCreativesRequest(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    adcp_version: Annotated[
-        Optional[str],
-        Field(
-            description="AdCP schema version for this request",
-            pattern="^\\d+\\.\\d+\\.\\d+$",
-        ),
-    ] = "1.6.0"
     creatives: Annotated[
         list[Creative],
         Field(

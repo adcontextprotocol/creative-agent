@@ -99,36 +99,12 @@ class Filters(BaseModel):
         Field(
             description="Types of third-party creative snippets supported by AdCP",
             examples=[
-                {
-                    "type": "vast_xml",
-                    "description": "Inline VAST XML",
-                    "snippet": '<VAST version="3.0"><Ad><InLine><AdTitle>Sample Ad</AdTitle>...</InLine></Ad></VAST>',
-                },
-                {
-                    "type": "vast_url",
-                    "description": "VAST endpoint URL",
-                    "snippet": "https://ads.example.com/vast?campaign=12345&placement=video",
-                },
-                {
-                    "type": "html",
-                    "description": "HTML display ad",
-                    "snippet": '<div style="width:300px;height:250px"><img src="banner.jpg" alt="Ad"/></div>',
-                },
-                {
-                    "type": "javascript",
-                    "description": "JavaScript ad tag",
-                    "snippet": '<script type="text/javascript" src="https://ads.example.com/tag.js"></script>',
-                },
-                {
-                    "type": "iframe",
-                    "description": "iFrame ad tag",
-                    "snippet": '<iframe src="https://ads.example.com/creative" width="300" height="250"></iframe>',
-                },
-                {
-                    "type": "daast_url",
-                    "description": "DAAST audio ad URL",
-                    "snippet": "https://audio-ads.example.com/daast?campaign=audio123",
-                },
+                "vast_xml",
+                "vast_url",
+                "html",
+                "javascript",
+                "iframe",
+                "daast_url",
             ],
             title="Snippet Type",
         ),
@@ -195,13 +171,6 @@ class ListCreativesRequest(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    adcp_version: Annotated[
-        Optional[str],
-        Field(
-            description="AdCP schema version for this request",
-            pattern="^\\d+\\.\\d+\\.\\d+$",
-        ),
-    ] = "1.6.0"
     filters: Annotated[
         Optional[Filters], Field(description="Filter criteria for querying creatives")
     ] = None

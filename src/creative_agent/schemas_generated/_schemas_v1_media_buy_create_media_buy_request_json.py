@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import Annotated, Any, Optional, Union
+from typing import Annotated, Any, Literal, Optional, Union
 
 from pydantic import (
     AnyUrl,
@@ -21,24 +21,6 @@ class Pacing(Enum):
     even = "even"
     asap = "asap"
     front_loaded = "front_loaded"
-
-
-class Budget(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-    )
-    total: Annotated[float, Field(description="Total budget amount", ge=0.0)]
-    currency: Annotated[
-        str,
-        Field(
-            description="ISO 4217 currency code",
-            examples=["USD", "EUR", "GBP"],
-            pattern="^[A-Z]{3}$",
-        ),
-    ]
-    pacing: Annotated[
-        Optional[Pacing], Field(description="Budget pacing strategy", title="Pacing")
-    ] = None
 
 
 class GeoCountryAnyOfItem(RootModel[str]):
@@ -91,6 +73,240 @@ class TargetingOverlay(BaseModel):
     ] = None
 
 
+class FormatId(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    agent_url: Annotated[
+        AnyUrl,
+        Field(
+            description="URL of the agent that defines this format (e.g., 'https://creatives.adcontextprotocol.org' for standard formats, or 'https://publisher.com/.well-known/adcp/sales' for custom formats)"
+        ),
+    ]
+    id: Annotated[
+        str,
+        Field(
+            description="Format identifier within the agent's namespace (e.g., 'display_300x250', 'video_standard_30s')",
+            pattern="^[a-zA-Z0-9_-]+$",
+        ),
+    ]
+
+
+class Assets(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    asset_type: Literal["image"]
+    url: Annotated[AnyUrl, Field(description="URL to the image asset")]
+    width: Annotated[
+        Optional[int], Field(description="Image width in pixels", ge=1)
+    ] = None
+    height: Annotated[
+        Optional[int], Field(description="Image height in pixels", ge=1)
+    ] = None
+    format: Annotated[
+        Optional[str],
+        Field(description="Image file format (jpg, png, gif, webp, etc.)"),
+    ] = None
+    alt_text: Annotated[
+        Optional[str], Field(description="Alternative text for accessibility")
+    ] = None
+
+
+class Assets39(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    asset_type: Literal["video"]
+    url: Annotated[AnyUrl, Field(description="URL to the video asset")]
+    width: Annotated[
+        Optional[int], Field(description="Video width in pixels", ge=1)
+    ] = None
+    height: Annotated[
+        Optional[int], Field(description="Video height in pixels", ge=1)
+    ] = None
+    duration_ms: Annotated[
+        Optional[int], Field(description="Video duration in milliseconds", ge=0)
+    ] = None
+    format: Annotated[
+        Optional[str], Field(description="Video file format (mp4, webm, mov, etc.)")
+    ] = None
+    bitrate_kbps: Annotated[
+        Optional[int], Field(description="Video bitrate in kilobits per second", ge=1)
+    ] = None
+
+
+class Assets40(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    asset_type: Literal["audio"]
+    url: Annotated[AnyUrl, Field(description="URL to the audio asset")]
+    duration_ms: Annotated[
+        Optional[int], Field(description="Audio duration in milliseconds", ge=0)
+    ] = None
+    format: Annotated[
+        Optional[str], Field(description="Audio file format (mp3, wav, aac, etc.)")
+    ] = None
+    bitrate_kbps: Annotated[
+        Optional[int], Field(description="Audio bitrate in kilobits per second", ge=1)
+    ] = None
+
+
+class Assets41(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    asset_type: Literal["text"]
+    content: Annotated[str, Field(description="Text content")]
+    max_length: Annotated[
+        Optional[int], Field(description="Maximum character length constraint", ge=1)
+    ] = None
+    language: Annotated[
+        Optional[str], Field(description="Language code (e.g., 'en', 'es', 'fr')")
+    ] = None
+
+
+class Assets42(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    asset_type: Literal["html"]
+    content: Annotated[str, Field(description="HTML content")]
+    version: Annotated[
+        Optional[str], Field(description="HTML version (e.g., 'HTML5')")
+    ] = None
+
+
+class Assets43(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    asset_type: Literal["css"]
+    content: Annotated[str, Field(description="CSS content")]
+    media: Annotated[
+        Optional[str],
+        Field(description="CSS media query context (e.g., 'screen', 'print')"),
+    ] = None
+
+
+class ModuleType(Enum):
+    esm = "esm"
+    commonjs = "commonjs"
+    script = "script"
+
+
+class Assets44(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    asset_type: Literal["javascript"]
+    content: Annotated[str, Field(description="JavaScript content")]
+    module_type: Annotated[
+        Optional[ModuleType], Field(description="JavaScript module type")
+    ] = None
+
+
+class Colors(BaseModel):
+    primary: Optional[str] = None
+    secondary: Optional[str] = None
+    accent: Optional[str] = None
+
+
+class Assets45(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    asset_type: Literal["promoted_offerings"]
+    url: Annotated[
+        Optional[AnyUrl],
+        Field(
+            description="URL of the advertiser's brand or offering (e.g., https://retailer.com)"
+        ),
+    ] = None
+    colors: Annotated[Optional[Colors], Field(description="Brand colors")] = None
+    fonts: Annotated[Optional[list[str]], Field(description="Brand fonts")] = None
+    tone: Annotated[Optional[str], Field(description="Brand tone/voice")] = None
+
+
+class Assets46(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    asset_type: Literal["url"]
+    url: Annotated[AnyUrl, Field(description="URL reference")]
+    description: Annotated[
+        Optional[str], Field(description="Description of what this URL points to")
+    ] = None
+
+
+class Input(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    name: Annotated[
+        str, Field(description="Human-readable name for this preview variant")
+    ]
+    macros: Annotated[
+        Optional[dict[str, str]],
+        Field(description="Macro values to apply for this preview"),
+    ] = None
+    context_description: Annotated[
+        Optional[str],
+        Field(
+            description="Natural language description of the context for AI-generated content"
+        ),
+    ] = None
+
+
+class Creative(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    creative_id: Annotated[str, Field(description="Unique identifier for the creative")]
+    name: Annotated[str, Field(description="Human-readable creative name")]
+    format_id: Annotated[
+        FormatId,
+        Field(
+            description="Structured format identifier with agent URL and format name",
+            title="Format ID",
+        ),
+    ]
+    assets: Annotated[
+        dict[
+            str,
+            Union[
+                Assets,
+                Assets39,
+                Assets40,
+                Assets41,
+                Assets42,
+                Assets43,
+                Assets44,
+                Assets45,
+                Assets46,
+            ],
+        ],
+        Field(description="Assets required by the format, keyed by asset_role"),
+    ]
+    inputs: Annotated[
+        Optional[list[Input]],
+        Field(
+            description="Preview contexts for generative formats - defines what scenarios to generate previews for"
+        ),
+    ] = None
+    tags: Annotated[
+        Optional[list[str]],
+        Field(description="User-defined tags for organization and searchability"),
+    ] = None
+    approved: Annotated[
+        Optional[bool],
+        Field(
+            description="For generative creatives: set to true to approve and finalize, false to request regeneration with updated assets/message. Omit for non-generative creatives."
+        ),
+    ] = None
+
+
 class Packages(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -98,20 +314,46 @@ class Packages(BaseModel):
     buyer_ref: Annotated[
         str, Field(description="Buyer's reference identifier for this package")
     ]
-    products: Annotated[
-        list[str], Field(description="Array of product IDs to include in this package")
-    ]
-    format_ids: Annotated[
-        list[str],
+    product_id: Annotated[
+        str,
         Field(
-            description="Array of format IDs that will be used for this package - must be supported by all products"
+            description="Product ID for this package (recommended - replaces deprecated products array)"
         ),
     ]
-    budget: Annotated[
-        Optional[Budget],
+    products: Annotated[
+        Optional[list[str]],
         Field(
-            description="Budget configuration for a media buy or package",
-            title="Budget",
+            description="DEPRECATED: Use product_id instead. Array of product IDs - only first product will be used"
+        ),
+    ] = None
+    format_ids: Annotated[
+        Optional[list[str]],
+        Field(
+            description="Array of format IDs that will be used for this package - must be supported by the product. If omitted, defaults to all formats supported by the product.",
+            min_length=1,
+        ),
+    ] = None
+    budget: Annotated[
+        float,
+        Field(
+            description="Budget allocation for this package in the media buy's currency",
+            ge=0.0,
+        ),
+    ]
+    pacing: Annotated[
+        Optional[Pacing], Field(description="Budget pacing strategy", title="Pacing")
+    ] = None
+    pricing_option_id: Annotated[
+        str,
+        Field(
+            description="ID of the selected pricing option from the product's pricing_options array"
+        ),
+    ]
+    bid_price: Annotated[
+        Optional[float],
+        Field(
+            description="Bid price for auction-based CPM pricing (required if using cpm-auction-option)",
+            ge=0.0,
         ),
     ] = None
     targeting_overlay: Annotated[
@@ -123,7 +365,237 @@ class Packages(BaseModel):
     ] = None
     creative_ids: Annotated[
         Optional[list[str]],
-        Field(description="Creative IDs to assign to this package at creation time"),
+        Field(
+            description="Creative IDs to assign to this package at creation time (references existing library creatives)"
+        ),
+    ] = None
+    creatives: Annotated[
+        Optional[list[Creative]],
+        Field(
+            description="Full creative objects to upload and assign to this package at creation time (alternative to creative_ids - creatives will be added to library). Supports both static and generative creatives.",
+            max_length=100,
+        ),
+    ] = None
+
+
+class TargetingOverlay3(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    geo_country_any_of: Annotated[
+        Optional[list[GeoCountryAnyOfItem]],
+        Field(
+            description="Restrict delivery to specific countries (ISO codes). Use for regulatory compliance or RCT testing."
+        ),
+    ] = None
+    geo_region_any_of: Annotated[
+        Optional[list[str]],
+        Field(
+            description="Restrict delivery to specific regions/states. Use for regulatory compliance or RCT testing."
+        ),
+    ] = None
+    geo_metro_any_of: Annotated[
+        Optional[list[str]],
+        Field(
+            description="Restrict delivery to specific metro areas (DMA codes). Use for regulatory compliance or RCT testing."
+        ),
+    ] = None
+    geo_postal_code_any_of: Annotated[
+        Optional[list[str]],
+        Field(
+            description="Restrict delivery to specific postal/ZIP codes. Use for regulatory compliance or RCT testing."
+        ),
+    ] = None
+    frequency_cap: Annotated[
+        Optional[FrequencyCap],
+        Field(
+            description="Frequency capping settings for package-level application",
+            title="Frequency Cap",
+        ),
+    ] = None
+
+
+class Assets47(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    asset_type: Literal["image"]
+    url: Annotated[AnyUrl, Field(description="URL to the image asset")]
+    width: Annotated[
+        Optional[int], Field(description="Image width in pixels", ge=1)
+    ] = None
+    height: Annotated[
+        Optional[int], Field(description="Image height in pixels", ge=1)
+    ] = None
+    format: Annotated[
+        Optional[str],
+        Field(description="Image file format (jpg, png, gif, webp, etc.)"),
+    ] = None
+    alt_text: Annotated[
+        Optional[str], Field(description="Alternative text for accessibility")
+    ] = None
+
+
+class Assets48(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    asset_type: Literal["video"]
+    url: Annotated[AnyUrl, Field(description="URL to the video asset")]
+    width: Annotated[
+        Optional[int], Field(description="Video width in pixels", ge=1)
+    ] = None
+    height: Annotated[
+        Optional[int], Field(description="Video height in pixels", ge=1)
+    ] = None
+    duration_ms: Annotated[
+        Optional[int], Field(description="Video duration in milliseconds", ge=0)
+    ] = None
+    format: Annotated[
+        Optional[str], Field(description="Video file format (mp4, webm, mov, etc.)")
+    ] = None
+    bitrate_kbps: Annotated[
+        Optional[int], Field(description="Video bitrate in kilobits per second", ge=1)
+    ] = None
+
+
+class Assets49(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    asset_type: Literal["audio"]
+    url: Annotated[AnyUrl, Field(description="URL to the audio asset")]
+    duration_ms: Annotated[
+        Optional[int], Field(description="Audio duration in milliseconds", ge=0)
+    ] = None
+    format: Annotated[
+        Optional[str], Field(description="Audio file format (mp3, wav, aac, etc.)")
+    ] = None
+    bitrate_kbps: Annotated[
+        Optional[int], Field(description="Audio bitrate in kilobits per second", ge=1)
+    ] = None
+
+
+class Assets50(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    asset_type: Literal["text"]
+    content: Annotated[str, Field(description="Text content")]
+    max_length: Annotated[
+        Optional[int], Field(description="Maximum character length constraint", ge=1)
+    ] = None
+    language: Annotated[
+        Optional[str], Field(description="Language code (e.g., 'en', 'es', 'fr')")
+    ] = None
+
+
+class Assets51(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    asset_type: Literal["html"]
+    content: Annotated[str, Field(description="HTML content")]
+    version: Annotated[
+        Optional[str], Field(description="HTML version (e.g., 'HTML5')")
+    ] = None
+
+
+class Assets52(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    asset_type: Literal["css"]
+    content: Annotated[str, Field(description="CSS content")]
+    media: Annotated[
+        Optional[str],
+        Field(description="CSS media query context (e.g., 'screen', 'print')"),
+    ] = None
+
+
+class Assets53(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    asset_type: Literal["javascript"]
+    content: Annotated[str, Field(description="JavaScript content")]
+    module_type: Annotated[
+        Optional[ModuleType], Field(description="JavaScript module type")
+    ] = None
+
+
+class Assets54(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    asset_type: Literal["promoted_offerings"]
+    url: Annotated[
+        Optional[AnyUrl],
+        Field(
+            description="URL of the advertiser's brand or offering (e.g., https://retailer.com)"
+        ),
+    ] = None
+    colors: Annotated[Optional[Colors], Field(description="Brand colors")] = None
+    fonts: Annotated[Optional[list[str]], Field(description="Brand fonts")] = None
+    tone: Annotated[Optional[str], Field(description="Brand tone/voice")] = None
+
+
+class Assets55(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    asset_type: Literal["url"]
+    url: Annotated[AnyUrl, Field(description="URL reference")]
+    description: Annotated[
+        Optional[str], Field(description="Description of what this URL points to")
+    ] = None
+
+
+class Creative2(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    creative_id: Annotated[str, Field(description="Unique identifier for the creative")]
+    name: Annotated[str, Field(description="Human-readable creative name")]
+    format_id: Annotated[
+        FormatId,
+        Field(
+            description="Structured format identifier with agent URL and format name",
+            title="Format ID",
+        ),
+    ]
+    assets: Annotated[
+        dict[
+            str,
+            Union[
+                Assets47,
+                Assets48,
+                Assets49,
+                Assets50,
+                Assets51,
+                Assets52,
+                Assets53,
+                Assets54,
+                Assets55,
+            ],
+        ],
+        Field(description="Assets required by the format, keyed by asset_role"),
+    ]
+    inputs: Annotated[
+        Optional[list[Input]],
+        Field(
+            description="Preview contexts for generative formats - defines what scenarios to generate previews for"
+        ),
+    ] = None
+    tags: Annotated[
+        Optional[list[str]],
+        Field(description="User-defined tags for organization and searchability"),
+    ] = None
+    approved: Annotated[
+        Optional[bool],
+        Field(
+            description="For generative creatives: set to true to approve and finalize, false to request regeneration with updated assets/message. Omit for non-generative creatives."
+        ),
     ] = None
 
 
@@ -134,23 +606,67 @@ class Packages1(BaseModel):
     buyer_ref: Annotated[
         str, Field(description="Buyer's reference identifier for this package")
     ]
+    product_id: Annotated[
+        Optional[str],
+        Field(
+            description="Product ID for this package (recommended - replaces deprecated products array)"
+        ),
+    ] = None
     products: Annotated[
-        list[str], Field(description="Array of product IDs to include in this package")
+        list[str],
+        Field(
+            description="DEPRECATED: Use product_id instead. Array of product IDs - only first product will be used"
+        ),
     ]
-    format_selection: Annotated[
-        dict[str, Any], Field(description="Dynamic format selection criteria")
-    ]
+    format_ids: Annotated[
+        Optional[list[str]],
+        Field(
+            description="Array of format IDs that will be used for this package - must be supported by the product. If omitted, defaults to all formats supported by the product.",
+            min_length=1,
+        ),
+    ] = None
     budget: Annotated[
-        Optional[Any],
-        Field(description="Circular reference to /schemas/v1/core/budget.json"),
+        float,
+        Field(
+            description="Budget allocation for this package in the media buy's currency",
+            ge=0.0,
+        ),
+    ]
+    pacing: Annotated[
+        Optional[Pacing], Field(description="Budget pacing strategy", title="Pacing")
+    ] = None
+    pricing_option_id: Annotated[
+        str,
+        Field(
+            description="ID of the selected pricing option from the product's pricing_options array"
+        ),
+    ]
+    bid_price: Annotated[
+        Optional[float],
+        Field(
+            description="Bid price for auction-based CPM pricing (required if using cpm-auction-option)",
+            ge=0.0,
+        ),
     ] = None
     targeting_overlay: Annotated[
-        Optional[Any],
-        Field(description="Circular reference to /schemas/v1/core/targeting.json"),
+        Optional[TargetingOverlay3],
+        Field(
+            description="Optional geographic refinements for media buys. Most targeting should be expressed in the brief and handled by the publisher. These fields are primarily for geographic restrictions (RCT testing, regulatory compliance).",
+            title="Targeting Overlay",
+        ),
     ] = None
     creative_ids: Annotated[
         Optional[list[str]],
-        Field(description="Creative IDs to assign to this package at creation time"),
+        Field(
+            description="Creative IDs to assign to this package at creation time (references existing library creatives)"
+        ),
+    ] = None
+    creatives: Annotated[
+        Optional[list[Creative2]],
+        Field(
+            description="Full creative objects to upload and assign to this package at creation time (alternative to creative_ids - creatives will be added to library). Supports both static and generative creatives.",
+            max_length=100,
+        ),
     ] = None
 
 
@@ -166,7 +682,7 @@ class Logo(BaseModel):
     height: Annotated[Optional[int], Field(description="Logo height in pixels")] = None
 
 
-class Colors(BaseModel):
+class Colors11(BaseModel):
     primary: Annotated[
         Optional[str],
         Field(
@@ -340,7 +856,9 @@ class BrandManifest(BaseModel):
             description="Brand logo assets with semantic tags for different use cases"
         ),
     ] = None
-    colors: Annotated[Optional[Colors], Field(description="Brand color palette")] = None
+    colors: Annotated[Optional[Colors11], Field(description="Brand color palette")] = (
+        None
+    )
     fonts: Annotated[
         Optional[Fonts], Field(description="Brand typography guidelines")
     ] = None
@@ -388,7 +906,7 @@ class BrandManifest(BaseModel):
     ] = None
 
 
-class Asset8(BaseModel):
+class Asset9(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
@@ -469,7 +987,9 @@ class BrandManifest4(BaseModel):
             description="Brand logo assets with semantic tags for different use cases"
         ),
     ] = None
-    colors: Annotated[Optional[Colors], Field(description="Brand color palette")] = None
+    colors: Annotated[Optional[Colors11], Field(description="Brand color palette")] = (
+        None
+    )
     fonts: Annotated[
         Optional[Fonts], Field(description="Brand typography guidelines")
     ] = None
@@ -483,7 +1003,7 @@ class BrandManifest4(BaseModel):
         None
     )
     assets: Annotated[
-        Optional[list[Asset8]],
+        Optional[list[Asset9]],
         Field(
             description="Brand asset library with explicit assets and tags. Assets are referenced inline with URLs pointing to CDN-hosted files."
         ),
@@ -596,13 +1116,6 @@ class CreateMediaBuyRequest1(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    adcp_version: Annotated[
-        Optional[str],
-        Field(
-            description="AdCP schema version for this request",
-            pattern="^\\d+\\.\\d+\\.\\d+$",
-        ),
-    ] = "1.6.1"
     buyer_ref: Annotated[
         str, Field(description="Buyer's reference identifier for this media buy")
     ]
@@ -660,25 +1173,7 @@ class CreateMediaBuyRequest1(BaseModel):
     reporting_webhook: Optional[ReportingWebhook] = None
 
 
-class Budget2(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-    )
-    total: Annotated[float, Field(description="Total budget amount", ge=0.0)]
-    currency: Annotated[
-        str,
-        Field(
-            description="ISO 4217 currency code",
-            examples=["USD", "EUR", "GBP"],
-            pattern="^[A-Z]{3}$",
-        ),
-    ]
-    pacing: Annotated[
-        Optional[Pacing], Field(description="Budget pacing strategy", title="Pacing")
-    ] = None
-
-
-class TargetingOverlay3(BaseModel):
+class TargetingOverlay4(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
@@ -715,6 +1210,196 @@ class TargetingOverlay3(BaseModel):
     ] = None
 
 
+class Assets56(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    asset_type: Literal["image"]
+    url: Annotated[AnyUrl, Field(description="URL to the image asset")]
+    width: Annotated[
+        Optional[int], Field(description="Image width in pixels", ge=1)
+    ] = None
+    height: Annotated[
+        Optional[int], Field(description="Image height in pixels", ge=1)
+    ] = None
+    format: Annotated[
+        Optional[str],
+        Field(description="Image file format (jpg, png, gif, webp, etc.)"),
+    ] = None
+    alt_text: Annotated[
+        Optional[str], Field(description="Alternative text for accessibility")
+    ] = None
+
+
+class Assets57(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    asset_type: Literal["video"]
+    url: Annotated[AnyUrl, Field(description="URL to the video asset")]
+    width: Annotated[
+        Optional[int], Field(description="Video width in pixels", ge=1)
+    ] = None
+    height: Annotated[
+        Optional[int], Field(description="Video height in pixels", ge=1)
+    ] = None
+    duration_ms: Annotated[
+        Optional[int], Field(description="Video duration in milliseconds", ge=0)
+    ] = None
+    format: Annotated[
+        Optional[str], Field(description="Video file format (mp4, webm, mov, etc.)")
+    ] = None
+    bitrate_kbps: Annotated[
+        Optional[int], Field(description="Video bitrate in kilobits per second", ge=1)
+    ] = None
+
+
+class Assets58(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    asset_type: Literal["audio"]
+    url: Annotated[AnyUrl, Field(description="URL to the audio asset")]
+    duration_ms: Annotated[
+        Optional[int], Field(description="Audio duration in milliseconds", ge=0)
+    ] = None
+    format: Annotated[
+        Optional[str], Field(description="Audio file format (mp3, wav, aac, etc.)")
+    ] = None
+    bitrate_kbps: Annotated[
+        Optional[int], Field(description="Audio bitrate in kilobits per second", ge=1)
+    ] = None
+
+
+class Assets59(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    asset_type: Literal["text"]
+    content: Annotated[str, Field(description="Text content")]
+    max_length: Annotated[
+        Optional[int], Field(description="Maximum character length constraint", ge=1)
+    ] = None
+    language: Annotated[
+        Optional[str], Field(description="Language code (e.g., 'en', 'es', 'fr')")
+    ] = None
+
+
+class Assets60(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    asset_type: Literal["html"]
+    content: Annotated[str, Field(description="HTML content")]
+    version: Annotated[
+        Optional[str], Field(description="HTML version (e.g., 'HTML5')")
+    ] = None
+
+
+class Assets61(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    asset_type: Literal["css"]
+    content: Annotated[str, Field(description="CSS content")]
+    media: Annotated[
+        Optional[str],
+        Field(description="CSS media query context (e.g., 'screen', 'print')"),
+    ] = None
+
+
+class Assets62(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    asset_type: Literal["javascript"]
+    content: Annotated[str, Field(description="JavaScript content")]
+    module_type: Annotated[
+        Optional[ModuleType], Field(description="JavaScript module type")
+    ] = None
+
+
+class Colors13(BaseModel):
+    primary: Optional[str] = None
+    secondary: Optional[str] = None
+    accent: Optional[str] = None
+
+
+class Assets63(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    asset_type: Literal["promoted_offerings"]
+    url: Annotated[
+        Optional[AnyUrl],
+        Field(
+            description="URL of the advertiser's brand or offering (e.g., https://retailer.com)"
+        ),
+    ] = None
+    colors: Annotated[Optional[Colors13], Field(description="Brand colors")] = None
+    fonts: Annotated[Optional[list[str]], Field(description="Brand fonts")] = None
+    tone: Annotated[Optional[str], Field(description="Brand tone/voice")] = None
+
+
+class Assets64(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    asset_type: Literal["url"]
+    url: Annotated[AnyUrl, Field(description="URL reference")]
+    description: Annotated[
+        Optional[str], Field(description="Description of what this URL points to")
+    ] = None
+
+
+class Creative3(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    creative_id: Annotated[str, Field(description="Unique identifier for the creative")]
+    name: Annotated[str, Field(description="Human-readable creative name")]
+    format_id: Annotated[
+        FormatId,
+        Field(
+            description="Structured format identifier with agent URL and format name",
+            title="Format ID",
+        ),
+    ]
+    assets: Annotated[
+        dict[
+            str,
+            Union[
+                Assets56,
+                Assets57,
+                Assets58,
+                Assets59,
+                Assets60,
+                Assets61,
+                Assets62,
+                Assets63,
+                Assets64,
+            ],
+        ],
+        Field(description="Assets required by the format, keyed by asset_role"),
+    ]
+    inputs: Annotated[
+        Optional[list[Input]],
+        Field(
+            description="Preview contexts for generative formats - defines what scenarios to generate previews for"
+        ),
+    ] = None
+    tags: Annotated[
+        Optional[list[str]],
+        Field(description="User-defined tags for organization and searchability"),
+    ] = None
+    approved: Annotated[
+        Optional[bool],
+        Field(
+            description="For generative creatives: set to true to approve and finalize, false to request regeneration with updated assets/message. Omit for non-generative creatives."
+        ),
+    ] = None
+
+
 class Packages2(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -722,24 +1407,50 @@ class Packages2(BaseModel):
     buyer_ref: Annotated[
         str, Field(description="Buyer's reference identifier for this package")
     ]
-    products: Annotated[
-        list[str], Field(description="Array of product IDs to include in this package")
-    ]
-    format_ids: Annotated[
-        list[str],
+    product_id: Annotated[
+        str,
         Field(
-            description="Array of format IDs that will be used for this package - must be supported by all products"
+            description="Product ID for this package (recommended - replaces deprecated products array)"
         ),
     ]
-    budget: Annotated[
-        Optional[Budget2],
+    products: Annotated[
+        Optional[list[str]],
         Field(
-            description="Budget configuration for a media buy or package",
-            title="Budget",
+            description="DEPRECATED: Use product_id instead. Array of product IDs - only first product will be used"
+        ),
+    ] = None
+    format_ids: Annotated[
+        Optional[list[str]],
+        Field(
+            description="Array of format IDs that will be used for this package - must be supported by the product. If omitted, defaults to all formats supported by the product.",
+            min_length=1,
+        ),
+    ] = None
+    budget: Annotated[
+        float,
+        Field(
+            description="Budget allocation for this package in the media buy's currency",
+            ge=0.0,
+        ),
+    ]
+    pacing: Annotated[
+        Optional[Pacing], Field(description="Budget pacing strategy", title="Pacing")
+    ] = None
+    pricing_option_id: Annotated[
+        str,
+        Field(
+            description="ID of the selected pricing option from the product's pricing_options array"
+        ),
+    ]
+    bid_price: Annotated[
+        Optional[float],
+        Field(
+            description="Bid price for auction-based CPM pricing (required if using cpm-auction-option)",
+            ge=0.0,
         ),
     ] = None
     targeting_overlay: Annotated[
-        Optional[TargetingOverlay3],
+        Optional[TargetingOverlay4],
         Field(
             description="Optional geographic refinements for media buys. Most targeting should be expressed in the brief and handled by the publisher. These fields are primarily for geographic restrictions (RCT testing, regulatory compliance).",
             title="Targeting Overlay",
@@ -747,7 +1458,237 @@ class Packages2(BaseModel):
     ] = None
     creative_ids: Annotated[
         Optional[list[str]],
-        Field(description="Creative IDs to assign to this package at creation time"),
+        Field(
+            description="Creative IDs to assign to this package at creation time (references existing library creatives)"
+        ),
+    ] = None
+    creatives: Annotated[
+        Optional[list[Creative3]],
+        Field(
+            description="Full creative objects to upload and assign to this package at creation time (alternative to creative_ids - creatives will be added to library). Supports both static and generative creatives.",
+            max_length=100,
+        ),
+    ] = None
+
+
+class TargetingOverlay5(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    geo_country_any_of: Annotated[
+        Optional[list[GeoCountryAnyOfItem]],
+        Field(
+            description="Restrict delivery to specific countries (ISO codes). Use for regulatory compliance or RCT testing."
+        ),
+    ] = None
+    geo_region_any_of: Annotated[
+        Optional[list[str]],
+        Field(
+            description="Restrict delivery to specific regions/states. Use for regulatory compliance or RCT testing."
+        ),
+    ] = None
+    geo_metro_any_of: Annotated[
+        Optional[list[str]],
+        Field(
+            description="Restrict delivery to specific metro areas (DMA codes). Use for regulatory compliance or RCT testing."
+        ),
+    ] = None
+    geo_postal_code_any_of: Annotated[
+        Optional[list[str]],
+        Field(
+            description="Restrict delivery to specific postal/ZIP codes. Use for regulatory compliance or RCT testing."
+        ),
+    ] = None
+    frequency_cap: Annotated[
+        Optional[FrequencyCap],
+        Field(
+            description="Frequency capping settings for package-level application",
+            title="Frequency Cap",
+        ),
+    ] = None
+
+
+class Assets65(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    asset_type: Literal["image"]
+    url: Annotated[AnyUrl, Field(description="URL to the image asset")]
+    width: Annotated[
+        Optional[int], Field(description="Image width in pixels", ge=1)
+    ] = None
+    height: Annotated[
+        Optional[int], Field(description="Image height in pixels", ge=1)
+    ] = None
+    format: Annotated[
+        Optional[str],
+        Field(description="Image file format (jpg, png, gif, webp, etc.)"),
+    ] = None
+    alt_text: Annotated[
+        Optional[str], Field(description="Alternative text for accessibility")
+    ] = None
+
+
+class Assets66(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    asset_type: Literal["video"]
+    url: Annotated[AnyUrl, Field(description="URL to the video asset")]
+    width: Annotated[
+        Optional[int], Field(description="Video width in pixels", ge=1)
+    ] = None
+    height: Annotated[
+        Optional[int], Field(description="Video height in pixels", ge=1)
+    ] = None
+    duration_ms: Annotated[
+        Optional[int], Field(description="Video duration in milliseconds", ge=0)
+    ] = None
+    format: Annotated[
+        Optional[str], Field(description="Video file format (mp4, webm, mov, etc.)")
+    ] = None
+    bitrate_kbps: Annotated[
+        Optional[int], Field(description="Video bitrate in kilobits per second", ge=1)
+    ] = None
+
+
+class Assets67(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    asset_type: Literal["audio"]
+    url: Annotated[AnyUrl, Field(description="URL to the audio asset")]
+    duration_ms: Annotated[
+        Optional[int], Field(description="Audio duration in milliseconds", ge=0)
+    ] = None
+    format: Annotated[
+        Optional[str], Field(description="Audio file format (mp3, wav, aac, etc.)")
+    ] = None
+    bitrate_kbps: Annotated[
+        Optional[int], Field(description="Audio bitrate in kilobits per second", ge=1)
+    ] = None
+
+
+class Assets68(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    asset_type: Literal["text"]
+    content: Annotated[str, Field(description="Text content")]
+    max_length: Annotated[
+        Optional[int], Field(description="Maximum character length constraint", ge=1)
+    ] = None
+    language: Annotated[
+        Optional[str], Field(description="Language code (e.g., 'en', 'es', 'fr')")
+    ] = None
+
+
+class Assets69(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    asset_type: Literal["html"]
+    content: Annotated[str, Field(description="HTML content")]
+    version: Annotated[
+        Optional[str], Field(description="HTML version (e.g., 'HTML5')")
+    ] = None
+
+
+class Assets70(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    asset_type: Literal["css"]
+    content: Annotated[str, Field(description="CSS content")]
+    media: Annotated[
+        Optional[str],
+        Field(description="CSS media query context (e.g., 'screen', 'print')"),
+    ] = None
+
+
+class Assets71(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    asset_type: Literal["javascript"]
+    content: Annotated[str, Field(description="JavaScript content")]
+    module_type: Annotated[
+        Optional[ModuleType], Field(description="JavaScript module type")
+    ] = None
+
+
+class Assets72(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    asset_type: Literal["promoted_offerings"]
+    url: Annotated[
+        Optional[AnyUrl],
+        Field(
+            description="URL of the advertiser's brand or offering (e.g., https://retailer.com)"
+        ),
+    ] = None
+    colors: Annotated[Optional[Colors13], Field(description="Brand colors")] = None
+    fonts: Annotated[Optional[list[str]], Field(description="Brand fonts")] = None
+    tone: Annotated[Optional[str], Field(description="Brand tone/voice")] = None
+
+
+class Assets73(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    asset_type: Literal["url"]
+    url: Annotated[AnyUrl, Field(description="URL reference")]
+    description: Annotated[
+        Optional[str], Field(description="Description of what this URL points to")
+    ] = None
+
+
+class Creative4(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    creative_id: Annotated[str, Field(description="Unique identifier for the creative")]
+    name: Annotated[str, Field(description="Human-readable creative name")]
+    format_id: Annotated[
+        FormatId,
+        Field(
+            description="Structured format identifier with agent URL and format name",
+            title="Format ID",
+        ),
+    ]
+    assets: Annotated[
+        dict[
+            str,
+            Union[
+                Assets65,
+                Assets66,
+                Assets67,
+                Assets68,
+                Assets69,
+                Assets70,
+                Assets71,
+                Assets72,
+                Assets73,
+            ],
+        ],
+        Field(description="Assets required by the format, keyed by asset_role"),
+    ]
+    inputs: Annotated[
+        Optional[list[Input]],
+        Field(
+            description="Preview contexts for generative formats - defines what scenarios to generate previews for"
+        ),
+    ] = None
+    tags: Annotated[
+        Optional[list[str]],
+        Field(description="User-defined tags for organization and searchability"),
+    ] = None
+    approved: Annotated[
+        Optional[bool],
+        Field(
+            description="For generative creatives: set to true to approve and finalize, false to request regeneration with updated assets/message. Omit for non-generative creatives."
+        ),
     ] = None
 
 
@@ -758,27 +1699,99 @@ class Packages3(BaseModel):
     buyer_ref: Annotated[
         str, Field(description="Buyer's reference identifier for this package")
     ]
+    product_id: Annotated[
+        Optional[str],
+        Field(
+            description="Product ID for this package (recommended - replaces deprecated products array)"
+        ),
+    ] = None
     products: Annotated[
-        list[str], Field(description="Array of product IDs to include in this package")
+        list[str],
+        Field(
+            description="DEPRECATED: Use product_id instead. Array of product IDs - only first product will be used"
+        ),
     ]
-    format_selection: Annotated[
-        dict[str, Any], Field(description="Dynamic format selection criteria")
-    ]
+    format_ids: Annotated[
+        Optional[list[str]],
+        Field(
+            description="Array of format IDs that will be used for this package - must be supported by the product. If omitted, defaults to all formats supported by the product.",
+            min_length=1,
+        ),
+    ] = None
     budget: Annotated[
-        Optional[Any],
-        Field(description="Circular reference to /schemas/v1/core/budget.json"),
+        float,
+        Field(
+            description="Budget allocation for this package in the media buy's currency",
+            ge=0.0,
+        ),
+    ]
+    pacing: Annotated[
+        Optional[Pacing], Field(description="Budget pacing strategy", title="Pacing")
+    ] = None
+    pricing_option_id: Annotated[
+        str,
+        Field(
+            description="ID of the selected pricing option from the product's pricing_options array"
+        ),
+    ]
+    bid_price: Annotated[
+        Optional[float],
+        Field(
+            description="Bid price for auction-based CPM pricing (required if using cpm-auction-option)",
+            ge=0.0,
+        ),
     ] = None
     targeting_overlay: Annotated[
-        Optional[Any],
-        Field(description="Circular reference to /schemas/v1/core/targeting.json"),
+        Optional[TargetingOverlay5],
+        Field(
+            description="Optional geographic refinements for media buys. Most targeting should be expressed in the brief and handled by the publisher. These fields are primarily for geographic restrictions (RCT testing, regulatory compliance).",
+            title="Targeting Overlay",
+        ),
     ] = None
     creative_ids: Annotated[
         Optional[list[str]],
-        Field(description="Creative IDs to assign to this package at creation time"),
+        Field(
+            description="Creative IDs to assign to this package at creation time (references existing library creatives)"
+        ),
+    ] = None
+    creatives: Annotated[
+        Optional[list[Creative4]],
+        Field(
+            description="Full creative objects to upload and assign to this package at creation time (alternative to creative_ids - creatives will be added to library). Supports both static and generative creatives.",
+            max_length=100,
+        ),
     ] = None
 
 
-class Asset9(BaseModel):
+class Colors15(BaseModel):
+    primary: Annotated[
+        Optional[str],
+        Field(
+            description="Primary brand color (hex format)", pattern="^#[0-9A-Fa-f]{6}$"
+        ),
+    ] = None
+    secondary: Annotated[
+        Optional[str],
+        Field(
+            description="Secondary brand color (hex format)",
+            pattern="^#[0-9A-Fa-f]{6}$",
+        ),
+    ] = None
+    accent: Annotated[
+        Optional[str],
+        Field(description="Accent color (hex format)", pattern="^#[0-9A-Fa-f]{6}$"),
+    ] = None
+    background: Annotated[
+        Optional[str],
+        Field(description="Background color (hex format)", pattern="^#[0-9A-Fa-f]{6}$"),
+    ] = None
+    text: Annotated[
+        Optional[str],
+        Field(description="Text color (hex format)", pattern="^#[0-9A-Fa-f]{6}$"),
+    ] = None
+
+
+class Asset10(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
@@ -859,7 +1872,9 @@ class BrandManifest5(BaseModel):
             description="Brand logo assets with semantic tags for different use cases"
         ),
     ] = None
-    colors: Annotated[Optional[Colors], Field(description="Brand color palette")] = None
+    colors: Annotated[Optional[Colors15], Field(description="Brand color palette")] = (
+        None
+    )
     fonts: Annotated[
         Optional[Fonts], Field(description="Brand typography guidelines")
     ] = None
@@ -873,7 +1888,7 @@ class BrandManifest5(BaseModel):
         None
     )
     assets: Annotated[
-        Optional[list[Asset9]],
+        Optional[list[Asset10]],
         Field(
             description="Brand asset library with explicit assets and tags. Assets are referenced inline with URLs pointing to CDN-hosted files."
         ),
@@ -907,7 +1922,7 @@ class BrandManifest5(BaseModel):
     ] = None
 
 
-class Asset10(BaseModel):
+class Asset11(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
@@ -988,7 +2003,9 @@ class BrandManifest6(BaseModel):
             description="Brand logo assets with semantic tags for different use cases"
         ),
     ] = None
-    colors: Annotated[Optional[Colors], Field(description="Brand color palette")] = None
+    colors: Annotated[Optional[Colors15], Field(description="Brand color palette")] = (
+        None
+    )
     fonts: Annotated[
         Optional[Fonts], Field(description="Brand typography guidelines")
     ] = None
@@ -1002,7 +2019,7 @@ class BrandManifest6(BaseModel):
         None
     )
     assets: Annotated[
-        Optional[list[Asset10]],
+        Optional[list[Asset11]],
         Field(
             description="Brand asset library with explicit assets and tags. Assets are referenced inline with URLs pointing to CDN-hosted files."
         ),
@@ -1092,13 +2109,6 @@ class CreateMediaBuyRequest2(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    adcp_version: Annotated[
-        Optional[str],
-        Field(
-            description="AdCP schema version for this request",
-            pattern="^\\d+\\.\\d+\\.\\d+$",
-        ),
-    ] = "1.6.1"
     buyer_ref: Annotated[
         str, Field(description="Buyer's reference identifier for this media buy")
     ]

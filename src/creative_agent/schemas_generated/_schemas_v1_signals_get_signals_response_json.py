@@ -94,13 +94,6 @@ class GetSignalsResponse(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    adcp_version: Annotated[
-        str,
-        Field(
-            description="AdCP schema version used for this response",
-            pattern="^\\d+\\.\\d+\\.\\d+$",
-        ),
-    ]
     message: Annotated[
         str, Field(description="Human-readable summary of the signal discovery results")
     ]

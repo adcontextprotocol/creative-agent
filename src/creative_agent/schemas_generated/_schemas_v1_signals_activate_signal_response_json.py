@@ -10,10 +10,15 @@ from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
 
 
 class Status(Enum):
-    pending = "pending"
-    processing = "processing"
-    deployed = "deployed"
+    submitted = "submitted"
+    working = "working"
+    input_required = "input-required"
+    completed = "completed"
+    canceled = "canceled"
     failed = "failed"
+    rejected = "rejected"
+    auth_required = "auth-required"
+    unknown = "unknown"
 
 
 class Error(BaseModel):
@@ -44,17 +49,22 @@ class ActivateSignalResponse(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    adcp_version: Annotated[
-        str,
-        Field(
-            description="AdCP schema version used for this response",
-            pattern="^\\d+\\.\\d+\\.\\d+$",
-        ),
+    message: Annotated[
+        str, Field(description="Human-readable summary of the activation status")
+    ]
+    context_id: Annotated[
+        str, Field(description="Session continuity identifier for tracking progress")
     ]
     task_id: Annotated[
         str, Field(description="Unique identifier for tracking the activation")
     ]
-    status: Annotated[Status, Field(description="Current status")]
+    status: Annotated[
+        Status,
+        Field(
+            description="Standardized task status values based on A2A TaskState enum. Indicates the current state of any AdCP operation.",
+            title="Task Status",
+        ),
+    ]
     decisioning_platform_segment_id: Annotated[
         Optional[str],
         Field(description="The platform-specific ID to use once activated"),

@@ -323,13 +323,6 @@ class GetMediaBuyDeliveryResponse(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    adcp_version: Annotated[
-        str,
-        Field(
-            description="AdCP schema version used for this response",
-            pattern="^\\d+\\.\\d+\\.\\d+$",
-        ),
-    ]
     notification_type: Annotated[
         Optional[NotificationType],
         Field(
