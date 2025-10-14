@@ -19,6 +19,7 @@ import json
 import subprocess
 import sys
 from pathlib import Path
+from typing import Optional
 
 import httpx
 
@@ -91,7 +92,7 @@ def download_missing_schema(ref: str, schema_dir: Path) -> bool:
         return False
 
 
-def resolve_refs_in_schema(schema: dict, schema_dir: Path, visited: set | None = None) -> dict:
+def resolve_refs_in_schema(schema: dict, schema_dir: Path, visited: Optional[set] = None) -> dict:
     """
     Recursively resolve all $ref references in a schema.
 

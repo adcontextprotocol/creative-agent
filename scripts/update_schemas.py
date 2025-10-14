@@ -13,6 +13,7 @@ import argparse
 import json
 import sys
 from pathlib import Path
+from typing import Optional, Union
 
 import httpx
 
@@ -30,7 +31,7 @@ def ref_to_filename(ref: str) -> str:
     return ref.replace("/", "_").replace(".", "_") + ".json"
 
 
-def download_schema(ref: str, base_url: str = "https://adcontextprotocol.org") -> dict | None:
+def download_schema(ref: str, base_url: str = "https://adcontextprotocol.org") -> Optional[dict]:
     """
     Download a schema from AdCP website.
 
@@ -87,7 +88,7 @@ def is_creative_agent_schema(ref: str) -> bool:
     return any(pattern in ref for pattern in creative_patterns)
 
 
-def discover_schemas(schema_dir: Path, creative_only: bool = True) -> list[str]:
+def discover_schemas(schema_dir: Path, creative_only: bool = True) -> list:
     """
     Discover all schema $refs from existing cache.
 
@@ -122,7 +123,7 @@ def discover_schemas(schema_dir: Path, creative_only: bool = True) -> list[str]:
     return sorted(refs)
 
 
-def find_refs_in_schema(obj: dict | list) -> set[str]:
+def find_refs_in_schema(obj: Union[dict, list]) -> set:
     """Recursively find all $ref values in a schema."""
     refs = set()
 

@@ -31,11 +31,6 @@ class Type(Enum):
     universal = "universal"
 
 
-class Category(Enum):
-    standard = "standard"
-    custom = "custom"
-
-
 class AssetType(Enum):
     image = "image"
     video = "video"
@@ -148,13 +143,6 @@ class Format(BaseModel):
             description="Media type of this format - determines rendering method and asset requirements"
         ),
     ]
-    category: Annotated[Optional[Category], Field(description="Format category")] = None
-    is_standard: Annotated[
-        Optional[bool],
-        Field(
-            description="Whether this format follows IAB specifications or AdCP standard format definitions (found in /schemas/v1/standard-formats/)"
-        ),
-    ] = None
     requirements: Annotated[
         Optional[dict[str, Any]],
         Field(
@@ -171,12 +159,6 @@ class Format(BaseModel):
         Optional[dict[str, Any]],
         Field(
             description="Delivery method specifications (e.g., hosted, VAST, third-party tags)"
-        ),
-    ] = None
-    accepts_3p_tags: Annotated[
-        Optional[bool],
-        Field(
-            description="Whether this format can accept third-party served creative tags as an alternative to hosted assets"
         ),
     ] = None
     supported_macros: Annotated[

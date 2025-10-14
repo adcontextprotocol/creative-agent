@@ -3,7 +3,7 @@
 from pydantic import AnyUrl
 
 from ..schemas import CreativeFormat
-from ..schemas_generated._schemas_v1_core_format_json import AssetsRequired, AssetType, Category, Type
+from ..schemas_generated._schemas_v1_core_format_json import AssetsRequired, AssetType, Type
 
 # Agent configuration
 AGENT_URL = AnyUrl("https://creative.adcontextprotocol.org")
@@ -33,12 +33,9 @@ GENERATIVE_FORMATS = [
         agent_url=AGENT_URL,
         name="Medium Rectangle - AI Generated",
         type=Type.display,
-        category=Category.standard,
-        is_standard=True,
         description="AI-generated 300x250 banner from brand context and prompt",
         requirements={"dimensions": "300x250"},
         output_format_ids=["display_300x250_image"],
-        accepts_3p_tags=False,
         supported_macros=COMMON_MACROS,
         assets_required=[
             AssetsRequired(
@@ -62,12 +59,9 @@ GENERATIVE_FORMATS = [
         agent_url=AGENT_URL,
         name="Leaderboard - AI Generated",
         type=Type.display,
-        category=Category.standard,
-        is_standard=True,
         description="AI-generated 728x90 banner from brand context and prompt",
         requirements={"dimensions": "728x90"},
         output_format_ids=["display_728x90_image"],
-        accepts_3p_tags=False,
         supported_macros=COMMON_MACROS,
         assets_required=[
             AssetsRequired(
@@ -91,12 +85,9 @@ GENERATIVE_FORMATS = [
         agent_url=AGENT_URL,
         name="Mobile Banner - AI Generated",
         type=Type.display,
-        category=Category.standard,
-        is_standard=True,
         description="AI-generated 320x50 mobile banner from brand context and prompt",
         requirements={"dimensions": "320x50"},
         output_format_ids=["display_320x50_image"],
-        accepts_3p_tags=False,
         supported_macros=COMMON_MACROS,
         assets_required=[
             AssetsRequired(
@@ -120,12 +111,9 @@ GENERATIVE_FORMATS = [
         agent_url=AGENT_URL,
         name="Wide Skyscraper - AI Generated",
         type=Type.display,
-        category=Category.standard,
-        is_standard=True,
         description="AI-generated 160x600 wide skyscraper from brand context and prompt",
         requirements={"dimensions": "160x600"},
         output_format_ids=["display_160x600_image"],
-        accepts_3p_tags=False,
         supported_macros=COMMON_MACROS,
         assets_required=[
             AssetsRequired(
@@ -149,12 +137,9 @@ GENERATIVE_FORMATS = [
         agent_url=AGENT_URL,
         name="Large Rectangle - AI Generated",
         type=Type.display,
-        category=Category.standard,
-        is_standard=True,
         description="AI-generated 336x280 large rectangle from brand context and prompt",
         requirements={"dimensions": "336x280"},
         output_format_ids=["display_336x280_image"],
-        accepts_3p_tags=False,
         supported_macros=COMMON_MACROS,
         assets_required=[
             AssetsRequired(
@@ -178,12 +163,9 @@ GENERATIVE_FORMATS = [
         agent_url=AGENT_URL,
         name="Half Page - AI Generated",
         type=Type.display,
-        category=Category.standard,
-        is_standard=True,
         description="AI-generated 300x600 half page from brand context and prompt",
         requirements={"dimensions": "300x600"},
         output_format_ids=["display_300x600_image"],
-        accepts_3p_tags=False,
         supported_macros=COMMON_MACROS,
         assets_required=[
             AssetsRequired(
@@ -207,12 +189,9 @@ GENERATIVE_FORMATS = [
         agent_url=AGENT_URL,
         name="Billboard - AI Generated",
         type=Type.display,
-        category=Category.standard,
-        is_standard=True,
         description="AI-generated 970x250 billboard from brand context and prompt",
         requirements={"dimensions": "970x250"},
         output_format_ids=["display_970x250_image"],
-        accepts_3p_tags=False,
         supported_macros=COMMON_MACROS,
         assets_required=[
             AssetsRequired(
@@ -240,10 +219,7 @@ VIDEO_FORMATS = [
         agent_url=AGENT_URL,
         name="Standard Video - 30 seconds",
         type=Type.video,
-        category=Category.standard,
-        is_standard=True,
         description="30-second video ad in standard aspect ratios",
-        accepts_3p_tags=True,
         supported_macros=[*COMMON_MACROS, "VIDEO_ID", "POD_POSITION", "CONTENT_GENRE"],
         requirements={
             "duration_seconds": 30,
@@ -270,10 +246,7 @@ VIDEO_FORMATS = [
         agent_url=AGENT_URL,
         name="Standard Video - 15 seconds",
         type=Type.video,
-        category=Category.standard,
-        is_standard=True,
         description="15-second video ad in standard aspect ratios",
-        accepts_3p_tags=True,
         supported_macros=[*COMMON_MACROS, "VIDEO_ID", "POD_POSITION", "CONTENT_GENRE"],
         requirements={
             "duration_seconds": 15,
@@ -300,10 +273,7 @@ VIDEO_FORMATS = [
         agent_url=AGENT_URL,
         name="VAST Video - 30 seconds",
         type=Type.video,
-        category=Category.standard,
-        is_standard=True,
         description="30-second video ad via VAST tag",
-        accepts_3p_tags=True,
         supported_macros=[*COMMON_MACROS, "VIDEO_ID", "POD_POSITION", "CONTENT_GENRE"],
         requirements={
             "duration_seconds": 30,
@@ -325,10 +295,7 @@ VIDEO_FORMATS = [
         agent_url=AGENT_URL,
         name="Full HD Video - 1920x1080",
         type=Type.video,
-        category=Category.standard,
-        is_standard=True,
         description="1920x1080 Full HD video (16:9)",
-        accepts_3p_tags=False,
         supported_macros=[*COMMON_MACROS, "VIDEO_ID", "POD_POSITION", "CONTENT_GENRE"],
         requirements={
             "dimensions": "1920x1080",
@@ -356,10 +323,7 @@ VIDEO_FORMATS = [
         agent_url=AGENT_URL,
         name="HD Video - 1280x720",
         type=Type.video,
-        category=Category.standard,
-        is_standard=True,
         description="1280x720 HD video (16:9)",
-        accepts_3p_tags=False,
         supported_macros=[*COMMON_MACROS, "VIDEO_ID", "POD_POSITION", "CONTENT_GENRE"],
         requirements={
             "dimensions": "1280x720",
@@ -387,10 +351,7 @@ VIDEO_FORMATS = [
         agent_url=AGENT_URL,
         name="Vertical Video - 1080x1920",
         type=Type.video,
-        category=Category.standard,
-        is_standard=True,
         description="1080x1920 vertical video (9:16) for mobile stories",
-        accepts_3p_tags=False,
         supported_macros=[*COMMON_MACROS, "VIDEO_ID", "POD_POSITION", "CONTENT_GENRE"],
         requirements={
             "dimensions": "1080x1920",
@@ -418,10 +379,7 @@ VIDEO_FORMATS = [
         agent_url=AGENT_URL,
         name="Square Video - 1080x1080",
         type=Type.video,
-        category=Category.standard,
-        is_standard=True,
         description="1080x1080 square video (1:1) for social feeds",
-        accepts_3p_tags=False,
         supported_macros=[*COMMON_MACROS, "VIDEO_ID", "POD_POSITION", "CONTENT_GENRE"],
         requirements={
             "dimensions": "1080x1080",
@@ -449,10 +407,7 @@ VIDEO_FORMATS = [
         agent_url=AGENT_URL,
         name="CTV Pre-Roll - 30 seconds",
         type=Type.video,
-        category=Category.standard,
-        is_standard=True,
         description="30-second pre-roll ad for Connected TV and streaming platforms",
-        accepts_3p_tags=True,
         supported_macros=[*COMMON_MACROS, "VIDEO_ID", "POD_POSITION", "CONTENT_GENRE", "PLAYER_SIZE"],
         requirements={
             "duration_seconds": 30,
@@ -479,10 +434,7 @@ VIDEO_FORMATS = [
         agent_url=AGENT_URL,
         name="CTV Mid-Roll - 30 seconds",
         type=Type.video,
-        category=Category.standard,
-        is_standard=True,
         description="30-second mid-roll ad for Connected TV and streaming platforms",
-        accepts_3p_tags=True,
         supported_macros=[*COMMON_MACROS, "VIDEO_ID", "POD_POSITION", "CONTENT_GENRE", "PLAYER_SIZE"],
         requirements={
             "duration_seconds": 30,
@@ -513,10 +465,7 @@ DISPLAY_IMAGE_FORMATS = [
         agent_url=AGENT_URL,
         name="Medium Rectangle - Image",
         type=Type.display,
-        category=Category.standard,
-        is_standard=True,
         description="300x250 static image banner",
-        accepts_3p_tags=False,
         supported_macros=COMMON_MACROS,
         requirements={
             "dimensions": "300x250",
@@ -550,10 +499,7 @@ DISPLAY_IMAGE_FORMATS = [
         agent_url=AGENT_URL,
         name="Leaderboard - Image",
         type=Type.display,
-        category=Category.standard,
-        is_standard=True,
         description="728x90 static image banner",
-        accepts_3p_tags=False,
         supported_macros=COMMON_MACROS,
         requirements={
             "dimensions": "728x90",
@@ -584,10 +530,7 @@ DISPLAY_IMAGE_FORMATS = [
         agent_url=AGENT_URL,
         name="Mobile Banner - Image",
         type=Type.display,
-        category=Category.standard,
-        is_standard=True,
         description="320x50 mobile banner",
-        accepts_3p_tags=False,
         supported_macros=COMMON_MACROS,
         requirements={
             "dimensions": "320x50",
@@ -618,10 +561,7 @@ DISPLAY_IMAGE_FORMATS = [
         agent_url=AGENT_URL,
         name="Wide Skyscraper - Image",
         type=Type.display,
-        category=Category.standard,
-        is_standard=True,
         description="160x600 wide skyscraper banner",
-        accepts_3p_tags=False,
         supported_macros=COMMON_MACROS,
         requirements={
             "dimensions": "160x600",
@@ -652,10 +592,7 @@ DISPLAY_IMAGE_FORMATS = [
         agent_url=AGENT_URL,
         name="Large Rectangle - Image",
         type=Type.display,
-        category=Category.standard,
-        is_standard=True,
         description="336x280 large rectangle banner",
-        accepts_3p_tags=False,
         supported_macros=COMMON_MACROS,
         requirements={
             "dimensions": "336x280",
@@ -686,10 +623,7 @@ DISPLAY_IMAGE_FORMATS = [
         agent_url=AGENT_URL,
         name="Half Page - Image",
         type=Type.display,
-        category=Category.standard,
-        is_standard=True,
         description="300x600 half page banner",
-        accepts_3p_tags=False,
         supported_macros=COMMON_MACROS,
         requirements={
             "dimensions": "300x600",
@@ -720,10 +654,7 @@ DISPLAY_IMAGE_FORMATS = [
         agent_url=AGENT_URL,
         name="Billboard - Image",
         type=Type.display,
-        category=Category.standard,
-        is_standard=True,
         description="970x250 billboard banner",
-        accepts_3p_tags=False,
         supported_macros=COMMON_MACROS,
         requirements={
             "dimensions": "970x250",
@@ -758,10 +689,7 @@ DISPLAY_HTML_FORMATS = [
         agent_url=AGENT_URL,
         name="Medium Rectangle - HTML5",
         type=Type.display,
-        category=Category.standard,
-        is_standard=True,
         description="300x250 HTML5 creative",
-        accepts_3p_tags=True,
         supported_macros=COMMON_MACROS,
         requirements={
             "dimensions": "300x250",
@@ -786,10 +714,7 @@ DISPLAY_HTML_FORMATS = [
         agent_url=AGENT_URL,
         name="Leaderboard - HTML5",
         type=Type.display,
-        category=Category.standard,
-        is_standard=True,
         description="728x90 HTML5 creative",
-        accepts_3p_tags=True,
         supported_macros=COMMON_MACROS,
         requirements={
             "dimensions": "728x90",
@@ -813,10 +738,7 @@ DISPLAY_HTML_FORMATS = [
         agent_url=AGENT_URL,
         name="Wide Skyscraper - HTML5",
         type=Type.display,
-        category=Category.standard,
-        is_standard=True,
         description="160x600 HTML5 creative",
-        accepts_3p_tags=True,
         supported_macros=COMMON_MACROS,
         requirements={
             "dimensions": "160x600",
@@ -840,10 +762,7 @@ DISPLAY_HTML_FORMATS = [
         agent_url=AGENT_URL,
         name="Large Rectangle - HTML5",
         type=Type.display,
-        category=Category.standard,
-        is_standard=True,
         description="336x280 HTML5 creative",
-        accepts_3p_tags=True,
         supported_macros=COMMON_MACROS,
         requirements={
             "dimensions": "336x280",
@@ -867,10 +786,7 @@ DISPLAY_HTML_FORMATS = [
         agent_url=AGENT_URL,
         name="Half Page - HTML5",
         type=Type.display,
-        category=Category.standard,
-        is_standard=True,
         description="300x600 HTML5 creative",
-        accepts_3p_tags=True,
         supported_macros=COMMON_MACROS,
         requirements={
             "dimensions": "300x600",
@@ -894,10 +810,7 @@ DISPLAY_HTML_FORMATS = [
         agent_url=AGENT_URL,
         name="Billboard - HTML5",
         type=Type.display,
-        category=Category.standard,
-        is_standard=True,
         description="970x250 HTML5 creative",
-        accepts_3p_tags=True,
         supported_macros=COMMON_MACROS,
         requirements={
             "dimensions": "970x250",
@@ -925,10 +838,7 @@ NATIVE_FORMATS = [
         agent_url=AGENT_URL,
         name="IAB Native Standard",
         type=Type.native,
-        category=Category.standard,
-        is_standard=True,
         description="Standard native ad with title, description, image, and CTA",
-        accepts_3p_tags=False,
         supported_macros=COMMON_MACROS,
         assets_required=[
             AssetsRequired(
@@ -992,10 +902,7 @@ NATIVE_FORMATS = [
         agent_url=AGENT_URL,
         name="Native Content Placement",
         type=Type.native,
-        category=Category.standard,
-        is_standard=True,
         description="In-article native ad with editorial styling",
-        accepts_3p_tags=False,
         supported_macros=COMMON_MACROS,
         assets_required=[
             AssetsRequired(
@@ -1063,10 +970,7 @@ AUDIO_FORMATS = [
         agent_url=AGENT_URL,
         name="Standard Audio - 15 seconds",
         type=Type.audio,
-        category=Category.standard,
-        is_standard=True,
         description="15-second audio ad",
-        accepts_3p_tags=True,
         supported_macros=[*COMMON_MACROS, "CONTENT_GENRE"],
         requirements={
             "duration_seconds": 15,
@@ -1091,10 +995,7 @@ AUDIO_FORMATS = [
         agent_url=AGENT_URL,
         name="Standard Audio - 30 seconds",
         type=Type.audio,
-        category=Category.standard,
-        is_standard=True,
         description="30-second audio ad",
-        accepts_3p_tags=True,
         supported_macros=[*COMMON_MACROS, "CONTENT_GENRE"],
         requirements={
             "duration_seconds": 30,
@@ -1119,10 +1020,7 @@ AUDIO_FORMATS = [
         agent_url=AGENT_URL,
         name="Standard Audio - 60 seconds",
         type=Type.audio,
-        category=Category.standard,
-        is_standard=True,
         description="60-second audio ad",
-        accepts_3p_tags=True,
         supported_macros=[*COMMON_MACROS, "CONTENT_GENRE"],
         requirements={
             "duration_seconds": 60,
@@ -1151,10 +1049,7 @@ DOOH_FORMATS = [
         agent_url=AGENT_URL,
         name="Digital Billboard - 1920x1080",
         type=Type.dooh,
-        category=Category.standard,
-        is_standard=True,
         description="Full HD digital billboard",
-        accepts_3p_tags=False,
         supported_macros=[*COMMON_MACROS, "SCREEN_ID", "VENUE_TYPE", "VENUE_LAT", "VENUE_LONG"],
         requirements={
             "dimensions": "1920x1080",
@@ -1180,10 +1075,7 @@ DOOH_FORMATS = [
         agent_url=AGENT_URL,
         name="Digital Billboard - Landscape",
         type=Type.dooh,
-        category=Category.standard,
-        is_standard=True,
         description="Landscape-oriented digital billboard (various sizes)",
-        accepts_3p_tags=False,
         supported_macros=[*COMMON_MACROS, "SCREEN_ID", "VENUE_TYPE", "VENUE_LAT", "VENUE_LONG"],
         requirements={
             "duration_seconds": 10,
@@ -1208,10 +1100,7 @@ DOOH_FORMATS = [
         agent_url=AGENT_URL,
         name="Digital Billboard - Portrait",
         type=Type.dooh,
-        category=Category.standard,
-        is_standard=True,
         description="Portrait-oriented digital billboard (various sizes)",
-        accepts_3p_tags=False,
         supported_macros=[*COMMON_MACROS, "SCREEN_ID", "VENUE_TYPE", "VENUE_LAT", "VENUE_LONG"],
         requirements={
             "duration_seconds": 10,
@@ -1236,10 +1125,7 @@ DOOH_FORMATS = [
         agent_url=AGENT_URL,
         name="Transit Screen",
         type=Type.dooh,
-        category=Category.standard,
-        is_standard=True,
         description="Transit and subway screen displays",
-        accepts_3p_tags=False,
         supported_macros=[*COMMON_MACROS, "SCREEN_ID", "VENUE_TYPE", "VENUE_LAT", "VENUE_LONG", "TRANSIT_LINE"],
         requirements={
             "dimensions": "1920x1080",
