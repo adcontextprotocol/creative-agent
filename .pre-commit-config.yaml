@@ -17,13 +17,8 @@ repos:
         pass_filenames: false
         stages: [manual]
 
-      # Validate schema compliance
-      - id: schema-compliance
-        name: Validate format definitions match AdCP schemas
-        entry: uv run pytest tests/schema_compliance/ -v --tb=short
-        language: system
-        pass_filenames: false
-        files: ^(src/creative_agent/data/standard_formats\.py|tests/schemas/v1/.*\.json|src/creative_agent/schemas_generated/.*\.py)$
+      # Schema compliance runs in CI only (requires uv + full test environment)
+      # See .github/workflows/ci.yml for schema compliance validation
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0

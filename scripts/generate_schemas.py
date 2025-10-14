@@ -160,8 +160,8 @@ def generate_schemas_from_json(schema_dir: Path, output_file: Path):
     temp_dir.mkdir(exist_ok=True)
 
     try:
-        # Process each JSON schema file
-        schema_files = list(schema_dir.glob("*.json"))
+        # Process each JSON schema file in sorted order for deterministic output
+        schema_files = sorted(schema_dir.glob("*.json"))
         print(f"📝 Found {len(schema_files)} schema files")
 
         # Skip these non-schema files
@@ -208,6 +208,7 @@ def generate_schemas_from_json(schema_dir: Path, output_file: Path):
             "--target-python-version",
             "3.12",
             "--disable-timestamp",
+            "--reuse-model",  # Reuse models with same content for deterministic class names
         ]
 
         result = subprocess.run(cmd, capture_output=True, text=True, check=False)

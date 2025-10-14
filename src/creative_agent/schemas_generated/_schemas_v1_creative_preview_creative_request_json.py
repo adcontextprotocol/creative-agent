@@ -612,71 +612,13 @@ class BrandManifest(BaseModel):
     ] = None
 
 
-class Asset7(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-    )
-    asset_id: Annotated[str, Field(description="Unique identifier for this asset")]
-    asset_type: Annotated[AssetType, Field(description="Type of asset")]
-    url: Annotated[AnyUrl, Field(description="URL to CDN-hosted asset file")]
-    tags: Annotated[
-        Optional[list[str]],
-        Field(
-            description="Tags for asset discovery (e.g., 'holiday', 'lifestyle', 'product_shot')"
-        ),
-    ] = None
-    name: Annotated[Optional[str], Field(description="Human-readable asset name")] = (
-        None
-    )
-    description: Annotated[
-        Optional[str], Field(description="Asset description or usage notes")
-    ] = None
-    width: Annotated[
-        Optional[int], Field(description="Image/video width in pixels")
-    ] = None
-    height: Annotated[
-        Optional[int], Field(description="Image/video height in pixels")
-    ] = None
-    duration_seconds: Annotated[
-        Optional[float], Field(description="Video/audio duration in seconds")
-    ] = None
-    file_size_bytes: Annotated[
-        Optional[int], Field(description="File size in bytes")
-    ] = None
-    format: Annotated[
-        Optional[str], Field(description="File format (e.g., 'jpg', 'mp4', 'mp3')")
-    ] = None
-    metadata: Annotated[
-        Optional[dict[str, Any]],
-        Field(description="Additional asset-specific metadata"),
-    ] = None
+Asset9 = Asset
 
 
-class ProductCatalog5(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-    )
-    feed_url: Annotated[AnyUrl, Field(description="URL to product catalog feed")]
-    feed_format: Annotated[
-        Optional[FeedFormat], Field(description="Format of the product feed")
-    ] = "google_merchant_center"
-    categories: Annotated[
-        Optional[list[str]],
-        Field(
-            description="Product categories available in the catalog (for filtering)"
-        ),
-    ] = None
-    last_updated: Annotated[
-        Optional[AwareDatetime],
-        Field(description="When the product catalog was last updated"),
-    ] = None
-    update_frequency: Annotated[
-        Optional[UpdateFrequency],
-        Field(description="How frequently the product catalog is updated"),
-    ] = None
+ProductCatalog7 = ProductCatalog
 
 
-class BrandManifest4(BaseModel):
+class BrandManifest6(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
@@ -707,13 +649,13 @@ class BrandManifest4(BaseModel):
         None
     )
     assets: Annotated[
-        Optional[list[Asset7]],
+        Optional[list[Asset9]],
         Field(
             description="Brand asset library with explicit assets and tags. Assets are referenced inline with URLs pointing to CDN-hosted files."
         ),
     ] = None
     product_catalog: Annotated[
-        Optional[ProductCatalog5],
+        Optional[ProductCatalog7],
         Field(
             description="Product catalog information for e-commerce advertisers. Enables SKU-level creative generation and product selection."
         ),
@@ -788,7 +730,7 @@ class Offering(BaseModel):
     ] = None
 
 
-class AssetType11(Enum):
+class AssetType14(Enum):
     image = "image"
     video = "video"
     audio = "audio"
@@ -809,7 +751,7 @@ class AssetSelectors(BaseModel):
         ),
     ] = None
     asset_types: Annotated[
-        Optional[list[AssetType11]],
+        Optional[list[AssetType14]],
         Field(description="Filter by asset type (e.g., ['image', 'video'])"),
     ] = None
     exclude_tags: Annotated[
@@ -822,7 +764,7 @@ class PromotedOfferings(BaseModel):
         extra="forbid",
     )
     brand_manifest: Annotated[
-        Union[Union[BrandManifest, BrandManifest4], AnyUrl],
+        Union[Union[BrandManifest, BrandManifest6], AnyUrl],
         Field(
             description="Brand manifest provided either as an inline object or a URL string pointing to a hosted manifest",
             examples=[
