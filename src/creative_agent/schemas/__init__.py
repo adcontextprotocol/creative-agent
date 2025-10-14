@@ -27,8 +27,8 @@ from ..schemas_generated._schemas_v1_core_creative_asset_json import CreativeAss
 
 # Format schemas
 from ..schemas_generated._schemas_v1_core_format_json import Format as CreativeFormat
-from ..schemas_generated._schemas_v1_media_buy_list_creative_formats_response_json import (
-    ListCreativeFormatsResponse,
+from ..schemas_generated._schemas_v1_creative_list_creative_formats_response_json import (
+    ListCreativeFormatsResponseCreativeAgent as ListCreativeFormatsResponse,
 )
 
 # Build schemas (agent-specific, not part of AdCP)

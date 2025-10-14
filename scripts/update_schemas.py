@@ -63,9 +63,37 @@ def download_schema(ref: str, base_url: str = "https://adcontextprotocol.org") -
         return None
 
 
-def discover_schemas(schema_dir: Path) -> list[str]:
+def is_creative_agent_schema(ref: str) -> bool:
+    """
+    Check if a schema is relevant for a Creative Agent.
+
+    Creative agents only need schemas related to creative formats, assets,
+    and creative agent tools - not media buy, signals, or other protocol areas.
+    """
+    creative_patterns = [
+        "/schemas/v1/core/assets/",  # All asset types
+        "/schemas/v1/core/creative-",  # Creative-specific schemas
+        "/schemas/v1/core/format",  # Format and format-id
+        "/schemas/v1/core/brand-manifest",  # Brand manifest schemas
+        "/schemas/v1/creative/",  # Creative agent tool schemas
+        "/schemas/v1/enums/",  # Shared enums (needed by assets and formats)
+        "/schemas/v1/standard-formats/",  # Standard format definitions
+        "/schemas/v1/adagents.json",  # Agent capabilities
+        "/schemas/v1/core/response.json",  # Protocol response wrapper
+        "/schemas/v1/core/error.json",  # Error schema
+        "/schemas/v1/core/sub-asset.json",  # Sub-asset for carousels
+    ]
+
+    return any(pattern in ref for pattern in creative_patterns)
+
+
+def discover_schemas(schema_dir: Path, creative_only: bool = True) -> list[str]:
     """
     Discover all schema $refs from existing cache.
+
+    Args:
+        schema_dir: Directory containing cached schemas
+        creative_only: If True, only return creative-agent-relevant schemas
 
     Returns list of unique $ref paths found in existing schemas.
     """
@@ -78,10 +106,15 @@ def discover_schemas(schema_dir: Path) -> list[str]:
 
             # Extract $ref from this schema
             if "$id" in schema:
-                refs.add(schema["$id"])
+                schema_ref = schema["$id"]
+                if not creative_only or is_creative_agent_schema(schema_ref):
+                    refs.add(schema_ref)
 
             # Recursively find all $refs in the schema
-            refs.update(find_refs_in_schema(schema))
+            all_refs = find_refs_in_schema(schema)
+            if creative_only:
+                all_refs = {r for r in all_refs if is_creative_agent_schema(r)}
+            refs.update(all_refs)
 
         except Exception as e:
             print(f"  ⚠️  Error reading {schema_file.name}: {e}")
@@ -105,14 +138,21 @@ def find_refs_in_schema(obj: dict | list) -> set[str]:
     return refs
 
 
-def update_schemas(schema_dir: Path, dry_run: bool = False):
+def update_schemas(schema_dir: Path, dry_run: bool = False, creative_only: bool = True):
     """
-    Update all schemas from AdCP website.
+    Update schemas from AdCP website.
 
     Discovers schema refs from existing cache, downloads latest versions,
     and updates local files.
+
+    Args:
+        schema_dir: Directory containing cached schemas
+        dry_run: If True, show what would change without modifying files
+        creative_only: If True, only update creative-agent-relevant schemas
     """
     print(f"📂 Schema directory: {schema_dir}")
+    if creative_only:
+        print("🎨 Filtering to creative-agent-relevant schemas only")
 
     if not schema_dir.exists():
         print(f"❌ Directory not found: {schema_dir}")
@@ -120,7 +160,7 @@ def update_schemas(schema_dir: Path, dry_run: bool = False):
 
     # Discover all schema refs
     print("\n🔍 Discovering schemas from existing cache...")
-    refs = discover_schemas(schema_dir)
+    refs = discover_schemas(schema_dir, creative_only=creative_only)
     print(f"   Found {len(refs)} unique schema refs")
 
     # Download and update each schema
@@ -182,7 +222,9 @@ def update_schemas(schema_dir: Path, dry_run: bool = False):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Update AdCP schemas from website")
+    parser = argparse.ArgumentParser(
+        description="Update AdCP schemas from website (creative-agent-relevant schemas only by default)"
+    )
     parser.add_argument("--dry-run", action="store_true", help="Show what would be updated without making changes")
     parser.add_argument(
         "--schema-dir",
@@ -190,9 +232,14 @@ def main():
         default=Path("tests/schemas/v1"),
         help="Directory containing JSON schemas (default: tests/schemas/v1)",
     )
+    parser.add_argument(
+        "--all-schemas",
+        action="store_true",
+        help="Include all AdCP schemas (media buy, signals, etc.), not just creative-agent schemas",
+    )
     args = parser.parse_args()
 
-    update_schemas(args.schema_dir, dry_run=args.dry_run)
+    update_schemas(args.schema_dir, dry_run=args.dry_run, creative_only=not args.all_schemas)
 
 
 if __name__ == "__main__":
