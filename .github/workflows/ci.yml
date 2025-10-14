@@ -47,6 +47,9 @@ jobs:
       - name: Run smoke tests
         run: uv run pytest tests/smoke/ -v --no-cov -m smoke
 
+      - name: Run schema compliance tests
+        run: uv run pytest tests/schema_compliance/ -v --no-cov
+
       - name: Run all tests with coverage
         run: uv run pytest --cov=src/creative_agent --cov-fail-under=10 --cov-report=term-missing
 
