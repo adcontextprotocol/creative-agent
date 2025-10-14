@@ -61,12 +61,12 @@ def test_format_has_required_fields():
             pytest.fail(f"Format {format_obj.format_id} missing required fields: {missing}")
 
 
-def test_format_ids_are_structured():
+def test_output_format_ids_are_strings():
     """
-    Verify that any format_id references in formats are structured objects.
+    Verify that output_format_ids use string format IDs (per schema).
 
-    This catches regressions where we might use string IDs instead of
-    structured {agent_url, id} objects.
+    Note: Format.output_format_ids uses strings (same agent assumed),
+    while Product.format_ids uses structured {agent_url, id} objects.
     """
     for format_obj in STANDARD_FORMATS:
         format_dict = format_obj.model_dump(mode="json", by_alias=True, exclude_none=True)
@@ -74,17 +74,12 @@ def test_format_ids_are_structured():
         if "output_format_ids" in format_dict:
             output_ids = format_dict["output_format_ids"]
             if output_ids:  # Skip if empty list
-                # Each should be a dict with agent_url and id
-                for output_id in output_ids:
-                    if not isinstance(output_id, dict):
+                # Each should be a string per Format schema
+                for idx, output_id in enumerate(output_ids):
+                    if not isinstance(output_id, str):
                         pytest.fail(
-                            f"Format {format_obj.format_id} has non-structured output_format_id: {output_id}. "
-                            "Should be {{agent_url: str, id: str}}"
-                        )
-                    if "agent_url" not in output_id or "id" not in output_id:
-                        pytest.fail(
-                            f"Format {format_obj.format_id} has incomplete format_id structure: {output_id}. "
-                            "Must have both agent_url and id fields"
+                            f"Format {format_obj.format_id} output_format_ids[{idx}] is not a string: {output_id}. "
+                            "Per schema, output_format_ids items should be strings (format_id within same agent)."
                         )
 
 
