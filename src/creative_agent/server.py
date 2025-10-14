@@ -172,6 +172,19 @@ def preview_creative(
                 indent=2,
             )
 
+        # Validate manifest assets
+        from .validation import validate_manifest_assets
+
+        validation_errors = validate_manifest_assets(request.creative_manifest, check_remote_mime=False)
+        if validation_errors:
+            return json.dumps(
+                {
+                    "error": "Asset validation failed",
+                    "validation_errors": validation_errors,
+                },
+                indent=2,
+            )
+
         # Generate preview variants
         previews = []
         preview_id = str(uuid.uuid4())
@@ -667,6 +680,20 @@ Return ONLY the JSON manifest, no additional text."""
                         # Use generated image as data URI
                         asset_data["url"] = generated_images[image_index]
                         image_index += 1
+
+        # Validate generated manifest assets
+        from .validation import validate_manifest_assets
+
+        validation_errors = validate_manifest_assets(manifest_data, check_remote_mime=False)
+        if validation_errors:
+            return json.dumps(
+                {
+                    "error": "AI-generated creative failed validation",
+                    "validation_errors": validation_errors,
+                    "hint": "The AI generated invalid assets. Please try again with more specific instructions.",
+                },
+                indent=2,
+            )
 
         # Generate session context ID
         session_context_id = request.context_id or str(uuid.uuid4())
