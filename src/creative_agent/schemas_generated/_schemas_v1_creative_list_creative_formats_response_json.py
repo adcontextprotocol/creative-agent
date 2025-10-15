@@ -8,6 +8,9 @@ from typing import Annotated, Any, Optional, Union
 
 from pydantic import AnyUrl, BaseModel, ConfigDict, Field
 
+# Import Render types from core format schema for renders field
+from ._schemas_v1_core_format_json import Render
+
 
 class Status(Enum):
     submitted = "submitted"
@@ -171,6 +174,13 @@ class Format(BaseModel):
         Optional[list[str]],
         Field(
             description="For generative formats: array of format IDs that this format can generate. When a format accepts inputs like brand_manifest and message, this specifies what concrete output formats can be produced (e.g., a generative banner format might output standard image banner formats)."
+        ),
+    ] = None
+    renders: Annotated[
+        Optional[list[Render]],
+        Field(
+            description="Specification of rendered pieces for this format",
+            min_length=1,
         ),
     ] = None
 

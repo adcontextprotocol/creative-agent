@@ -195,6 +195,72 @@
       "items": {
         "type": "string"
       }
+    },
+    "renders": {
+      "type": "array",
+      "description": "Specification of rendered pieces for this format",
+      "items": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string",
+            "description": "Semantic role of this rendered piece"
+          },
+          "dimensions": {
+            "type": "object",
+            "properties": {
+              "width": {
+                "type": "number",
+                "minimum": 0
+              },
+              "height": {
+                "type": "number",
+                "minimum": 0
+              },
+              "min_width": {
+                "type": "number",
+                "minimum": 0
+              },
+              "min_height": {
+                "type": "number",
+                "minimum": 0
+              },
+              "max_width": {
+                "type": "number",
+                "minimum": 0
+              },
+              "max_height": {
+                "type": "number",
+                "minimum": 0
+              },
+              "responsive": {
+                "type": "object",
+                "properties": {
+                  "width": {
+                    "type": "boolean"
+                  },
+                  "height": {
+                    "type": "boolean"
+                  }
+                },
+                "required": ["width", "height"]
+              },
+              "aspect_ratio": {
+                "type": "string",
+                "pattern": "^\\d+:\\d+$"
+              },
+              "unit": {
+                "type": "string",
+                "enum": ["px", "dp", "inches", "cm"],
+                "default": "px"
+              }
+            },
+            "required": ["unit"]
+          }
+        },
+        "required": ["role", "dimensions"]
+      },
+      "minItems": 1
     }
   },
   "required": [

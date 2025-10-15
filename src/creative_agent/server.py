@@ -271,11 +271,14 @@ def _generate_preview_variant(
     else:
         hints.requires_interaction = True
 
-    # Extract dimensions if available
-    if format_obj.dimensions:
-        parts = format_obj.dimensions.split("x")
-        if len(parts) == 2:
-            hints.estimated_dimensions = {"width": int(parts[0]), "height": int(parts[1])}
+    # Extract dimensions from renders array
+    if format_obj.renders and len(format_obj.renders) > 0:
+        primary_render = format_obj.renders[0]
+        if primary_render.dimensions.width and primary_render.dimensions.height:
+            hints.estimated_dimensions = {
+                "width": int(primary_render.dimensions.width),
+                "height": int(primary_render.dimensions.height),
+            }
 
     # Build embedding security metadata
     embedding = PreviewEmbedding(
@@ -422,8 +425,10 @@ Description: {fmt.description}
 
         if is_generative:
             format_spec += f"\nThis will generate a: {output_fmt.name}\n"
-            if output_fmt.requirements and output_fmt.requirements.get("dimensions"):
-                format_spec += f"Dimensions: {output_fmt.requirements['dimensions']}\n"
+            if output_fmt.renders and len(output_fmt.renders) > 0:
+                render = output_fmt.renders[0]
+                if render.dimensions.width and render.dimensions.height:
+                    format_spec += f"Dimensions: {int(render.dimensions.width)}x{int(render.dimensions.height)}\n"
 
         format_spec += "\nRequired Assets:\n"
 
