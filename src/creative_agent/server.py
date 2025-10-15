@@ -74,12 +74,12 @@ def list_creative_formats(
         )
 
         # Import required types
-        from .schemas_generated._schemas_v1_media_buy_list_creative_formats_response_json import (
+        from .schemas_generated._schemas_v1_creative_list_creative_formats_response_json import (
             Capability,
             CreativeAgent,
             Status,
         )
-        from .schemas_generated._schemas_v1_media_buy_list_creative_formats_response_json import (
+        from .schemas_generated._schemas_v1_creative_list_creative_formats_response_json import (
             Format as ResponseFormat,
         )
 
