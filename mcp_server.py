@@ -284,17 +284,15 @@ def preview_creative(manifest_json: str) -> PreviewSuccessResponse | PreviewErro
         type_value = fmt.type.value if hasattr(fmt.type, "value") else fmt.type
 
         if type_value == "display":
-            # Extract dimensions from format requirements or manifest
+            # Extract dimensions from format renders or manifest
             width = manifest.get("width")
             height = manifest.get("height")
 
             if not width or not height:
-                if fmt.requirements and "dimensions" in fmt.requirements:
-                    dims = fmt.requirements["dimensions"]
-                    if "x" in dims:
-                        parts = dims.split("x")
-                        width = int(parts[0])
-                        height = int(parts[1])
+                if fmt.renders and len(fmt.renders) > 0:
+                    render = fmt.renders[0]
+                    width = int(render.dimensions.width)
+                    height = int(render.dimensions.height)
 
             width = width or 300
             height = height or 250
