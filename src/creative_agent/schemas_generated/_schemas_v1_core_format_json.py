@@ -95,6 +95,35 @@ class AssetsRequired1(BaseModel):
     ]
 
 
+class Responsive(BaseModel):
+    width: bool
+    height: bool
+
+
+class Unit(Enum):
+    px = "px"
+    dp = "dp"
+    inches = "inches"
+    cm = "cm"
+
+
+class Dimensions(BaseModel):
+    width: Annotated[Optional[float], Field(ge=0.0)] = None
+    height: Annotated[Optional[float], Field(ge=0.0)] = None
+    min_width: Annotated[Optional[float], Field(ge=0.0)] = None
+    min_height: Annotated[Optional[float], Field(ge=0.0)] = None
+    max_width: Annotated[Optional[float], Field(ge=0.0)] = None
+    max_height: Annotated[Optional[float], Field(ge=0.0)] = None
+    responsive: Optional[Responsive] = None
+    aspect_ratio: Annotated[Optional[str], Field(pattern="^\\d+:\\d+$")] = None
+    unit: Unit
+
+
+class Render(BaseModel):
+    role: Annotated[str, Field(description="Semantic role of this rendered piece")]
+    dimensions: Dimensions
+
+
 class Format(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -159,5 +188,11 @@ class Format(BaseModel):
         Optional[list[str]],
         Field(
             description="For generative formats: array of format IDs that this format can generate. When a format accepts inputs like brand_manifest and message, this specifies what concrete output formats can be produced (e.g., a generative banner format might output standard image banner formats)."
+        ),
+    ] = None
+    renders: Annotated[
+        Optional[list[Render]],
+        Field(
+            description="Specification of rendered pieces for this format", min_length=1
         ),
     ] = None

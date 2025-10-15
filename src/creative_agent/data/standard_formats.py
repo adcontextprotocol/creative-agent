@@ -1,9 +1,20 @@
 """Standard AdCP creative formats."""
 
+# mypy: disable-error-code="call-arg"
+# Pydantic models with extra='forbid' trigger false positives when optional fields aren't passed
+
 from pydantic import AnyUrl
 
 from ..schemas import CreativeFormat
-from ..schemas_generated._schemas_v1_core_format_json import AssetsRequired, AssetType, Type
+from ..schemas_generated._schemas_v1_core_format_json import (
+    AssetsRequired,
+    AssetType,
+    Dimensions,
+    Render,
+    Responsive,
+    Type,
+    Unit,
+)
 
 # Agent configuration
 AGENT_URL = AnyUrl("https://creative.adcontextprotocol.org")
@@ -24,6 +35,20 @@ COMMON_MACROS = [
     "GPP_STRING",
 ]
 
+
+def create_fixed_render(width: int, height: int, role: str = "primary") -> Render:
+    """Create a render with fixed dimensions (non-responsive)."""
+    return Render(
+        role=role,
+        dimensions=Dimensions(
+            width=width,
+            height=height,
+            responsive=Responsive(width=False, height=False),
+            unit=Unit.px,
+        ),
+    )
+
+
 # Generative Formats - AI-powered creative generation
 # These use type='display' (what they generate) and output_format_ids
 # to specify what standard formats they can produce
@@ -34,7 +59,7 @@ GENERATIVE_FORMATS = [
         name="Medium Rectangle - AI Generated",
         type=Type.display,
         description="AI-generated 300x250 banner from brand context and prompt",
-        requirements={"dimensions": "300x250"},
+        renders=[create_fixed_render(300, 250)],
         output_format_ids=["display_300x250_image"],
         supported_macros=COMMON_MACROS,
         assets_required=[
@@ -60,7 +85,7 @@ GENERATIVE_FORMATS = [
         name="Leaderboard - AI Generated",
         type=Type.display,
         description="AI-generated 728x90 banner from brand context and prompt",
-        requirements={"dimensions": "728x90"},
+        renders=[create_fixed_render(728, 90)],
         output_format_ids=["display_728x90_image"],
         supported_macros=COMMON_MACROS,
         assets_required=[
@@ -86,7 +111,7 @@ GENERATIVE_FORMATS = [
         name="Mobile Banner - AI Generated",
         type=Type.display,
         description="AI-generated 320x50 mobile banner from brand context and prompt",
-        requirements={"dimensions": "320x50"},
+        renders=[create_fixed_render(320, 50)],
         output_format_ids=["display_320x50_image"],
         supported_macros=COMMON_MACROS,
         assets_required=[
@@ -112,7 +137,7 @@ GENERATIVE_FORMATS = [
         name="Wide Skyscraper - AI Generated",
         type=Type.display,
         description="AI-generated 160x600 wide skyscraper from brand context and prompt",
-        requirements={"dimensions": "160x600"},
+        renders=[create_fixed_render(160, 600)],
         output_format_ids=["display_160x600_image"],
         supported_macros=COMMON_MACROS,
         assets_required=[
@@ -138,7 +163,7 @@ GENERATIVE_FORMATS = [
         name="Large Rectangle - AI Generated",
         type=Type.display,
         description="AI-generated 336x280 large rectangle from brand context and prompt",
-        requirements={"dimensions": "336x280"},
+        renders=[create_fixed_render(336, 280)],
         output_format_ids=["display_336x280_image"],
         supported_macros=COMMON_MACROS,
         assets_required=[
@@ -164,7 +189,7 @@ GENERATIVE_FORMATS = [
         name="Half Page - AI Generated",
         type=Type.display,
         description="AI-generated 300x600 half page from brand context and prompt",
-        requirements={"dimensions": "300x600"},
+        renders=[create_fixed_render(300, 600)],
         output_format_ids=["display_300x600_image"],
         supported_macros=COMMON_MACROS,
         assets_required=[
@@ -190,7 +215,7 @@ GENERATIVE_FORMATS = [
         name="Billboard - AI Generated",
         type=Type.display,
         description="AI-generated 970x250 billboard from brand context and prompt",
-        requirements={"dimensions": "970x250"},
+        renders=[create_fixed_render(970, 250)],
         output_format_ids=["display_970x250_image"],
         supported_macros=COMMON_MACROS,
         assets_required=[
@@ -297,8 +322,8 @@ VIDEO_FORMATS = [
         type=Type.video,
         description="1920x1080 Full HD video (16:9)",
         supported_macros=[*COMMON_MACROS, "VIDEO_ID", "POD_POSITION", "CONTENT_GENRE"],
+        renders=[create_fixed_render(1920, 1080)],
         requirements={
-            "dimensions": "1920x1080",
             "max_file_size_mb": 100,
             "acceptable_formats": ["mp4", "mov", "webm"],
             "aspect_ratios": ["16:9"],
@@ -325,8 +350,8 @@ VIDEO_FORMATS = [
         type=Type.video,
         description="1280x720 HD video (16:9)",
         supported_macros=[*COMMON_MACROS, "VIDEO_ID", "POD_POSITION", "CONTENT_GENRE"],
+        renders=[create_fixed_render(1280, 720)],
         requirements={
-            "dimensions": "1280x720",
             "max_file_size_mb": 75,
             "acceptable_formats": ["mp4", "mov", "webm"],
             "aspect_ratios": ["16:9"],
@@ -353,8 +378,8 @@ VIDEO_FORMATS = [
         type=Type.video,
         description="1080x1920 vertical video (9:16) for mobile stories",
         supported_macros=[*COMMON_MACROS, "VIDEO_ID", "POD_POSITION", "CONTENT_GENRE"],
+        renders=[create_fixed_render(1080, 1920)],
         requirements={
-            "dimensions": "1080x1920",
             "max_file_size_mb": 100,
             "acceptable_formats": ["mp4", "mov", "webm"],
             "aspect_ratios": ["9:16"],
@@ -381,8 +406,8 @@ VIDEO_FORMATS = [
         type=Type.video,
         description="1080x1080 square video (1:1) for social feeds",
         supported_macros=[*COMMON_MACROS, "VIDEO_ID", "POD_POSITION", "CONTENT_GENRE"],
+        renders=[create_fixed_render(1080, 1080)],
         requirements={
-            "dimensions": "1080x1080",
             "max_file_size_mb": 100,
             "acceptable_formats": ["mp4", "mov", "webm"],
             "aspect_ratios": ["1:1"],
@@ -467,9 +492,7 @@ DISPLAY_IMAGE_FORMATS = [
         type=Type.display,
         description="300x250 static image banner",
         supported_macros=COMMON_MACROS,
-        requirements={
-            "dimensions": "300x250",
-        },
+        renders=[create_fixed_render(300, 250)],
         assets_required=[
             AssetsRequired(
                 asset_id="banner_image",
@@ -501,9 +524,7 @@ DISPLAY_IMAGE_FORMATS = [
         type=Type.display,
         description="728x90 static image banner",
         supported_macros=COMMON_MACROS,
-        requirements={
-            "dimensions": "728x90",
-        },
+        renders=[create_fixed_render(728, 90)],
         assets_required=[
             AssetsRequired(
                 asset_id="banner_image",
@@ -532,9 +553,7 @@ DISPLAY_IMAGE_FORMATS = [
         type=Type.display,
         description="320x50 mobile banner",
         supported_macros=COMMON_MACROS,
-        requirements={
-            "dimensions": "320x50",
-        },
+        renders=[create_fixed_render(320, 50)],
         assets_required=[
             AssetsRequired(
                 asset_id="banner_image",
@@ -563,9 +582,7 @@ DISPLAY_IMAGE_FORMATS = [
         type=Type.display,
         description="160x600 wide skyscraper banner",
         supported_macros=COMMON_MACROS,
-        requirements={
-            "dimensions": "160x600",
-        },
+        renders=[create_fixed_render(160, 600)],
         assets_required=[
             AssetsRequired(
                 asset_id="banner_image",
@@ -594,9 +611,7 @@ DISPLAY_IMAGE_FORMATS = [
         type=Type.display,
         description="336x280 large rectangle banner",
         supported_macros=COMMON_MACROS,
-        requirements={
-            "dimensions": "336x280",
-        },
+        renders=[create_fixed_render(336, 280)],
         assets_required=[
             AssetsRequired(
                 asset_id="banner_image",
@@ -625,9 +640,7 @@ DISPLAY_IMAGE_FORMATS = [
         type=Type.display,
         description="300x600 half page banner",
         supported_macros=COMMON_MACROS,
-        requirements={
-            "dimensions": "300x600",
-        },
+        renders=[create_fixed_render(300, 600)],
         assets_required=[
             AssetsRequired(
                 asset_id="banner_image",
@@ -656,9 +669,7 @@ DISPLAY_IMAGE_FORMATS = [
         type=Type.display,
         description="970x250 billboard banner",
         supported_macros=COMMON_MACROS,
-        requirements={
-            "dimensions": "970x250",
-        },
+        renders=[create_fixed_render(970, 250)],
         assets_required=[
             AssetsRequired(
                 asset_id="banner_image",
@@ -691,9 +702,7 @@ DISPLAY_HTML_FORMATS = [
         type=Type.display,
         description="300x250 HTML5 creative",
         supported_macros=COMMON_MACROS,
-        requirements={
-            "dimensions": "300x250",
-        },
+        renders=[create_fixed_render(300, 250)],
         assets_required=[
             AssetsRequired(
                 asset_id="html_creative",
@@ -716,9 +725,7 @@ DISPLAY_HTML_FORMATS = [
         type=Type.display,
         description="728x90 HTML5 creative",
         supported_macros=COMMON_MACROS,
-        requirements={
-            "dimensions": "728x90",
-        },
+        renders=[create_fixed_render(728, 90)],
         assets_required=[
             AssetsRequired(
                 asset_id="html_creative",
@@ -740,9 +747,7 @@ DISPLAY_HTML_FORMATS = [
         type=Type.display,
         description="160x600 HTML5 creative",
         supported_macros=COMMON_MACROS,
-        requirements={
-            "dimensions": "160x600",
-        },
+        renders=[create_fixed_render(160, 600)],
         assets_required=[
             AssetsRequired(
                 asset_id="html_creative",
@@ -764,9 +769,7 @@ DISPLAY_HTML_FORMATS = [
         type=Type.display,
         description="336x280 HTML5 creative",
         supported_macros=COMMON_MACROS,
-        requirements={
-            "dimensions": "336x280",
-        },
+        renders=[create_fixed_render(336, 280)],
         assets_required=[
             AssetsRequired(
                 asset_id="html_creative",
@@ -788,9 +791,7 @@ DISPLAY_HTML_FORMATS = [
         type=Type.display,
         description="300x600 HTML5 creative",
         supported_macros=COMMON_MACROS,
-        requirements={
-            "dimensions": "300x600",
-        },
+        renders=[create_fixed_render(300, 600)],
         assets_required=[
             AssetsRequired(
                 asset_id="html_creative",
@@ -812,9 +813,7 @@ DISPLAY_HTML_FORMATS = [
         type=Type.display,
         description="970x250 HTML5 creative",
         supported_macros=COMMON_MACROS,
-        requirements={
-            "dimensions": "970x250",
-        },
+        renders=[create_fixed_render(970, 250)],
         assets_required=[
             AssetsRequired(
                 asset_id="html_creative",
@@ -1051,8 +1050,8 @@ DOOH_FORMATS = [
         type=Type.dooh,
         description="Full HD digital billboard",
         supported_macros=[*COMMON_MACROS, "SCREEN_ID", "VENUE_TYPE", "VENUE_LAT", "VENUE_LONG"],
+        renders=[create_fixed_render(1920, 1080)],
         requirements={
-            "dimensions": "1920x1080",
             "duration_seconds": 10,
             "max_file_size_mb": 5,
         },
@@ -1127,8 +1126,8 @@ DOOH_FORMATS = [
         type=Type.dooh,
         description="Transit and subway screen displays",
         supported_macros=[*COMMON_MACROS, "SCREEN_ID", "VENUE_TYPE", "VENUE_LAT", "VENUE_LONG", "TRANSIT_LINE"],
+        renders=[create_fixed_render(1920, 1080)],
         requirements={
-            "dimensions": "1920x1080",
             "duration_seconds": 15,
             "max_file_size_mb": 5,
         },
@@ -1195,22 +1194,30 @@ def filter_formats(
             results = [fmt for fmt in results if fmt.type == type]
 
     if dimensions:
-        results = [fmt for fmt in results if fmt.requirements and fmt.requirements.get("dimensions") == dimensions]
+        # Support legacy "WIDTHxHEIGHT" string format for backward compatibility
+        parts = dimensions.split("x")
+        if len(parts) == 2:
+            try:
+                target_width, target_height = int(parts[0]), int(parts[1])
+                results = [
+                    fmt
+                    for fmt in results
+                    if fmt.renders
+                    and len(fmt.renders) > 0
+                    and fmt.renders[0].dimensions.width == target_width
+                    and fmt.renders[0].dimensions.height == target_height
+                ]
+            except ValueError:
+                pass  # Invalid dimension format, skip filter
 
-    # Dimension filtering - parse width and height from "WIDTHxHEIGHT" format
+    # Dimension filtering
     if any([max_width, max_height, min_width, min_height]):
 
-        def get_dimensions(fmt: CreativeFormat) -> tuple[int | None, int | None]:
-            """Extract width and height from format."""
-            if fmt.requirements and "dimensions" in fmt.requirements:
-                dims = fmt.requirements["dimensions"]
-                if isinstance(dims, str) and "x" in dims:
-                    parts = dims.split("x")
-                    if len(parts) == 2:
-                        try:
-                            return int(parts[0]), int(parts[1])
-                        except ValueError:
-                            pass
+        def get_dimensions(fmt: CreativeFormat) -> tuple[float | None, float | None]:
+            """Extract width and height from format renders."""
+            if fmt.renders and len(fmt.renders) > 0:
+                render = fmt.renders[0]
+                return render.dimensions.width, render.dimensions.height
             return None, None
 
         filtered = []
@@ -1232,19 +1239,26 @@ def filter_formats(
         results = filtered
 
     if is_responsive is not None:
-        # Filter for responsive formats (those without fixed dimensions)
+        # Filter based on responsive flag in renders
         if is_responsive:
             results = [
                 fmt
                 for fmt in results
-                if not (fmt.requirements and "dimensions" in fmt.requirements and fmt.requirements["dimensions"])
+                if fmt.renders
+                and len(fmt.renders) > 0
+                and fmt.renders[0].dimensions.responsive
+                and (fmt.renders[0].dimensions.responsive.width or fmt.renders[0].dimensions.responsive.height)
             ]
         else:
             # Filter for non-responsive (fixed dimension) formats
             results = [
                 fmt
                 for fmt in results
-                if fmt.requirements and "dimensions" in fmt.requirements and fmt.requirements["dimensions"]
+                if fmt.renders
+                and len(fmt.renders) > 0
+                and fmt.renders[0].dimensions.responsive
+                and not fmt.renders[0].dimensions.responsive.width
+                and not fmt.renders[0].dimensions.responsive.height
             ]
 
     if name_search:
