@@ -8,9 +8,6 @@ from typing import Annotated, Any, Optional, Union
 
 from pydantic import AnyUrl, BaseModel, ConfigDict, Field
 
-# Import Render types from core format schema for renders field
-from ._schemas_v1_core_format_json import Render
-
 
 class Status(Enum):
     submitted = "submitted"
@@ -110,6 +107,35 @@ class AssetsRequired3(BaseModel):
     ]
 
 
+class Responsive(BaseModel):
+    width: bool
+    height: bool
+
+
+class Unit(Enum):
+    px = "px"
+    dp = "dp"
+    inches = "inches"
+    cm = "cm"
+
+
+class Dimensions(BaseModel):
+    width: Annotated[Optional[float], Field(ge=0.0)] = None
+    height: Annotated[Optional[float], Field(ge=0.0)] = None
+    min_width: Annotated[Optional[float], Field(ge=0.0)] = None
+    min_height: Annotated[Optional[float], Field(ge=0.0)] = None
+    max_width: Annotated[Optional[float], Field(ge=0.0)] = None
+    max_height: Annotated[Optional[float], Field(ge=0.0)] = None
+    responsive: Optional[Responsive] = None
+    aspect_ratio: Annotated[Optional[str], Field(pattern="^\\d+:\\d+$")] = None
+    unit: Unit
+
+
+class Render(BaseModel):
+    role: Annotated[str, Field(description="Semantic role of this rendered piece")]
+    dimensions: Dimensions
+
+
 class Format(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -179,8 +205,7 @@ class Format(BaseModel):
     renders: Annotated[
         Optional[list[Render]],
         Field(
-            description="Specification of rendered pieces for this format",
-            min_length=1,
+            description="Specification of rendered pieces for this format", min_length=1
         ),
     ] = None
 
