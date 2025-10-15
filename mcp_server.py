@@ -354,3 +354,98 @@ def preview_creative(manifest_json: str) -> PreviewSuccessResponse | PreviewErro
                 ValidationError(path="/", message=f"Internal error generating preview: {e!s}", type="server_internal")
             ]
         )
+
+
+# Prompts - guided workflows for common tasks
+@mcp.prompt()
+def create_display_banner(format_id: str = "display_300x250_image") -> str:
+    """Guide user through creating a display banner creative.
+
+    Args:
+        format_id: The display format to use (e.g., display_300x250_image, display_728x90_image)
+    """
+    return f"""I'll help you create a {format_id} display banner. Let's work through this step by step:
+
+1. First, let me check what assets are required for this format:
+   - Use list_creative_formats to get the format details and see the manifest_example
+
+2. Gather your assets:
+   - You'll need a banner image (typically JPG, PNG, or WebP)
+   - A click-through URL for where users should land
+   - Make sure your image matches the required dimensions
+
+3. Create the manifest:
+   - Structure it as a dictionary with format_id and assets
+   - Each asset should be an object with a "url" field
+   - Example structure: {{"format_id": "{format_id}", "assets": {{"banner_image": {{"url": "..."}}, "click_url": {{"url": "..."}}}}}}
+
+4. Generate the preview:
+   - Use preview_creative with your manifest to see how it will render
+
+Would you like me to retrieve the format details for {format_id} first?"""
+
+
+@mcp.prompt()
+def validate_manifest(format_id: str) -> str:
+    """Guide user through validating a creative manifest before submission.
+
+    Args:
+        format_id: The format ID to validate against
+    """
+    return f"""I'll help you validate a creative manifest for {format_id}. Here's the validation checklist:
+
+1. Get the format requirements:
+   - Use list_creative_formats to see the exact requirements for {format_id}
+   - Review the manifest_example to see the expected structure
+
+2. Check your manifest structure:
+   - Ensure format_id field is present and matches "{format_id}"
+   - Verify assets is a dictionary (not a list)
+   - Confirm all required assets are present
+
+3. Validate each asset:
+   - Image/video/audio assets need a "url" field
+   - Text/HTML assets need a "value" field
+   - URLs should be absolute (https://) or data URLs
+   - Check file size limits if specified
+
+4. Test with preview:
+   - Use preview_creative to validate and see any errors
+   - Errors will include JSON Pointer paths showing exactly what's wrong
+
+Let me retrieve the format details for {format_id} to help you validate your manifest."""
+
+
+@mcp.prompt()
+def explore_formats(ad_type: str = "display") -> str:
+    """Guide user through exploring available creative formats.
+
+    Args:
+        ad_type: Type of ad to explore (display, video, audio, native, dooh)
+    """
+    return f"""I'll help you explore available {ad_type} creative formats. Here's how to find the right format:
+
+1. List all formats:
+   - Use list_creative_formats to see all available formats
+   - Each format includes:
+     * format_id - unique identifier
+     * type - format category ({ad_type}, video, audio, etc.)
+     * requirements - dimensions, file sizes, constraints
+     * assets_required - what assets you need to provide
+     * manifest_example - a working example you can copy
+
+2. Filter for {ad_type} formats:
+   - Look for formats where type == "{ad_type}"
+   - Common {ad_type} formats include standard IAB sizes
+
+3. Choose based on your needs:
+   - Consider dimensions (300x250, 728x90, etc.)
+   - Check asset requirements (image, HTML5, etc.)
+   - Review file size limits
+
+4. Use the manifest_example:
+   - Copy the manifest_example from your chosen format
+   - Replace the example URLs with your actual assets
+   - Use preview_creative to generate a preview
+
+Let me retrieve the {ad_type} formats for you."""
