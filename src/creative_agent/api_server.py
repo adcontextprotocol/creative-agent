@@ -8,7 +8,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from .data.formats import STANDARD_FORMATS, get_format_by_id
+from .data.standard_formats import STANDARD_FORMATS, get_format_by_id
 
 app = FastAPI(title="AdCP Creative Agent", version="1.0.0")
 
@@ -78,9 +78,25 @@ async def preview_creative(request: PreviewRequest) -> dict[str, Any]:
     preview_id = str(uuid.uuid4())
 
     # Build iframe HTML based on format type
-    if fmt.type == "display":
-        width = request.width or fmt.width or 300
-        height = request.height or fmt.height or 250
+    type_value = fmt.type.value if hasattr(fmt.type, "value") else fmt.type
+
+    if type_value == "display":
+        # Get dimensions from request or format requirements
+        width = request.width
+        height = request.height
+
+        if not width or not height:
+            if fmt.requirements and "dimensions" in fmt.requirements:
+                dims = fmt.requirements["dimensions"]
+                if isinstance(dims, str) and "x" in dims:
+                    parts = dims.split("x")
+                    if len(parts) == 2:
+                        width = int(parts[0])
+                        height = int(parts[1])
+
+        width = width or 300
+        height = height or 250
+
         image_url = request.assets.get("image", "")
         click_url = request.assets.get("click_url", "#")
 
@@ -92,9 +108,9 @@ async def preview_creative(request: PreviewRequest) -> dict[str, Any]:
 </iframe>
 """.strip()
 
-    elif fmt.type == "video":
-        width = request.width or fmt.width or 640
-        height = request.height or fmt.height or 360
+    elif type_value == "video":
+        width = request.width or 640
+        height = request.height or 360
         video_url = request.assets.get("video", "")
 
         iframe_html = f"""
