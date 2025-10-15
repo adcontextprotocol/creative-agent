@@ -14,14 +14,65 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
 from fastmcp import FastMCP
+from pydantic import BaseModel, Field
 
 from creative_agent.data.standard_formats import STANDARD_FORMATS, get_format_by_id
 
 mcp = FastMCP("adcp-creative-agent")
 
 
+# Response models
+class FormatWithExample(BaseModel):
+    """Format definition with manifest example."""
+
+    format_id: str = Field(description="Unique format identifier")
+    name: str = Field(description="Human-readable format name")
+    type: str = Field(description="Format type (display, video, audio, native, dooh)")
+    description: str | None = Field(None, description="Format description")
+    requirements: dict | None = Field(None, description="Format requirements and constraints")
+    assets_required: list[dict] = Field(
+        default_factory=list, description="Required and optional assets with specifications"
+    )
+    supported_macros: list[str] | None = Field(None, description="Supported macro substitutions")
+    manifest_example: dict = Field(description="Complete working example of a valid manifest")
+
+
+class ListFormatsResponse(BaseModel):
+    """Response from list_creative_formats."""
+
+    formats: list[FormatWithExample] = Field(description="List of available formats with examples")
+
+
+class ValidationError(BaseModel):
+    """Validation error with JSON Pointer path."""
+
+    path: str = Field(description="JSON Pointer to the error location (e.g., /assets/banner_image)")
+    message: str = Field(description="Human-readable error message")
+    type: str = Field(description="Error type (e.g., missing_required_field, invalid_type)")
+    hint: str | None = Field(None, description="Hint for fixing the error")
+    example: dict | None = Field(None, description="Example of correct value")
+    asset_type: str | None = Field(None, description="Required asset type")
+    requirements: dict | None = Field(None, description="Asset requirements")
+
+
+class PreviewErrorResponse(BaseModel):
+    """Error response from preview_creative."""
+
+    errors: list[ValidationError] = Field(description="List of validation errors")
+
+
+class PreviewSuccessResponse(BaseModel):
+    """Success response from preview_creative."""
+
+    preview_id: str = Field(description="Unique preview identifier")
+    format_id: str = Field(description="Format used for preview")
+    preview_url: str = Field(description="URL to view the preview")
+    iframe_html: str = Field(description="HTML iframe code for embedding the preview")
+    manifest: dict = Field(description="The manifest that was used to generate the preview")
+
+
 @mcp.tool()
-def list_creative_formats() -> str:
+def list_creative_formats() -> ListFormatsResponse:
     """List all available AdCP creative formats.
 
     Returns all standard creative formats defined in the AdCP spec including
@@ -37,9 +88,6 @@ def list_creative_formats() -> str:
       - required: Whether the asset is required
       - requirements: Constraints like dimensions, file size, formats
     - manifest_example: Complete working example of a valid manifest
-
-    Returns:
-        JSON array of creative format objects with full schema and examples
     """
     formats_data = []
     for fmt in STANDARD_FORMATS:
@@ -77,13 +125,20 @@ def list_creative_formats() -> str:
                     continue
 
         fmt_dict["manifest_example"] = manifest_example
-        formats_data.append(fmt_dict)
 
-    return json.dumps(formats_data, indent=2)
+        # Convert type enum to string for response
+        if "type" in fmt_dict and hasattr(fmt_dict["type"], "value"):
+            fmt_dict["type"] = fmt_dict["type"].value
+        elif isinstance(fmt_dict.get("type"), object) and not isinstance(fmt_dict["type"], str):
+            fmt_dict["type"] = str(fmt_dict["type"])
+
+        formats_data.append(FormatWithExample(**fmt_dict))
+
+    return ListFormatsResponse(formats=formats_data)
 
 
 @mcp.tool()
-def preview_creative(manifest_json: str) -> str:
+def preview_creative(manifest_json: str) -> PreviewSuccessResponse | PreviewErrorResponse:
     """Generate a preview from a creative manifest.
 
     Takes a creative manifest and generates a rendered preview.
@@ -117,40 +172,46 @@ def preview_creative(manifest_json: str) -> str:
     try:
         manifest = json.loads(manifest_json)
     except json.JSONDecodeError as e:
-        return json.dumps({"errors": [{"path": "/", "message": f"Invalid JSON: {e!s}", "type": "json_syntax_error"}]})
+        return PreviewErrorResponse(
+            errors=[ValidationError(path="/", message=f"Invalid JSON: {e!s}", type="json_syntax_error")]
+        )
 
-    errors = []
+    errors: list[ValidationError] = []
 
     # Validate format_id
     format_id = manifest.get("format_id")
     if not format_id:
-        errors.append({"path": "/format_id", "message": "format_id is required", "type": "missing_required_field"})
-        return json.dumps({"errors": errors})
+        errors.append(
+            ValidationError(path="/format_id", message="format_id is required", type="missing_required_field")
+        )
+        return PreviewErrorResponse(errors=errors)
 
     fmt = get_format_by_id(format_id)
     if not fmt:
         errors.append(
-            {
-                "path": "/format_id",
-                "message": f"Format '{format_id}' not found",
-                "type": "invalid_format_id",
-                "hint": "Use list_creative_formats to see available formats",
-            }
+            ValidationError(
+                path="/format_id",
+                message=f"Format '{format_id}' not found",
+                type="invalid_format_id",
+                hint="Use list_creative_formats to see available formats",
+            )
         )
-        return json.dumps({"errors": errors})
+        return PreviewErrorResponse(errors=errors)
 
     # Validate assets structure
     assets = manifest.get("assets")
     if assets is None:
-        errors.append({"path": "/assets", "message": "assets field is required", "type": "missing_required_field"})
+        errors.append(
+            ValidationError(path="/assets", message="assets field is required", type="missing_required_field")
+        )
     elif not isinstance(assets, dict):
         errors.append(
-            {
-                "path": "/assets",
-                "message": f"assets must be a dictionary, got {type(assets).__name__}",
-                "type": "invalid_type",
-                "hint": "Use asset_id as keys, e.g. {'banner_image': {'url': '...'}, 'click_url': {'url': '...'}}",
-            }
+            ValidationError(
+                path="/assets",
+                message=f"assets must be a dictionary, got {type(assets).__name__}",
+                type="invalid_type",
+                hint="Use asset_id as keys, e.g. {'banner_image': {'url': '...'}, 'click_url': {'url': '...'}}",
+            )
         )
     # Validate required assets
     elif fmt.assets_required:
@@ -161,17 +222,17 @@ def preview_creative(manifest_json: str) -> str:
             asset_id = asset_req.asset_id
             if asset_id not in assets:
                 errors.append(
-                    {
-                        "path": f"/assets/{asset_id}",
-                        "message": f"Required asset '{asset_id}' is missing",
-                        "type": "missing_required_asset",
-                        "asset_type": asset_req.asset_type.value
+                    ValidationError(
+                        path=f"/assets/{asset_id}",
+                        message=f"Required asset '{asset_id}' is missing",
+                        type="missing_required_asset",
+                        asset_type=asset_req.asset_type.value
                         if hasattr(asset_req.asset_type, "value")
                         else str(asset_req.asset_type),
-                        "requirements": asset_req.requirements
+                        requirements=asset_req.requirements
                         if hasattr(asset_req, "requirements") and asset_req.requirements
                         else {},
-                    }
+                    )
                 )
                 continue
 
@@ -179,11 +240,11 @@ def preview_creative(manifest_json: str) -> str:
             asset = assets[asset_id]
             if not isinstance(asset, dict):
                 errors.append(
-                    {
-                        "path": f"/assets/{asset_id}",
-                        "message": "Asset must be a dictionary with 'url' or 'value' field",
-                        "type": "invalid_asset_structure",
-                    }
+                    ValidationError(
+                        path=f"/assets/{asset_id}",
+                        message="Asset must be a dictionary with 'url' or 'value' field",
+                        type="invalid_asset_structure",
+                    )
                 )
                 continue
 
@@ -194,26 +255,26 @@ def preview_creative(manifest_json: str) -> str:
             if asset_type in ["image", "video", "audio", "url", "brand_manifest"]:
                 if "url" not in asset:
                     errors.append(
-                        {
-                            "path": f"/assets/{asset_id}/url",
-                            "message": f"Asset of type '{asset_type}' requires a 'url' field",
-                            "type": "missing_required_field",
-                            "example": {"url": "https://example.com/asset.jpg"},
-                        }
+                        ValidationError(
+                            path=f"/assets/{asset_id}/url",
+                            message=f"Asset of type '{asset_type}' requires a 'url' field",
+                            type="missing_required_field",
+                            example={"url": "https://example.com/asset.jpg"},
+                        )
                     )
             elif asset_type in ["text", "html"]:
                 if "value" not in asset:
                     errors.append(
-                        {
-                            "path": f"/assets/{asset_id}/value",
-                            "message": f"Asset of type '{asset_type}' requires a 'value' field",
-                            "type": "missing_required_field",
-                            "example": {"value": "Example content"},
-                        }
+                        ValidationError(
+                            path=f"/assets/{asset_id}/value",
+                            message=f"Asset of type '{asset_type}' requires a 'value' field",
+                            type="missing_required_field",
+                            example={"value": "Example content"},
+                        )
                     )
 
     if errors:
-        return json.dumps({"errors": errors}, indent=2)
+        return PreviewErrorResponse(errors=errors)
 
     # Generate preview ID
     preview_id = str(uuid.uuid4())
@@ -279,22 +340,17 @@ def preview_creative(manifest_json: str) -> str:
             # Generic HTML preview
             iframe_html = f"<div>Preview for {fmt.name} (format_id: {format_id})</div>"
 
-        response = {
-            "preview_id": preview_id,
-            "format_id": format_id,
-            "preview_url": f"https://preview.adcp.example.com/{preview_id}",
-            "iframe_html": iframe_html,
-            "manifest": manifest,
-        }
-
-        return json.dumps(response, indent=2)
+        return PreviewSuccessResponse(
+            preview_id=preview_id,
+            format_id=format_id,
+            preview_url=f"https://preview.adcp.example.com/{preview_id}",
+            iframe_html=iframe_html,
+            manifest=manifest,
+        )
 
     except Exception as e:
-        return json.dumps(
-            {
-                "errors": [
-                    {"path": "/", "message": f"Internal error generating preview: {e!s}", "type": "server_internal"}
-                ]
-            },
-            indent=2,
+        return PreviewErrorResponse(
+            errors=[
+                ValidationError(path="/", message=f"Internal error generating preview: {e!s}", type="server_internal")
+            ]
         )
