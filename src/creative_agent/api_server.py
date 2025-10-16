@@ -58,8 +58,14 @@ async def list_formats() -> list[dict[str, Any]]:
 
 @app.get("/formats/{format_id}")
 async def get_format(format_id: str) -> dict[str, Any]:
-    """Get a specific format."""
-    fmt = get_format_by_id(format_id)
+    """Get a specific format by ID (assumes this agent's formats)."""
+
+    from .data.standard_formats import AGENT_URL
+    from .schemas_generated._schemas_v1_core_format_json import FormatId
+
+    # Convert string ID to FormatId object (assume our agent)
+    fmt_id = FormatId(agent_url=AGENT_URL, id=format_id)
+    fmt = get_format_by_id(fmt_id)
     if not fmt:
         raise HTTPException(status_code=404, detail=f"Format {format_id} not found")
     result: dict[str, Any] = fmt.model_dump(mode="json")
@@ -69,8 +75,13 @@ async def get_format(format_id: str) -> dict[str, Any]:
 @app.post("/preview")
 async def preview_creative(request: PreviewRequest) -> dict[str, Any]:
     """Generate preview from creative manifest."""
-    # Validate format exists
-    fmt = get_format_by_id(request.format_id)
+
+    from .data.standard_formats import AGENT_URL
+    from .schemas_generated._schemas_v1_core_format_json import FormatId
+
+    # Convert string ID to FormatId object (assume our agent)
+    fmt_id = FormatId(agent_url=AGENT_URL, id=request.format_id)
+    fmt = get_format_by_id(fmt_id)
     if not fmt:
         raise HTTPException(status_code=404, detail=f"Format {request.format_id} not found")
 
@@ -81,21 +92,24 @@ async def preview_creative(request: PreviewRequest) -> dict[str, Any]:
     type_value = fmt.type.value if hasattr(fmt.type, "value") else fmt.type
 
     if type_value == "display":
-        # Get dimensions from request or format requirements
+        # Get dimensions from request or format renders
         width = request.width
         height = request.height
 
         if not width or not height:
-            if fmt.requirements and "dimensions" in fmt.requirements:
-                dims = fmt.requirements["dimensions"]
-                if isinstance(dims, str) and "x" in dims:
-                    parts = dims.split("x")
-                    if len(parts) == 2:
-                        width = int(parts[0])
-                        height = int(parts[1])
+            # Get dimensions from format renders
+            if fmt.renders and len(fmt.renders) > 0:
+                render = fmt.renders[0]
+                if render.dimensions and render.dimensions.width and render.dimensions.height:
+                    width = width or int(render.dimensions.width)
+                    height = height or int(render.dimensions.height)
 
-        width = width or 300
-        height = height or 250
+            # If still missing dimensions, return error
+            if not width or not height:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Format {fmt_id.id} has no fixed dimensions and dimensions were not provided in request"
+                )
 
         image_url = request.assets.get("image", "")
         click_url = request.assets.get("click_url", "#")

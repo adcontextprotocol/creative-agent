@@ -24,12 +24,12 @@ from .schemas import (
     PreviewCreativeResponse,
     PreviewVariant,
 )
-from .schemas_generated._schemas_v1_core_format_id_json import FormatId
+from .schemas_generated._schemas_v1_core_format_json import FormatId
 
 mcp = FastMCP("adcp-creative-agent")
 
 
-def normalize_format_id_for_comparison(format_id: FormatId | dict | Any) -> tuple[str, str]:
+def normalize_format_id_for_comparison(format_id: FormatId | dict[str, Any] | Any) -> tuple[str, str]:
     """
     Normalize a format_id to (id, agent_url) tuple for comparison.
 
@@ -37,11 +37,10 @@ def normalize_format_id_for_comparison(format_id: FormatId | dict | Any) -> tupl
     """
     if isinstance(format_id, FormatId):
         return (format_id.id, str(format_id.agent_url))
-    elif isinstance(format_id, dict):
+    if isinstance(format_id, dict):
         # Handle dict from JSON (e.g., from manifest)
         return (format_id.get("id", ""), format_id.get("agent_url", ""))
-    else:
-        return ("", "")
+    return ("", "")
 
 
 @mcp.tool()
@@ -98,7 +97,6 @@ def list_creative_formats(
         from .schemas_generated._schemas_v1_creative_list_creative_formats_response_json import (
             Capability,
             CreativeAgent,
-            Status,
         )
         from .schemas_generated._schemas_v1_creative_list_creative_formats_response_json import (
             Format as ResponseFormat,
@@ -111,7 +109,6 @@ def list_creative_formats(
         response_formats = [ResponseFormat(**fmt.model_dump(mode="json", exclude_unset=True)) for fmt in formats]
 
         response = ListCreativeFormatsResponse(
-            status=Status.completed,
             formats=response_formats,
             creative_agents=[
                 CreativeAgent(
@@ -165,8 +162,10 @@ def preview_creative(
             inputs_obj = [PreviewInput(**inp) for inp in inputs]
 
         # Parse request (creative_manifest stays as dict)
+        # Convert string format_id to FormatId object
+        fmt_id = FormatId(agent_url=AGENT_URL, id=format_id)
         request = PreviewCreativeRequest(
-            format_id=format_id,
+            format_id=fmt_id,
             creative_manifest=creative_manifest,
             inputs=inputs_obj,
             template_id=template_id,
@@ -412,7 +411,9 @@ def build_creative(
         )
 
         # Get format definition
-        fmt = get_format_by_id(request.format_id)
+        # Convert string format_id to FormatId object
+        fmt_id = FormatId(agent_url=AGENT_URL, id=request.format_id)
+        fmt = get_format_by_id(fmt_id)
         if not fmt:
             return json.dumps(
                 {"error": f"Format {request.format_id} not found"},
@@ -528,7 +529,11 @@ Description: {fmt.description}
             )
 
         # The format_id in the output manifest should be the OUTPUT format
-        output_format_id = output_fmt.format_id if is_generative else request.format_id
+        # Extract string ID from FormatId object if needed
+        if is_generative:
+            output_format_id: str = output_fmt.format_id.id if hasattr(output_fmt.format_id, "id") else str(output_fmt.format_id)
+        else:
+            output_format_id = request.format_id
 
         if generate_images:
             prompt = f"""You are a creative generation AI for advertising.

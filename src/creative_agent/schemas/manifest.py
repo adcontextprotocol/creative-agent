@@ -4,7 +4,7 @@ from typing import Any
 
 from pydantic import BaseModel
 
-from ..schemas_generated._schemas_v1_core_format_id_json import FormatId
+from ..schemas_generated._schemas_v1_core_format_json import FormatId
 
 # CreativeManifest is imported from AdCP schemas via __init__.py
 # (uses CreativeAsset from AdCP as the base)

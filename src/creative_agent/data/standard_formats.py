@@ -1113,10 +1113,7 @@ def filter_formats(
     if format_ids:
         # Convert to (id, agent_url) tuples for comparison
         search_ids = [(fid.id, str(fid.agent_url)) for fid in format_ids]
-        results = [
-            fmt for fmt in results
-            if (fmt.format_id.id, str(fmt.format_id.agent_url)) in search_ids
-        ]
+        results = [fmt for fmt in results if (fmt.format_id.id, str(fmt.format_id.agent_url)) in search_ids]
 
     if type:
         # Handle both Type enum and string values
