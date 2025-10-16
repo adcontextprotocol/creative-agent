@@ -1152,8 +1152,9 @@ def filter_formats(
         filtered = []
         for fmt in results:
             width, height = get_dimensions(fmt)
+            # Exclude formats without dimensions when dimension filtering is requested
             if width is None or height is None:
-                continue  # Skip formats without dimensions
+                continue
 
             if max_width is not None and width > max_width:
                 continue
