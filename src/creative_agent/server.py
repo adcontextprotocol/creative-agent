@@ -531,7 +531,9 @@ Description: {fmt.description}
         # The format_id in the output manifest should be the OUTPUT format
         # Extract string ID from FormatId object if needed
         if is_generative:
-            output_format_id: str = output_fmt.format_id.id if hasattr(output_fmt.format_id, "id") else str(output_fmt.format_id)
+            output_format_id: str = (
+                output_fmt.format_id.id if hasattr(output_fmt.format_id, "id") else str(output_fmt.format_id)
+            )
         else:
             output_format_id = request.format_id
 

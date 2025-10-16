@@ -108,7 +108,7 @@ async def preview_creative(request: PreviewRequest) -> dict[str, Any]:
             if not width or not height:
                 raise HTTPException(
                     status_code=400,
-                    detail=f"Format {fmt_id.id} has no fixed dimensions and dimensions were not provided in request"
+                    detail=f"Format {fmt_id.id} has no fixed dimensions and dimensions were not provided in request",
                 )
 
         image_url = request.assets.get("image", "")
