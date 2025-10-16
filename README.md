@@ -92,7 +92,7 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
     "adcp-creative-agent": {
       "command": "uv",
       "args": ["run", "adcp-creative-agent"],
-      "cwd": "/absolute/path/to/creative-agent/.conductor/jackson-v1"
+      "cwd": "/absolute/path/to/creative-agent"
     }
   }
 }
@@ -135,7 +135,7 @@ Returns all available AdCP creative format specifications.
 
 **Response:** JSON array of AdCP `CreativeFormat` objects.
 
-See the [AdCP Creative Formats specification](https://github.com/anthropics/adcp) for complete schema and field definitions.
+See the [AdCP Creative Formats specification](https://github.com/adcontextprotocol/adcp) for complete schema and field definitions.
 
 ### `build_creative`
 
@@ -327,9 +327,9 @@ supported_macros=COMMON_MACROS + ["VIDEO_ID", "POD_POSITION", "CONTENT_GENRE"]
 ### 6. IAB Specification Links
 
 For standard IAB formats, include specification URLs:
-- Video: `https://iabtechlab.com/standards/video-ad-serving-template-vast/`
+- Video: `https://iabtechlab.com/standards/vast/`
 - Native: `https://iabtechlab.com/standards/openrtb-native/`
-- Display: `https://iabtechlab.com/ad-experiences/display-ad-formats/`
+- Display: `https://iabtechlab.com/standards/iab-new-ad-portfolio-guidelines/`
 
 ## Deployment
 
@@ -495,4 +495,4 @@ MIT License - see LICENSE file
 
 ## Spec Reference
 
-Format specifications from [AdCP Media Buy Protocol](https://adcontextprotocol.org/docs/media-buy/capability-discovery/creative-formats)
+Format specifications from [AdCP Media Buy Protocol](https://adcontextprotocol.org/docs/media-buy/specification)
