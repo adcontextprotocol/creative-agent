@@ -6,7 +6,26 @@ from __future__ import annotations
 from enum import Enum
 from typing import Annotated, Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import AnyUrl, BaseModel, ConfigDict, Field
+
+
+class FormatId(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    agent_url: Annotated[
+        AnyUrl,
+        Field(
+            description="URL of the agent that defines this format (e.g., 'https://creatives.adcontextprotocol.org' for standard formats, or 'https://publisher.com/.well-known/adcp/sales' for custom formats)"
+        ),
+    ]
+    id: Annotated[
+        str,
+        Field(
+            description="Format identifier within the agent's namespace (e.g., 'display_300x250', 'video_standard_30s')",
+            pattern="^[a-zA-Z0-9_-]+$",
+        ),
+    ]
 
 
 class Type(Enum):
@@ -31,7 +50,8 @@ class ListCreativeFormatsRequestCreativeAgent(BaseModel):
         extra="forbid",
     )
     format_ids: Annotated[
-        Optional[list[str]], Field(description="Return only these specific format IDs")
+        Optional[list[FormatId]],
+        Field(description="Return only these specific format IDs"),
     ] = None
     type: Annotated[
         Optional[Type],

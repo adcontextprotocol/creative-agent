@@ -3,10 +3,68 @@
 
 from __future__ import annotations
 
-from enum import Enum
 from typing import Annotated, Optional
 
 from pydantic import AnyUrl, AwareDatetime, BaseModel, ConfigDict, Field
+
+
+class Dimensions(BaseModel):
+    width: Annotated[float, Field(ge=0.0)]
+    height: Annotated[float, Field(ge=0.0)]
+
+
+class Embedding(BaseModel):
+    recommended_sandbox: Annotated[
+        Optional[str],
+        Field(
+            description="Recommended iframe sandbox attribute value (e.g., 'allow-scripts allow-same-origin')"
+        ),
+    ] = None
+    requires_https: Annotated[
+        Optional[bool],
+        Field(description="Whether this output requires HTTPS for secure embedding"),
+    ] = None
+    supports_fullscreen: Annotated[
+        Optional[bool],
+        Field(description="Whether this output supports fullscreen mode"),
+    ] = None
+    csp_policy: Annotated[
+        Optional[str],
+        Field(description="Content Security Policy requirements for embedding"),
+    ] = None
+
+
+class Render(BaseModel):
+    render_id: Annotated[
+        str,
+        Field(
+            description="Unique identifier for this rendered piece within the variant"
+        ),
+    ]
+    preview_url: Annotated[
+        AnyUrl,
+        Field(
+            description="URL to an HTML page that renders this piece. Can be embedded in an iframe. Handles all rendering complexity internally (images, video players, audio players, interactive content, etc.)."
+        ),
+    ]
+    role: Annotated[
+        str,
+        Field(
+            description="Semantic role of this rendered piece. Use 'primary' for main content, 'companion' for associated banners, descriptive strings for device variants or custom roles."
+        ),
+    ]
+    dimensions: Annotated[
+        Optional[Dimensions],
+        Field(
+            description="Dimensions for this rendered piece. For companion ads with multiple sizes, this specifies which size this piece is."
+        ),
+    ] = None
+    embedding: Annotated[
+        Optional[Embedding],
+        Field(
+            description="Optional security and embedding metadata for safe iframe integration"
+        ),
+    ] = None
 
 
 class Input(BaseModel):
@@ -20,78 +78,15 @@ class Input(BaseModel):
     ] = None
 
 
-class PrimaryMediaType(Enum):
-    image = "image"
-    video = "video"
-    audio = "audio"
-    interactive = "interactive"
-
-
-class EstimatedDimensions(BaseModel):
-    width: Annotated[float, Field(ge=0.0)]
-    height: Annotated[float, Field(ge=0.0)]
-
-
-class Hints(BaseModel):
-    primary_media_type: Annotated[
-        Optional[PrimaryMediaType],
-        Field(
-            description="Primary media type contained in the preview (for optimization only)"
-        ),
-    ] = None
-    estimated_dimensions: Annotated[
-        Optional[EstimatedDimensions],
-        Field(
-            description="Estimated rendered dimensions (may differ from actual responsive rendering)"
-        ),
-    ] = None
-    estimated_duration_seconds: Annotated[
-        Optional[float],
-        Field(
-            description="Estimated duration for video/audio content (for optimization only)",
-            ge=0.0,
-        ),
-    ] = None
-    contains_audio: Annotated[
-        Optional[bool],
-        Field(
-            description="Whether the preview contains audio (helps with autoplay policies)"
-        ),
-    ] = None
-    requires_interaction: Annotated[
-        Optional[bool],
-        Field(
-            description="Whether the preview requires user interaction to fully experience"
-        ),
-    ] = None
-
-
-class Embedding(BaseModel):
-    recommended_sandbox: Annotated[
-        Optional[str],
-        Field(
-            description="Recommended iframe sandbox attribute value (e.g., 'allow-scripts allow-same-origin')"
-        ),
-    ] = None
-    requires_https: Annotated[
-        Optional[bool],
-        Field(description="Whether the preview requires HTTPS for secure embedding"),
-    ] = None
-    supports_fullscreen: Annotated[
-        Optional[bool],
-        Field(description="Whether the preview supports fullscreen mode"),
-    ] = None
-    csp_policy: Annotated[
-        Optional[str],
-        Field(description="Content Security Policy requirements for embedding"),
-    ] = None
-
-
 class Preview(BaseModel):
-    preview_url: Annotated[
-        AnyUrl,
+    preview_id: Annotated[
+        str, Field(description="Unique identifier for this preview variant")
+    ]
+    renders: Annotated[
+        list[Render],
         Field(
-            description="URL to an HTML page that renders this preview variant. Can be embedded in an iframe. Handles all rendering complexity internally (images, video players, audio players, interactive content, etc.)."
+            description="Array of rendered pieces for this preview variant. Most formats render as a single piece. Companion ad formats (video + banner), multi-placement formats, and adaptive formats render as multiple pieces.",
+            min_length=1,
         ),
     ]
     input: Annotated[
@@ -100,18 +95,6 @@ class Preview(BaseModel):
             description="The input parameters that generated this preview variant. Echoes back the request input or shows defaults used."
         ),
     ]
-    hints: Annotated[
-        Optional[Hints],
-        Field(
-            description="Optional optimization hints for clients. Clients MUST support HTML rendering regardless of hints. These enable optimizations like preloading appropriate codecs or sizing iframes."
-        ),
-    ] = None
-    embedding: Annotated[
-        Optional[Embedding],
-        Field(
-            description="Optional security and embedding metadata for safe iframe integration"
-        ),
-    ] = None
 
 
 class PreviewCreativeResponse(BaseModel):

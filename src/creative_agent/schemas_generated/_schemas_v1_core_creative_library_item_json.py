@@ -83,7 +83,7 @@ class Assets(BaseModel):
     ] = None
 
 
-class Assets10(BaseModel):
+class Assets14(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
@@ -174,6 +174,6 @@ class CreativeLibraryItem(BaseModel):
         Optional[list[str]], Field(description="User-defined tags for organization")
     ] = None
     assets: Annotated[
-        Optional[list[Union[Assets, Assets10]]],
+        Optional[list[Union[Assets, Assets14]]],
         Field(description="Sub-assets for multi-asset formats like carousels"),
     ] = None

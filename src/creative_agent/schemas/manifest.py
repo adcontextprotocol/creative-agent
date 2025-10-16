@@ -4,6 +4,8 @@ from typing import Any
 
 from pydantic import BaseModel
 
+from ..schemas_generated._schemas_v1_core_format_id_json import FormatId
+
 # CreativeManifest is imported from AdCP schemas via __init__.py
 # (uses CreativeAsset from AdCP as the base)
 
@@ -19,7 +21,7 @@ class PreviewInput(BaseModel):
 class PreviewCreativeRequest(BaseModel):
     """Request for preview_creative task."""
 
-    format_id: str
+    format_id: FormatId
     creative_manifest: dict[str, Any]  # AdCP CreativeAsset structure
     inputs: list[PreviewInput] | None = None
     template_id: str | None = None

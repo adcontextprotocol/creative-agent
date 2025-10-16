@@ -3,22 +3,9 @@
 
 from __future__ import annotations
 
-from enum import Enum
 from typing import Annotated, Any, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
-
-
-class Status(Enum):
-    submitted = "submitted"
-    working = "working"
-    input_required = "input-required"
-    completed = "completed"
-    canceled = "canceled"
-    failed = "failed"
-    rejected = "rejected"
-    auth_required = "auth-required"
-    unknown = "unknown"
 
 
 class ProtocolResponse(BaseModel):
@@ -26,13 +13,6 @@ class ProtocolResponse(BaseModel):
         extra="forbid",
     )
     message: Annotated[str, Field(description="Human-readable summary")]
-    status: Annotated[
-        Optional[Status],
-        Field(
-            description="Standardized task status values based on A2A TaskState enum. Indicates the current state of any AdCP operation.",
-            title="Task Status",
-        ),
-    ] = None
     context_id: Annotated[
         Optional[str], Field(description="Session continuity identifier")
     ] = None

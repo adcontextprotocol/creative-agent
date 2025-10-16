@@ -63,10 +63,9 @@ def test_format_has_required_fields():
 
 def test_output_format_ids_are_strings():
     """
-    Verify that output_format_ids use string format IDs (per schema).
+    Verify that output_format_ids use FormatId objects (per AdCP v2.4.1).
 
-    Note: Format.output_format_ids uses strings (same agent assumed),
-    while Product.format_ids uses structured {agent_url, id} objects.
+    Per AdCP v2.4.1, Format.output_format_ids is an array of FormatId objects.
     """
     for format_obj in STANDARD_FORMATS:
         format_dict = format_obj.model_dump(mode="json", by_alias=True, exclude_none=True)
@@ -74,12 +73,17 @@ def test_output_format_ids_are_strings():
         if "output_format_ids" in format_dict:
             output_ids = format_dict["output_format_ids"]
             if output_ids:  # Skip if empty list
-                # Each should be a string per Format schema
+                # Each should be a FormatId object (dict with agent_url and id)
                 for idx, output_id in enumerate(output_ids):
-                    if not isinstance(output_id, str):
+                    if not isinstance(output_id, dict):
                         pytest.fail(
-                            f"Format {format_obj.format_id} output_format_ids[{idx}] is not a string: {output_id}. "
-                            "Per schema, output_format_ids items should be strings (format_id within same agent)."
+                            f"Format {format_obj.format_id} output_format_ids[{idx}] is not a dict: {output_id}. "
+                            "Per schema, output_format_ids items should be FormatId objects."
+                        )
+                    if "agent_url" not in output_id or "id" not in output_id:
+                        pytest.fail(
+                            f"Format {format_obj.format_id} output_format_ids[{idx}] missing required fields: {output_id}. "
+                            "FormatId must have 'agent_url' and 'id' fields."
                         )
 
 

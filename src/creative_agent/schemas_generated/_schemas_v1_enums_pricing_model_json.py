@@ -8,6 +8,7 @@ from enum import Enum
 
 class PricingModel(Enum):
     cpm = "cpm"
+    vcpm = "vcpm"
     cpc = "cpc"
     cpcv = "cpcv"
     cpv = "cpv"

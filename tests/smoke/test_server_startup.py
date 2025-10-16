@@ -39,7 +39,7 @@ def test_list_creative_formats():
     assert len(STANDARD_FORMATS) > 0
 
     # Check for specific AdCP formats
-    format_ids = [fmt.format_id for fmt in STANDARD_FORMATS]
+    format_ids = [fmt.format_id.id for fmt in STANDARD_FORMATS]
     assert "video_standard_15s" in format_ids
     assert "video_standard_30s" in format_ids
     assert "display_300x250_image" in format_ids
@@ -49,14 +49,15 @@ def test_list_creative_formats():
 @pytest.mark.smoke
 def test_preview_creative_logic():
     """Verify preview generation logic works."""
-    from src.creative_agent.data.standard_formats import get_format_by_id
+    from src.creative_agent.data.standard_formats import AGENT_URL, get_format_by_id
+    from src.creative_agent.schemas_generated._schemas_v1_core_format_id_json import FormatId
 
     # Verify display format exists
-    fmt = get_format_by_id("display_300x250_image")
+    fmt = get_format_by_id(FormatId(agent_url=AGENT_URL, id="display_300x250_image"))
     assert fmt is not None
     assert fmt.type.value == "display"
 
     # Verify video format exists
-    fmt = get_format_by_id("video_standard_15s")
+    fmt = get_format_by_id(FormatId(agent_url=AGENT_URL, id="video_standard_15s"))
     assert fmt is not None
     assert fmt.type.value == "video"

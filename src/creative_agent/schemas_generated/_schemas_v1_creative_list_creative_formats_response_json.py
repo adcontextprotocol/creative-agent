@@ -9,16 +9,23 @@ from typing import Annotated, Any, Optional, Union
 from pydantic import AnyUrl, BaseModel, ConfigDict, Field
 
 
-class Status(Enum):
-    submitted = "submitted"
-    working = "working"
-    input_required = "input-required"
-    completed = "completed"
-    canceled = "canceled"
-    failed = "failed"
-    rejected = "rejected"
-    auth_required = "auth-required"
-    unknown = "unknown"
+class FormatId(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    agent_url: Annotated[
+        AnyUrl,
+        Field(
+            description="URL of the agent that defines this format (e.g., 'https://creatives.adcontextprotocol.org' for standard formats, or 'https://publisher.com/.well-known/adcp/sales' for custom formats)"
+        ),
+    ]
+    id: Annotated[
+        str,
+        Field(
+            description="Format identifier within the agent's namespace (e.g., 'display_300x250', 'video_standard_30s')",
+            pattern="^[a-zA-Z0-9_-]+$",
+        ),
+    ]
 
 
 class Type(Enum):
@@ -29,6 +36,67 @@ class Type(Enum):
     dooh = "dooh"
     rich_media = "rich_media"
     universal = "universal"
+
+
+class Responsive(BaseModel):
+    width: bool
+    height: bool
+
+
+class Unit(Enum):
+    px = "px"
+    dp = "dp"
+    inches = "inches"
+    cm = "cm"
+
+
+class Dimensions(BaseModel):
+    width: Annotated[
+        Optional[float], Field(description="Fixed width in specified units", ge=0.0)
+    ] = None
+    height: Annotated[
+        Optional[float], Field(description="Fixed height in specified units", ge=0.0)
+    ] = None
+    min_width: Annotated[
+        Optional[float],
+        Field(description="Minimum width for responsive renders", ge=0.0),
+    ] = None
+    min_height: Annotated[
+        Optional[float],
+        Field(description="Minimum height for responsive renders", ge=0.0),
+    ] = None
+    max_width: Annotated[
+        Optional[float],
+        Field(description="Maximum width for responsive renders", ge=0.0),
+    ] = None
+    max_height: Annotated[
+        Optional[float],
+        Field(description="Maximum height for responsive renders", ge=0.0),
+    ] = None
+    responsive: Annotated[
+        Optional[Responsive],
+        Field(description="Indicates which dimensions are responsive/fluid"),
+    ] = None
+    aspect_ratio: Annotated[
+        Optional[str],
+        Field(
+            description="Fixed aspect ratio constraint (e.g., '16:9', '4:3', '1:1')",
+            pattern="^\\d+:\\d+$",
+        ),
+    ] = None
+    unit: Annotated[Unit, Field(description="Unit of measurement for dimensions")]
+
+
+class Render(BaseModel):
+    role: Annotated[
+        str,
+        Field(
+            description="Semantic role of this rendered piece (e.g., 'primary', 'companion', 'mobile_variant')"
+        ),
+    ]
+    dimensions: Annotated[
+        Dimensions, Field(description="Dimensions for this rendered piece")
+    ]
 
 
 class AssetType(Enum):
@@ -107,40 +175,17 @@ class AssetsRequired3(BaseModel):
     ]
 
 
-class Responsive(BaseModel):
-    width: bool
-    height: bool
-
-
-class Unit(Enum):
-    px = "px"
-    dp = "dp"
-    inches = "inches"
-    cm = "cm"
-
-
-class Dimensions(BaseModel):
-    width: Annotated[Optional[float], Field(ge=0.0)] = None
-    height: Annotated[Optional[float], Field(ge=0.0)] = None
-    min_width: Annotated[Optional[float], Field(ge=0.0)] = None
-    min_height: Annotated[Optional[float], Field(ge=0.0)] = None
-    max_width: Annotated[Optional[float], Field(ge=0.0)] = None
-    max_height: Annotated[Optional[float], Field(ge=0.0)] = None
-    responsive: Optional[Responsive] = None
-    aspect_ratio: Annotated[Optional[str], Field(pattern="^\\d+:\\d+$")] = None
-    unit: Unit
-
-
-class Render(BaseModel):
-    role: Annotated[str, Field(description="Semantic role of this rendered piece")]
-    dimensions: Dimensions
-
-
 class Format(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    format_id: Annotated[str, Field(description="Unique identifier for the format")]
+    format_id: Annotated[
+        FormatId,
+        Field(
+            description="Structured format identifier with agent URL and format name",
+            title="Format ID",
+        ),
+    ]
     agent_url: Annotated[
         Optional[AnyUrl],
         Field(
@@ -157,7 +202,7 @@ class Format(BaseModel):
     preview_image: Annotated[
         Optional[AnyUrl],
         Field(
-            description="Optional preview image URL for format browsing/discovery UI"
+            description="Optional preview image URL for format browsing/discovery UI. Should be 400x300px (4:3 aspect ratio) PNG or JPG. Used as thumbnail/card image in format browsers."
         ),
     ] = None
     example_url: Annotated[
@@ -172,10 +217,11 @@ class Format(BaseModel):
             description="Media type of this format - determines rendering method and asset requirements"
         ),
     ]
-    requirements: Annotated[
-        Optional[dict[str, Any]],
+    renders: Annotated[
+        Optional[list[Render]],
         Field(
-            description="Technical specifications for this format (e.g., dimensions, duration, file size limits, codecs)"
+            description="Specification of rendered pieces for this format. Most formats produce a single render. Companion ad formats (video + banner), adaptive formats, and multi-placement formats produce multiple renders. Each render specifies its role and dimensions.",
+            min_length=1,
         ),
     ] = None
     assets_required: Annotated[
@@ -197,15 +243,9 @@ class Format(BaseModel):
         ),
     ] = None
     output_format_ids: Annotated[
-        Optional[list[str]],
+        Optional[list[Any]],
         Field(
             description="For generative formats: array of format IDs that this format can generate. When a format accepts inputs like brand_manifest and message, this specifies what concrete output formats can be produced (e.g., a generative banner format might output standard image banner formats)."
-        ),
-    ] = None
-    renders: Annotated[
-        Optional[list[Render]],
-        Field(
-            description="Specification of rendered pieces for this format", min_length=1
         ),
     ] = None
 
@@ -261,13 +301,6 @@ class ListCreativeFormatsResponseCreativeAgent(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    status: Annotated[
-        Optional[Status],
-        Field(
-            description="Standardized task status values based on A2A TaskState enum. Indicates the current state of any AdCP operation.",
-            title="Task Status",
-        ),
-    ] = None
     formats: Annotated[
         list[Format],
         Field(

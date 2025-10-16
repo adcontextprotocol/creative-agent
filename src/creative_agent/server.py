@@ -24,8 +24,24 @@ from .schemas import (
     PreviewCreativeResponse,
     PreviewVariant,
 )
+from .schemas_generated._schemas_v1_core_format_id_json import FormatId
 
 mcp = FastMCP("adcp-creative-agent")
+
+
+def normalize_format_id_for_comparison(format_id: FormatId | dict | Any) -> tuple[str, str]:
+    """
+    Normalize a format_id to (id, agent_url) tuple for comparison.
+
+    Handles FormatId object or dict representations.
+    """
+    if isinstance(format_id, FormatId):
+        return (format_id.id, str(format_id.agent_url))
+    elif isinstance(format_id, dict):
+        # Handle dict from JSON (e.g., from manifest)
+        return (format_id.get("id", ""), format_id.get("agent_url", ""))
+    else:
+        return ("", "")
 
 
 @mcp.tool()
@@ -59,9 +75,14 @@ def list_creative_formats(
         JSON string with format list response
     """
     try:
+        # Convert string format_ids to FormatId objects (assume they're from our agent)
+        format_id_objects = None
+        if format_ids:
+            format_id_objects = [FormatId(agent_url=AGENT_URL, id=fid) for fid in format_ids]
+
         # Cast asset_types to the expected type (filter_formats accepts str or AssetType)
         formats = filter_formats(
-            format_ids=format_ids,
+            format_ids=format_id_objects,
             type=type,
             asset_types=asset_types,  # type: ignore[arg-type]  # filter_formats accepts list[str]
             dimensions=dimensions,
@@ -164,13 +185,17 @@ def preview_creative(
 
         # Validate manifest format_id matches
         manifest_format_id = request.creative_manifest.get("format_id")
-        if manifest_format_id != request.format_id:
-            return json.dumps(
-                {
-                    "error": f"Manifest format_id '{manifest_format_id}' does not match request format_id '{request.format_id}'"
-                },
-                indent=2,
-            )
+        if manifest_format_id:
+            # Normalize both for comparison
+            manifest_norm = normalize_format_id_for_comparison(manifest_format_id)
+            request_norm = normalize_format_id_for_comparison(request.format_id)
+            if manifest_norm != request_norm:
+                return json.dumps(
+                    {
+                        "error": f"Manifest format_id '{manifest_format_id}' does not match request format_id '{request.format_id}'"
+                    },
+                    indent=2,
+                )
 
         # Validate manifest assets
         from .validation import validate_manifest_assets

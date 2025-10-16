@@ -143,13 +143,173 @@ class Assets6(BaseModel):
     ] = None
 
 
+class VastVersion(Enum):
+    field_2_0 = "2.0"
+    field_3_0 = "3.0"
+    field_4_0 = "4.0"
+    field_4_1 = "4.1"
+    field_4_2 = "4.2"
+
+
+class TrackingEvent(Enum):
+    start = "start"
+    first_quartile = "firstQuartile"
+    midpoint = "midpoint"
+    third_quartile = "thirdQuartile"
+    complete = "complete"
+    impression = "impression"
+    click = "click"
+    pause = "pause"
+    resume = "resume"
+    skip = "skip"
+    mute = "mute"
+    unmute = "unmute"
+    fullscreen = "fullscreen"
+    exit_fullscreen = "exitFullscreen"
+    player_expand = "playerExpand"
+    player_collapse = "playerCollapse"
+
+
+class Assets7(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    asset_type: Literal["vast"]
+    url: Annotated[AnyUrl, Field(description="URL endpoint that returns VAST XML")]
+    content: Annotated[Optional[str], Field(description="Inline VAST XML content")] = (
+        None
+    )
+    vast_version: Annotated[
+        Optional[VastVersion], Field(description="VAST specification version")
+    ] = None
+    vpaid_enabled: Annotated[
+        Optional[bool],
+        Field(
+            description="Whether VPAID (Video Player-Ad Interface Definition) is supported"
+        ),
+    ] = None
+    max_wrapper_depth: Annotated[
+        Optional[int],
+        Field(description="Maximum allowed wrapper/redirect depth", ge=0, le=10),
+    ] = None
+    duration_ms: Annotated[
+        Optional[int],
+        Field(description="Expected video duration in milliseconds (if known)", ge=0),
+    ] = None
+    tracking_events: Annotated[
+        Optional[list[TrackingEvent]],
+        Field(description="Tracking events supported by this VAST tag"),
+    ] = None
+
+
+class Assets8(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    asset_type: Literal["vast"]
+    url: Annotated[
+        Optional[AnyUrl], Field(description="URL endpoint that returns VAST XML")
+    ] = None
+    content: Annotated[str, Field(description="Inline VAST XML content")]
+    vast_version: Annotated[
+        Optional[VastVersion], Field(description="VAST specification version")
+    ] = None
+    vpaid_enabled: Annotated[
+        Optional[bool],
+        Field(
+            description="Whether VPAID (Video Player-Ad Interface Definition) is supported"
+        ),
+    ] = None
+    max_wrapper_depth: Annotated[
+        Optional[int],
+        Field(description="Maximum allowed wrapper/redirect depth", ge=0, le=10),
+    ] = None
+    duration_ms: Annotated[
+        Optional[int],
+        Field(description="Expected video duration in milliseconds (if known)", ge=0),
+    ] = None
+    tracking_events: Annotated[
+        Optional[list[TrackingEvent]],
+        Field(description="Tracking events supported by this VAST tag"),
+    ] = None
+
+
+class DaastVersion(Enum):
+    field_1_0 = "1.0"
+    field_1_1 = "1.1"
+
+
+class TrackingEvent6(Enum):
+    start = "start"
+    first_quartile = "firstQuartile"
+    midpoint = "midpoint"
+    third_quartile = "thirdQuartile"
+    complete = "complete"
+    impression = "impression"
+    pause = "pause"
+    resume = "resume"
+    skip = "skip"
+    mute = "mute"
+    unmute = "unmute"
+
+
+class Assets9(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    asset_type: Literal["daast"]
+    url: Annotated[AnyUrl, Field(description="URL endpoint that returns DAAST XML")]
+    content: Annotated[Optional[str], Field(description="Inline DAAST XML content")] = (
+        None
+    )
+    daast_version: Annotated[
+        Optional[DaastVersion], Field(description="DAAST specification version")
+    ] = None
+    duration_ms: Annotated[
+        Optional[int],
+        Field(description="Expected audio duration in milliseconds (if known)", ge=0),
+    ] = None
+    tracking_events: Annotated[
+        Optional[list[TrackingEvent6]],
+        Field(description="Tracking events supported by this DAAST tag"),
+    ] = None
+    companion_ads: Annotated[
+        Optional[bool], Field(description="Whether companion display ads are included")
+    ] = None
+
+
+class Assets10(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    asset_type: Literal["daast"]
+    url: Annotated[
+        Optional[AnyUrl], Field(description="URL endpoint that returns DAAST XML")
+    ] = None
+    content: Annotated[str, Field(description="Inline DAAST XML content")]
+    daast_version: Annotated[
+        Optional[DaastVersion], Field(description="DAAST specification version")
+    ] = None
+    duration_ms: Annotated[
+        Optional[int],
+        Field(description="Expected audio duration in milliseconds (if known)", ge=0),
+    ] = None
+    tracking_events: Annotated[
+        Optional[list[TrackingEvent6]],
+        Field(description="Tracking events supported by this DAAST tag"),
+    ] = None
+    companion_ads: Annotated[
+        Optional[bool], Field(description="Whether companion display ads are included")
+    ] = None
+
+
 class Colors(BaseModel):
     primary: Optional[str] = None
     secondary: Optional[str] = None
     accent: Optional[str] = None
 
 
-class Assets7(BaseModel):
+class Assets11(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
@@ -165,7 +325,7 @@ class Assets7(BaseModel):
     tone: Annotated[Optional[str], Field(description="Brand tone/voice")] = None
 
 
-class Assets8(BaseModel):
+class Assets12(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
@@ -219,8 +379,10 @@ class CreativeAsset(BaseModel):
                 Assets4,
                 Assets5,
                 Assets6,
-                Assets7,
-                Assets8,
+                Union[Assets7, Assets8],
+                Union[Assets9, Assets10],
+                Assets11,
+                Assets12,
             ],
         ],
         Field(description="Assets required by the format, keyed by asset_role"),

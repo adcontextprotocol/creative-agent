@@ -10,6 +10,7 @@ from ..schemas_generated._schemas_v1_core_format_json import (
     AssetsRequired,
     AssetType,
     Dimensions,
+    FormatId,
     Render,
     Responsive,
     Type,
@@ -36,6 +37,11 @@ COMMON_MACROS = [
 ]
 
 
+def create_format_id(format_name: str) -> FormatId:
+    """Create a FormatId object with agent URL and format name."""
+    return FormatId(agent_url=AGENT_URL, id=format_name)
+
+
 def create_fixed_render(width: int, height: int, role: str = "primary") -> Render:
     """Create a render with fixed dimensions (non-responsive)."""
     return Render(
@@ -54,13 +60,13 @@ def create_fixed_render(width: int, height: int, role: str = "primary") -> Rende
 # to specify what standard formats they can produce
 GENERATIVE_FORMATS = [
     CreativeFormat(
-        format_id="display_300x250_generative",
+        format_id=create_format_id("display_300x250_generative"),
         agent_url=AGENT_URL,
         name="Medium Rectangle - AI Generated",
         type=Type.display,
         description="AI-generated 300x250 banner from brand context and prompt",
         renders=[create_fixed_render(300, 250)],
-        output_format_ids=["display_300x250_image"],
+        output_format_ids=[create_format_id("display_300x250_image")],
         supported_macros=COMMON_MACROS,
         assets_required=[
             AssetsRequired(
@@ -80,13 +86,13 @@ GENERATIVE_FORMATS = [
         ],
     ),
     CreativeFormat(
-        format_id="display_728x90_generative",
+        format_id=create_format_id("display_728x90_generative"),
         agent_url=AGENT_URL,
         name="Leaderboard - AI Generated",
         type=Type.display,
         description="AI-generated 728x90 banner from brand context and prompt",
         renders=[create_fixed_render(728, 90)],
-        output_format_ids=["display_728x90_image"],
+        output_format_ids=[create_format_id("display_728x90_image")],
         supported_macros=COMMON_MACROS,
         assets_required=[
             AssetsRequired(
@@ -106,13 +112,13 @@ GENERATIVE_FORMATS = [
         ],
     ),
     CreativeFormat(
-        format_id="display_320x50_generative",
+        format_id=create_format_id("display_320x50_generative"),
         agent_url=AGENT_URL,
         name="Mobile Banner - AI Generated",
         type=Type.display,
         description="AI-generated 320x50 mobile banner from brand context and prompt",
         renders=[create_fixed_render(320, 50)],
-        output_format_ids=["display_320x50_image"],
+        output_format_ids=[create_format_id("display_320x50_image")],
         supported_macros=COMMON_MACROS,
         assets_required=[
             AssetsRequired(
@@ -132,13 +138,13 @@ GENERATIVE_FORMATS = [
         ],
     ),
     CreativeFormat(
-        format_id="display_160x600_generative",
+        format_id=create_format_id("display_160x600_generative"),
         agent_url=AGENT_URL,
         name="Wide Skyscraper - AI Generated",
         type=Type.display,
         description="AI-generated 160x600 wide skyscraper from brand context and prompt",
         renders=[create_fixed_render(160, 600)],
-        output_format_ids=["display_160x600_image"],
+        output_format_ids=[create_format_id("display_160x600_image")],
         supported_macros=COMMON_MACROS,
         assets_required=[
             AssetsRequired(
@@ -158,13 +164,13 @@ GENERATIVE_FORMATS = [
         ],
     ),
     CreativeFormat(
-        format_id="display_336x280_generative",
+        format_id=create_format_id("display_336x280_generative"),
         agent_url=AGENT_URL,
         name="Large Rectangle - AI Generated",
         type=Type.display,
         description="AI-generated 336x280 large rectangle from brand context and prompt",
         renders=[create_fixed_render(336, 280)],
-        output_format_ids=["display_336x280_image"],
+        output_format_ids=[create_format_id("display_336x280_image")],
         supported_macros=COMMON_MACROS,
         assets_required=[
             AssetsRequired(
@@ -184,13 +190,13 @@ GENERATIVE_FORMATS = [
         ],
     ),
     CreativeFormat(
-        format_id="display_300x600_generative",
+        format_id=create_format_id("display_300x600_generative"),
         agent_url=AGENT_URL,
         name="Half Page - AI Generated",
         type=Type.display,
         description="AI-generated 300x600 half page from brand context and prompt",
         renders=[create_fixed_render(300, 600)],
-        output_format_ids=["display_300x600_image"],
+        output_format_ids=[create_format_id("display_300x600_image")],
         supported_macros=COMMON_MACROS,
         assets_required=[
             AssetsRequired(
@@ -210,13 +216,13 @@ GENERATIVE_FORMATS = [
         ],
     ),
     CreativeFormat(
-        format_id="display_970x250_generative",
+        format_id=create_format_id("display_970x250_generative"),
         agent_url=AGENT_URL,
         name="Billboard - AI Generated",
         type=Type.display,
         description="AI-generated 970x250 billboard from brand context and prompt",
         renders=[create_fixed_render(970, 250)],
-        output_format_ids=["display_970x250_image"],
+        output_format_ids=[create_format_id("display_970x250_image")],
         supported_macros=COMMON_MACROS,
         assets_required=[
             AssetsRequired(
@@ -240,18 +246,12 @@ GENERATIVE_FORMATS = [
 # Video Formats
 VIDEO_FORMATS = [
     CreativeFormat(
-        format_id="video_standard_30s",
+        format_id=create_format_id("video_standard_30s"),
         agent_url=AGENT_URL,
         name="Standard Video - 30 seconds",
         type=Type.video,
         description="30-second video ad in standard aspect ratios",
         supported_macros=[*COMMON_MACROS, "VIDEO_ID", "POD_POSITION", "CONTENT_GENRE"],
-        requirements={
-            "duration_seconds": 30,
-            "max_file_size_mb": 50,
-            "acceptable_formats": ["mp4", "mov", "webm"],
-            "aspect_ratios": ["16:9", "9:16", "1:1", "4:5"],
-        },
         assets_required=[
             AssetsRequired(
                 asset_id="video_file",
@@ -267,18 +267,12 @@ VIDEO_FORMATS = [
         ],
     ),
     CreativeFormat(
-        format_id="video_standard_15s",
+        format_id=create_format_id("video_standard_15s"),
         agent_url=AGENT_URL,
         name="Standard Video - 15 seconds",
         type=Type.video,
         description="15-second video ad in standard aspect ratios",
         supported_macros=[*COMMON_MACROS, "VIDEO_ID", "POD_POSITION", "CONTENT_GENRE"],
-        requirements={
-            "duration_seconds": 15,
-            "max_file_size_mb": 25,
-            "acceptable_formats": ["mp4", "mov", "webm"],
-            "aspect_ratios": ["16:9", "9:16", "1:1", "4:5"],
-        },
         assets_required=[
             AssetsRequired(
                 asset_id="video_file",
@@ -294,15 +288,12 @@ VIDEO_FORMATS = [
         ],
     ),
     CreativeFormat(
-        format_id="video_vast_30s",
+        format_id=create_format_id("video_vast_30s"),
         agent_url=AGENT_URL,
         name="VAST Video - 30 seconds",
         type=Type.video,
         description="30-second video ad via VAST tag",
         supported_macros=[*COMMON_MACROS, "VIDEO_ID", "POD_POSITION", "CONTENT_GENRE"],
-        requirements={
-            "duration_seconds": 30,
-        },
         assets_required=[
             AssetsRequired(
                 asset_id="vast_tag",
@@ -316,18 +307,13 @@ VIDEO_FORMATS = [
         ],
     ),
     CreativeFormat(
-        format_id="video_1920x1080",
+        format_id=create_format_id("video_1920x1080"),
         agent_url=AGENT_URL,
         name="Full HD Video - 1920x1080",
         type=Type.video,
         description="1920x1080 Full HD video (16:9)",
         supported_macros=[*COMMON_MACROS, "VIDEO_ID", "POD_POSITION", "CONTENT_GENRE"],
         renders=[create_fixed_render(1920, 1080)],
-        requirements={
-            "max_file_size_mb": 100,
-            "acceptable_formats": ["mp4", "mov", "webm"],
-            "aspect_ratios": ["16:9"],
-        },
         assets_required=[
             AssetsRequired(
                 asset_id="video_file",
@@ -344,18 +330,13 @@ VIDEO_FORMATS = [
         ],
     ),
     CreativeFormat(
-        format_id="video_1280x720",
+        format_id=create_format_id("video_1280x720"),
         agent_url=AGENT_URL,
         name="HD Video - 1280x720",
         type=Type.video,
         description="1280x720 HD video (16:9)",
         supported_macros=[*COMMON_MACROS, "VIDEO_ID", "POD_POSITION", "CONTENT_GENRE"],
         renders=[create_fixed_render(1280, 720)],
-        requirements={
-            "max_file_size_mb": 75,
-            "acceptable_formats": ["mp4", "mov", "webm"],
-            "aspect_ratios": ["16:9"],
-        },
         assets_required=[
             AssetsRequired(
                 asset_id="video_file",
@@ -372,18 +353,13 @@ VIDEO_FORMATS = [
         ],
     ),
     CreativeFormat(
-        format_id="video_1080x1920",
+        format_id=create_format_id("video_1080x1920"),
         agent_url=AGENT_URL,
         name="Vertical Video - 1080x1920",
         type=Type.video,
         description="1080x1920 vertical video (9:16) for mobile stories",
         supported_macros=[*COMMON_MACROS, "VIDEO_ID", "POD_POSITION", "CONTENT_GENRE"],
         renders=[create_fixed_render(1080, 1920)],
-        requirements={
-            "max_file_size_mb": 100,
-            "acceptable_formats": ["mp4", "mov", "webm"],
-            "aspect_ratios": ["9:16"],
-        },
         assets_required=[
             AssetsRequired(
                 asset_id="video_file",
@@ -400,18 +376,13 @@ VIDEO_FORMATS = [
         ],
     ),
     CreativeFormat(
-        format_id="video_1080x1080",
+        format_id=create_format_id("video_1080x1080"),
         agent_url=AGENT_URL,
         name="Square Video - 1080x1080",
         type=Type.video,
         description="1080x1080 square video (1:1) for social feeds",
         supported_macros=[*COMMON_MACROS, "VIDEO_ID", "POD_POSITION", "CONTENT_GENRE"],
         renders=[create_fixed_render(1080, 1080)],
-        requirements={
-            "max_file_size_mb": 100,
-            "acceptable_formats": ["mp4", "mov", "webm"],
-            "aspect_ratios": ["1:1"],
-        },
         assets_required=[
             AssetsRequired(
                 asset_id="video_file",
@@ -428,18 +399,12 @@ VIDEO_FORMATS = [
         ],
     ),
     CreativeFormat(
-        format_id="video_ctv_preroll_30s",
+        format_id=create_format_id("video_ctv_preroll_30s"),
         agent_url=AGENT_URL,
         name="CTV Pre-Roll - 30 seconds",
         type=Type.video,
         description="30-second pre-roll ad for Connected TV and streaming platforms",
         supported_macros=[*COMMON_MACROS, "VIDEO_ID", "POD_POSITION", "CONTENT_GENRE", "PLAYER_SIZE"],
-        requirements={
-            "duration_seconds": 30,
-            "max_file_size_mb": 75,
-            "acceptable_formats": ["mp4", "mov"],
-            "aspect_ratios": ["16:9"],
-        },
         assets_required=[
             AssetsRequired(
                 asset_id="video_file",
@@ -455,18 +420,12 @@ VIDEO_FORMATS = [
         ],
     ),
     CreativeFormat(
-        format_id="video_ctv_midroll_30s",
+        format_id=create_format_id("video_ctv_midroll_30s"),
         agent_url=AGENT_URL,
         name="CTV Mid-Roll - 30 seconds",
         type=Type.video,
         description="30-second mid-roll ad for Connected TV and streaming platforms",
         supported_macros=[*COMMON_MACROS, "VIDEO_ID", "POD_POSITION", "CONTENT_GENRE", "PLAYER_SIZE"],
-        requirements={
-            "duration_seconds": 30,
-            "max_file_size_mb": 75,
-            "acceptable_formats": ["mp4", "mov"],
-            "aspect_ratios": ["16:9"],
-        },
         assets_required=[
             AssetsRequired(
                 asset_id="video_file",
@@ -486,7 +445,7 @@ VIDEO_FORMATS = [
 # Display Formats - Image-based
 DISPLAY_IMAGE_FORMATS = [
     CreativeFormat(
-        format_id="display_300x250_image",
+        format_id=create_format_id("display_300x250_image"),
         agent_url=AGENT_URL,
         name="Medium Rectangle - Image",
         type=Type.display,
@@ -518,7 +477,7 @@ DISPLAY_IMAGE_FORMATS = [
         ],
     ),
     CreativeFormat(
-        format_id="display_728x90_image",
+        format_id=create_format_id("display_728x90_image"),
         agent_url=AGENT_URL,
         name="Leaderboard - Image",
         type=Type.display,
@@ -547,7 +506,7 @@ DISPLAY_IMAGE_FORMATS = [
         ],
     ),
     CreativeFormat(
-        format_id="display_320x50_image",
+        format_id=create_format_id("display_320x50_image"),
         agent_url=AGENT_URL,
         name="Mobile Banner - Image",
         type=Type.display,
@@ -576,7 +535,7 @@ DISPLAY_IMAGE_FORMATS = [
         ],
     ),
     CreativeFormat(
-        format_id="display_160x600_image",
+        format_id=create_format_id("display_160x600_image"),
         agent_url=AGENT_URL,
         name="Wide Skyscraper - Image",
         type=Type.display,
@@ -605,7 +564,7 @@ DISPLAY_IMAGE_FORMATS = [
         ],
     ),
     CreativeFormat(
-        format_id="display_336x280_image",
+        format_id=create_format_id("display_336x280_image"),
         agent_url=AGENT_URL,
         name="Large Rectangle - Image",
         type=Type.display,
@@ -634,7 +593,7 @@ DISPLAY_IMAGE_FORMATS = [
         ],
     ),
     CreativeFormat(
-        format_id="display_300x600_image",
+        format_id=create_format_id("display_300x600_image"),
         agent_url=AGENT_URL,
         name="Half Page - Image",
         type=Type.display,
@@ -663,7 +622,7 @@ DISPLAY_IMAGE_FORMATS = [
         ],
     ),
     CreativeFormat(
-        format_id="display_970x250_image",
+        format_id=create_format_id("display_970x250_image"),
         agent_url=AGENT_URL,
         name="Billboard - Image",
         type=Type.display,
@@ -696,7 +655,7 @@ DISPLAY_IMAGE_FORMATS = [
 # Display Formats - HTML5
 DISPLAY_HTML_FORMATS = [
     CreativeFormat(
-        format_id="display_300x250_html",
+        format_id=create_format_id("display_300x250_html"),
         agent_url=AGENT_URL,
         name="Medium Rectangle - HTML5",
         type=Type.display,
@@ -719,7 +678,7 @@ DISPLAY_HTML_FORMATS = [
         ],
     ),
     CreativeFormat(
-        format_id="display_728x90_html",
+        format_id=create_format_id("display_728x90_html"),
         agent_url=AGENT_URL,
         name="Leaderboard - HTML5",
         type=Type.display,
@@ -741,7 +700,7 @@ DISPLAY_HTML_FORMATS = [
         ],
     ),
     CreativeFormat(
-        format_id="display_160x600_html",
+        format_id=create_format_id("display_160x600_html"),
         agent_url=AGENT_URL,
         name="Wide Skyscraper - HTML5",
         type=Type.display,
@@ -763,7 +722,7 @@ DISPLAY_HTML_FORMATS = [
         ],
     ),
     CreativeFormat(
-        format_id="display_336x280_html",
+        format_id=create_format_id("display_336x280_html"),
         agent_url=AGENT_URL,
         name="Large Rectangle - HTML5",
         type=Type.display,
@@ -785,7 +744,7 @@ DISPLAY_HTML_FORMATS = [
         ],
     ),
     CreativeFormat(
-        format_id="display_300x600_html",
+        format_id=create_format_id("display_300x600_html"),
         agent_url=AGENT_URL,
         name="Half Page - HTML5",
         type=Type.display,
@@ -807,7 +766,7 @@ DISPLAY_HTML_FORMATS = [
         ],
     ),
     CreativeFormat(
-        format_id="display_970x250_html",
+        format_id=create_format_id("display_970x250_html"),
         agent_url=AGENT_URL,
         name="Billboard - HTML5",
         type=Type.display,
@@ -833,7 +792,7 @@ DISPLAY_HTML_FORMATS = [
 # Native Formats
 NATIVE_FORMATS = [
     CreativeFormat(
-        format_id="native_standard",
+        format_id=create_format_id("native_standard"),
         agent_url=AGENT_URL,
         name="IAB Native Standard",
         type=Type.native,
@@ -897,7 +856,7 @@ NATIVE_FORMATS = [
         ],
     ),
     CreativeFormat(
-        format_id="native_content",
+        format_id=create_format_id("native_content"),
         agent_url=AGENT_URL,
         name="Native Content Placement",
         type=Type.native,
@@ -965,17 +924,12 @@ NATIVE_FORMATS = [
 # Audio Formats
 AUDIO_FORMATS = [
     CreativeFormat(
-        format_id="audio_standard_15s",
+        format_id=create_format_id("audio_standard_15s"),
         agent_url=AGENT_URL,
         name="Standard Audio - 15 seconds",
         type=Type.audio,
         description="15-second audio ad",
         supported_macros=[*COMMON_MACROS, "CONTENT_GENRE"],
-        requirements={
-            "duration_seconds": 15,
-            "max_file_size_mb": 0.75,
-            "acceptable_formats": ["mp3", "aac", "m4a"],
-        },
         assets_required=[
             AssetsRequired(
                 asset_id="audio_file",
@@ -990,17 +944,12 @@ AUDIO_FORMATS = [
         ],
     ),
     CreativeFormat(
-        format_id="audio_standard_30s",
+        format_id=create_format_id("audio_standard_30s"),
         agent_url=AGENT_URL,
         name="Standard Audio - 30 seconds",
         type=Type.audio,
         description="30-second audio ad",
         supported_macros=[*COMMON_MACROS, "CONTENT_GENRE"],
-        requirements={
-            "duration_seconds": 30,
-            "max_file_size_mb": 1.5,
-            "acceptable_formats": ["mp3", "aac", "m4a"],
-        },
         assets_required=[
             AssetsRequired(
                 asset_id="audio_file",
@@ -1015,17 +964,12 @@ AUDIO_FORMATS = [
         ],
     ),
     CreativeFormat(
-        format_id="audio_standard_60s",
+        format_id=create_format_id("audio_standard_60s"),
         agent_url=AGENT_URL,
         name="Standard Audio - 60 seconds",
         type=Type.audio,
         description="60-second audio ad",
         supported_macros=[*COMMON_MACROS, "CONTENT_GENRE"],
-        requirements={
-            "duration_seconds": 60,
-            "max_file_size_mb": 3,
-            "acceptable_formats": ["mp3", "aac", "m4a"],
-        },
         assets_required=[
             AssetsRequired(
                 asset_id="audio_file",
@@ -1044,17 +988,13 @@ AUDIO_FORMATS = [
 # DOOH Formats
 DOOH_FORMATS = [
     CreativeFormat(
-        format_id="dooh_billboard_1920x1080",
+        format_id=create_format_id("dooh_billboard_1920x1080"),
         agent_url=AGENT_URL,
         name="Digital Billboard - 1920x1080",
         type=Type.dooh,
         description="Full HD digital billboard",
         supported_macros=[*COMMON_MACROS, "SCREEN_ID", "VENUE_TYPE", "VENUE_LAT", "VENUE_LONG"],
         renders=[create_fixed_render(1920, 1080)],
-        requirements={
-            "duration_seconds": 10,
-            "max_file_size_mb": 5,
-        },
         assets_required=[
             AssetsRequired(
                 asset_id="billboard_image",
@@ -1070,17 +1010,12 @@ DOOH_FORMATS = [
         ],
     ),
     CreativeFormat(
-        format_id="dooh_billboard_landscape",
+        format_id=create_format_id("dooh_billboard_landscape"),
         agent_url=AGENT_URL,
         name="Digital Billboard - Landscape",
         type=Type.dooh,
         description="Landscape-oriented digital billboard (various sizes)",
         supported_macros=[*COMMON_MACROS, "SCREEN_ID", "VENUE_TYPE", "VENUE_LAT", "VENUE_LONG"],
-        requirements={
-            "duration_seconds": 10,
-            "max_file_size_mb": 10,
-            "aspect_ratios": ["16:9", "21:9"],
-        },
         assets_required=[
             AssetsRequired(
                 asset_id="billboard_image",
@@ -1095,17 +1030,12 @@ DOOH_FORMATS = [
         ],
     ),
     CreativeFormat(
-        format_id="dooh_billboard_portrait",
+        format_id=create_format_id("dooh_billboard_portrait"),
         agent_url=AGENT_URL,
         name="Digital Billboard - Portrait",
         type=Type.dooh,
         description="Portrait-oriented digital billboard (various sizes)",
         supported_macros=[*COMMON_MACROS, "SCREEN_ID", "VENUE_TYPE", "VENUE_LAT", "VENUE_LONG"],
-        requirements={
-            "duration_seconds": 10,
-            "max_file_size_mb": 10,
-            "aspect_ratios": ["9:16"],
-        },
         assets_required=[
             AssetsRequired(
                 asset_id="billboard_image",
@@ -1120,17 +1050,13 @@ DOOH_FORMATS = [
         ],
     ),
     CreativeFormat(
-        format_id="dooh_transit_screen",
+        format_id=create_format_id("dooh_transit_screen"),
         agent_url=AGENT_URL,
         name="Transit Screen",
         type=Type.dooh,
         description="Transit and subway screen displays",
         supported_macros=[*COMMON_MACROS, "SCREEN_ID", "VENUE_TYPE", "VENUE_LAT", "VENUE_LONG", "TRANSIT_LINE"],
         renders=[create_fixed_render(1920, 1080)],
-        requirements={
-            "duration_seconds": 15,
-            "max_file_size_mb": 5,
-        },
         assets_required=[
             AssetsRequired(
                 asset_id="screen_image",
@@ -1160,16 +1086,17 @@ STANDARD_FORMATS = (
 )
 
 
-def get_format_by_id(format_id: str) -> CreativeFormat | None:
-    """Get format by ID."""
+def get_format_by_id(format_id: FormatId) -> CreativeFormat | None:
+    """Get format by FormatId object."""
     for fmt in STANDARD_FORMATS:
-        if fmt.format_id == format_id:
+        # Compare both ID and agent URL
+        if fmt.format_id.id == format_id.id and str(fmt.format_id.agent_url) == str(format_id.agent_url):
             return fmt
     return None
 
 
 def filter_formats(
-    format_ids: list[str] | None = None,
+    format_ids: list[FormatId] | None = None,
     type: Type | str | None = None,
     asset_types: list[AssetType | str] | None = None,
     dimensions: str | None = None,
@@ -1184,7 +1111,12 @@ def filter_formats(
     results = STANDARD_FORMATS
 
     if format_ids:
-        results = [fmt for fmt in results if fmt.format_id in format_ids]
+        # Convert to (id, agent_url) tuples for comparison
+        search_ids = [(fid.id, str(fid.agent_url)) for fid in format_ids]
+        results = [
+            fmt for fmt in results
+            if (fmt.format_id.id, str(fmt.format_id.agent_url)) in search_ids
+        ]
 
     if type:
         # Handle both Type enum and string values

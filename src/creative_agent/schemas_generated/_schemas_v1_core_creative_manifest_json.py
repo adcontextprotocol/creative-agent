@@ -68,7 +68,7 @@ class Codec(Enum):
     av1 = "av1"
 
 
-class Assets12(BaseModel):
+class Assets16(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
@@ -124,7 +124,7 @@ class Channels(Enum):
     field_7_1 = "7.1"
 
 
-class Assets13(BaseModel):
+class Assets17(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
@@ -157,7 +157,7 @@ class VastVersion(Enum):
     field_4_2 = "4.2"
 
 
-class Assets14(BaseModel):
+class Assets18(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
@@ -180,7 +180,7 @@ class Format3(Enum):
     markdown = "markdown"
 
 
-class Assets15(BaseModel):
+class Assets19(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
@@ -197,7 +197,7 @@ class Purpose(Enum):
     impression_tracker = "impression_tracker"
 
 
-class Assets16(BaseModel):
+class Assets20(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
@@ -232,7 +232,7 @@ class Security(BaseModel):
     api_key_header: Optional[str] = None
 
 
-class Assets17(BaseModel):
+class Assets21(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
@@ -252,7 +252,7 @@ class Assets17(BaseModel):
     fallback_required: Optional[bool] = True
 
 
-class Assets18(BaseModel):
+class Assets22(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
@@ -272,7 +272,7 @@ class Assets18(BaseModel):
     ] = None
 
 
-class Assets19(BaseModel):
+class Assets23(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
@@ -290,7 +290,7 @@ class Assets19(BaseModel):
     ] = None
 
 
-class Assets20(BaseModel):
+class Assets24(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
@@ -305,7 +305,7 @@ class Assets20(BaseModel):
     ] = None
 
 
-class Assets21(BaseModel):
+class Assets25(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
@@ -342,14 +342,14 @@ class CreativeManifest(BaseModel):
             str,
             Union[
                 Assets,
-                Assets12,
-                Assets13,
-                Assets14,
-                Assets15,
                 Assets16,
                 Assets17,
-                Union[Assets18, Assets19],
-                Union[Assets20, Assets21],
+                Assets18,
+                Assets19,
+                Assets20,
+                Assets21,
+                Union[Assets22, Assets23],
+                Union[Assets24, Assets25],
             ],
         ],
         Field(
