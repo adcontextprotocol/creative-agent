@@ -513,7 +513,7 @@ Description: {fmt.description}
                     # This is a repeatable group (AssetsRequired1)
                     format_spec += f"- {asset_req.asset_group_id} (repeatable group, {asset_req.min_count}-{asset_req.max_count} items)\n"
                     for asset in asset_req.assets:
-                        format_spec += f"  - {asset.asset_role or asset.asset_id} ({asset.asset_type.value})"
+                        format_spec += f"  - {asset.asset_id} ({asset.asset_type.value})"
                         if asset.requirements:
                             width = asset.requirements.get("width")
                             height = asset.requirements.get("height")
@@ -525,7 +525,7 @@ Description: {fmt.description}
                         format_spec += "\n"
                 else:
                     # This is a regular asset (AssetsRequired)
-                    format_spec += f"- {asset_req.asset_role or asset_req.asset_id} ({asset_req.asset_type.value})"
+                    format_spec += f"- {asset_req.asset_id} ({asset_req.asset_type.value})"
                     if asset_req.requirements:
                         width = asset_req.requirements.get("width")
                         height = asset_req.requirements.get("height")
@@ -596,7 +596,7 @@ After generating the images, output ONLY a JSON creative manifest with this stru
 {{
   "format_id": "{output_format_id}",
   "assets": {{
-    // Map each required asset_role to appropriate asset data
+    // Map each required asset_id to appropriate asset data
     // For images: {{"asset_type": "image", "url": "GENERATED_IMAGE_PLACEHOLDER", "width": X, "height": Y, "format": "png"}}
     // For text: {{"asset_type": "text", "content": "..."}}
     // For urls: {{"asset_type": "url", "url": "..."}}
@@ -619,7 +619,7 @@ Generate a JSON creative manifest with the following structure:
 {{
   "format_id": "{output_format_id}",
   "assets": {{
-    // Map each required asset_role to appropriate asset data
+    // Map each required asset_id to appropriate asset data
     // For text: {{"asset_type": "text", "content": "..."}}
     // For urls: {{"asset_type": "url", "url": "..."}}
   }},
@@ -757,7 +757,7 @@ Return ONLY the JSON manifest, no additional text."""
         # If we generated images, inject them into the manifest
         if generated_images and "assets" in manifest_data:
             image_index = 0
-            for _asset_role, asset_data in manifest_data["assets"].items():
+            for _asset_id, asset_data in manifest_data["assets"].items():
                 if isinstance(asset_data, dict) and asset_data.get("asset_type") == "image":
                     if image_index < len(generated_images):
                         # Use generated image as data URI

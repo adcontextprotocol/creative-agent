@@ -301,17 +301,17 @@ def validate_manifest_assets(
         for required_asset in format_obj.assets_required:
             # Check if this is a required (non-optional) asset
             is_required = getattr(required_asset, "required", True)
-            asset_role = getattr(required_asset, "asset_role", None)
+            asset_id = getattr(required_asset, "asset_id", None)
 
-            if is_required and asset_role and asset_role not in assets:
+            if is_required and asset_id and asset_id not in assets:
                 asset_type = getattr(required_asset, "asset_type", "asset")
-                errors.append(f"Missing required {asset_type} asset: '{asset_role}'")
+                errors.append(f"Missing required {asset_type} asset: '{asset_id}'")
 
     # Validate each asset
-    for asset_role, asset_data in assets.items():
+    for asset_id, asset_data in assets.items():
         try:
             validate_asset(asset_data, check_remote_mime=check_remote_mime)
         except AssetValidationError as e:
-            errors.append(f"Asset '{asset_role}': {e}")
+            errors.append(f"Asset '{asset_id}': {e}")
 
     return errors

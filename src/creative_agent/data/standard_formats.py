@@ -72,14 +72,12 @@ GENERATIVE_FORMATS = [
             AssetsRequired(
                 asset_id="brand_context",
                 asset_type=AssetType.brand_manifest,
-                asset_role="brand_context",
                 required=True,
                 requirements={"description": "Brand information and product offerings for AI generation"},
             ),
             AssetsRequired(
                 asset_id="generation_prompt",
                 asset_type=AssetType.text,
-                asset_role="generation_prompt",
                 required=True,
                 requirements={"description": "Text prompt describing the desired creative"},
             ),
@@ -98,14 +96,12 @@ GENERATIVE_FORMATS = [
             AssetsRequired(
                 asset_id="brand_context",
                 asset_type=AssetType.brand_manifest,
-                asset_role="brand_context",
                 required=True,
                 requirements={"description": "Brand information and product offerings for AI generation"},
             ),
             AssetsRequired(
                 asset_id="generation_prompt",
                 asset_type=AssetType.text,
-                asset_role="generation_prompt",
                 required=True,
                 requirements={"description": "Text prompt describing the desired creative"},
             ),
@@ -124,14 +120,12 @@ GENERATIVE_FORMATS = [
             AssetsRequired(
                 asset_id="brand_context",
                 asset_type=AssetType.brand_manifest,
-                asset_role="brand_context",
                 required=True,
                 requirements={"description": "Brand information and product offerings for AI generation"},
             ),
             AssetsRequired(
                 asset_id="generation_prompt",
                 asset_type=AssetType.text,
-                asset_role="generation_prompt",
                 required=True,
                 requirements={"description": "Text prompt describing the desired creative"},
             ),
@@ -150,14 +144,12 @@ GENERATIVE_FORMATS = [
             AssetsRequired(
                 asset_id="brand_context",
                 asset_type=AssetType.brand_manifest,
-                asset_role="brand_context",
                 required=True,
                 requirements={"description": "Brand information and product offerings for AI generation"},
             ),
             AssetsRequired(
                 asset_id="generation_prompt",
                 asset_type=AssetType.text,
-                asset_role="generation_prompt",
                 required=True,
                 requirements={"description": "Text prompt describing the desired creative"},
             ),
@@ -176,14 +168,12 @@ GENERATIVE_FORMATS = [
             AssetsRequired(
                 asset_id="brand_context",
                 asset_type=AssetType.brand_manifest,
-                asset_role="brand_context",
                 required=True,
                 requirements={"description": "Brand information and product offerings for AI generation"},
             ),
             AssetsRequired(
                 asset_id="generation_prompt",
                 asset_type=AssetType.text,
-                asset_role="generation_prompt",
                 required=True,
                 requirements={"description": "Text prompt describing the desired creative"},
             ),
@@ -202,14 +192,12 @@ GENERATIVE_FORMATS = [
             AssetsRequired(
                 asset_id="brand_context",
                 asset_type=AssetType.brand_manifest,
-                asset_role="brand_context",
                 required=True,
                 requirements={"description": "Brand information and product offerings for AI generation"},
             ),
             AssetsRequired(
                 asset_id="generation_prompt",
                 asset_type=AssetType.text,
-                asset_role="generation_prompt",
                 required=True,
                 requirements={"description": "Text prompt describing the desired creative"},
             ),
@@ -228,14 +216,12 @@ GENERATIVE_FORMATS = [
             AssetsRequired(
                 asset_id="brand_context",
                 asset_type=AssetType.brand_manifest,
-                asset_role="brand_context",
                 required=True,
                 requirements={"description": "Brand information and product offerings for AI generation"},
             ),
             AssetsRequired(
                 asset_id="generation_prompt",
                 asset_type=AssetType.text,
-                asset_role="generation_prompt",
                 required=True,
                 requirements={"description": "Text prompt describing the desired creative"},
             ),
@@ -256,7 +242,6 @@ VIDEO_FORMATS = [
             AssetsRequired(
                 asset_id="video_file",
                 asset_type=AssetType.video,
-                asset_role="video_file",
                 required=True,
                 requirements={
                     "duration_seconds": 30,
@@ -277,7 +262,6 @@ VIDEO_FORMATS = [
             AssetsRequired(
                 asset_id="video_file",
                 asset_type=AssetType.video,
-                asset_role="video_file",
                 required=True,
                 requirements={
                     "duration_seconds": 15,
@@ -298,7 +282,6 @@ VIDEO_FORMATS = [
             AssetsRequired(
                 asset_id="vast_tag",
                 asset_type=AssetType.text,
-                asset_role="vast_tag",
                 required=True,
                 requirements={
                     "description": "VAST 4.x compatible tag",
@@ -318,7 +301,6 @@ VIDEO_FORMATS = [
             AssetsRequired(
                 asset_id="video_file",
                 asset_type=AssetType.video,
-                asset_role="video_file",
                 required=True,
                 requirements={
                     "width": 1920,
@@ -341,7 +323,6 @@ VIDEO_FORMATS = [
             AssetsRequired(
                 asset_id="video_file",
                 asset_type=AssetType.video,
-                asset_role="video_file",
                 required=True,
                 requirements={
                     "width": 1280,
@@ -364,7 +345,6 @@ VIDEO_FORMATS = [
             AssetsRequired(
                 asset_id="video_file",
                 asset_type=AssetType.video,
-                asset_role="video_file",
                 required=True,
                 requirements={
                     "width": 1080,
@@ -387,7 +367,6 @@ VIDEO_FORMATS = [
             AssetsRequired(
                 asset_id="video_file",
                 asset_type=AssetType.video,
-                asset_role="video_file",
                 required=True,
                 requirements={
                     "width": 1080,
@@ -409,7 +388,6 @@ VIDEO_FORMATS = [
             AssetsRequired(
                 asset_id="video_file",
                 asset_type=AssetType.video,
-                asset_role="video_file",
                 required=True,
                 requirements={
                     "duration_seconds": 30,
@@ -430,7 +408,6 @@ VIDEO_FORMATS = [
             AssetsRequired(
                 asset_id="video_file",
                 asset_type=AssetType.video,
-                asset_role="video_file",
                 required=True,
                 requirements={
                     "duration_seconds": 30,
@@ -456,7 +433,6 @@ DISPLAY_IMAGE_FORMATS = [
             AssetsRequired(
                 asset_id="banner_image",
                 asset_type=AssetType.image,
-                asset_role="banner_image",
                 required=True,
                 requirements={
                     "width": 300,
@@ -468,7 +444,6 @@ DISPLAY_IMAGE_FORMATS = [
             AssetsRequired(
                 asset_id="click_url",
                 asset_type=AssetType.url,
-                asset_role="click_url",
                 required=True,
                 requirements={
                     "description": "Clickthrough destination URL",
@@ -488,7 +463,6 @@ DISPLAY_IMAGE_FORMATS = [
             AssetsRequired(
                 asset_id="banner_image",
                 asset_type=AssetType.image,
-                asset_role="banner_image",
                 required=True,
                 requirements={
                     "width": 728,
@@ -500,7 +474,6 @@ DISPLAY_IMAGE_FORMATS = [
             AssetsRequired(
                 asset_id="click_url",
                 asset_type=AssetType.url,
-                asset_role="click_url",
                 required=True,
             ),
         ],
@@ -517,7 +490,6 @@ DISPLAY_IMAGE_FORMATS = [
             AssetsRequired(
                 asset_id="banner_image",
                 asset_type=AssetType.image,
-                asset_role="banner_image",
                 required=True,
                 requirements={
                     "width": 320,
@@ -529,7 +501,6 @@ DISPLAY_IMAGE_FORMATS = [
             AssetsRequired(
                 asset_id="click_url",
                 asset_type=AssetType.url,
-                asset_role="click_url",
                 required=True,
             ),
         ],
@@ -546,7 +517,6 @@ DISPLAY_IMAGE_FORMATS = [
             AssetsRequired(
                 asset_id="banner_image",
                 asset_type=AssetType.image,
-                asset_role="banner_image",
                 required=True,
                 requirements={
                     "width": 160,
@@ -558,7 +528,6 @@ DISPLAY_IMAGE_FORMATS = [
             AssetsRequired(
                 asset_id="click_url",
                 asset_type=AssetType.url,
-                asset_role="click_url",
                 required=True,
             ),
         ],
@@ -575,7 +544,6 @@ DISPLAY_IMAGE_FORMATS = [
             AssetsRequired(
                 asset_id="banner_image",
                 asset_type=AssetType.image,
-                asset_role="banner_image",
                 required=True,
                 requirements={
                     "width": 336,
@@ -587,7 +555,6 @@ DISPLAY_IMAGE_FORMATS = [
             AssetsRequired(
                 asset_id="click_url",
                 asset_type=AssetType.url,
-                asset_role="click_url",
                 required=True,
             ),
         ],
@@ -604,7 +571,6 @@ DISPLAY_IMAGE_FORMATS = [
             AssetsRequired(
                 asset_id="banner_image",
                 asset_type=AssetType.image,
-                asset_role="banner_image",
                 required=True,
                 requirements={
                     "width": 300,
@@ -616,7 +582,6 @@ DISPLAY_IMAGE_FORMATS = [
             AssetsRequired(
                 asset_id="click_url",
                 asset_type=AssetType.url,
-                asset_role="click_url",
                 required=True,
             ),
         ],
@@ -633,7 +598,6 @@ DISPLAY_IMAGE_FORMATS = [
             AssetsRequired(
                 asset_id="banner_image",
                 asset_type=AssetType.image,
-                asset_role="banner_image",
                 required=True,
                 requirements={
                     "width": 970,
@@ -645,7 +609,6 @@ DISPLAY_IMAGE_FORMATS = [
             AssetsRequired(
                 asset_id="click_url",
                 asset_type=AssetType.url,
-                asset_role="click_url",
                 required=True,
             ),
         ],
@@ -666,7 +629,6 @@ DISPLAY_HTML_FORMATS = [
             AssetsRequired(
                 asset_id="html_creative",
                 asset_type=AssetType.html,
-                asset_role="html_creative",
                 required=True,
                 requirements={
                     "width": 300,
@@ -689,7 +651,6 @@ DISPLAY_HTML_FORMATS = [
             AssetsRequired(
                 asset_id="html_creative",
                 asset_type=AssetType.html,
-                asset_role="html_creative",
                 required=True,
                 requirements={
                     "width": 728,
@@ -711,7 +672,6 @@ DISPLAY_HTML_FORMATS = [
             AssetsRequired(
                 asset_id="html_creative",
                 asset_type=AssetType.html,
-                asset_role="html_creative",
                 required=True,
                 requirements={
                     "width": 160,
@@ -733,7 +693,6 @@ DISPLAY_HTML_FORMATS = [
             AssetsRequired(
                 asset_id="html_creative",
                 asset_type=AssetType.html,
-                asset_role="html_creative",
                 required=True,
                 requirements={
                     "width": 336,
@@ -755,7 +714,6 @@ DISPLAY_HTML_FORMATS = [
             AssetsRequired(
                 asset_id="html_creative",
                 asset_type=AssetType.html,
-                asset_role="html_creative",
                 required=True,
                 requirements={
                     "width": 300,
@@ -777,7 +735,6 @@ DISPLAY_HTML_FORMATS = [
             AssetsRequired(
                 asset_id="html_creative",
                 asset_type=AssetType.html,
-                asset_role="html_creative",
                 required=True,
                 requirements={
                     "width": 970,
@@ -802,7 +759,6 @@ NATIVE_FORMATS = [
             AssetsRequired(
                 asset_id="title",
                 asset_type=AssetType.text,
-                asset_role="title",
                 required=True,
                 requirements={
                     "description": "Headline text (25 chars recommended)",
@@ -811,7 +767,6 @@ NATIVE_FORMATS = [
             AssetsRequired(
                 asset_id="description",
                 asset_type=AssetType.text,
-                asset_role="description",
                 required=True,
                 requirements={
                     "description": "Body copy (90 chars recommended)",
@@ -820,7 +775,6 @@ NATIVE_FORMATS = [
             AssetsRequired(
                 asset_id="main_image",
                 asset_type=AssetType.image,
-                asset_role="main_image",
                 required=True,
                 requirements={
                     "description": "Primary image (1200x627 recommended)",
@@ -829,7 +783,6 @@ NATIVE_FORMATS = [
             AssetsRequired(
                 asset_id="icon",
                 asset_type=AssetType.image,
-                asset_role="icon",
                 required=False,
                 requirements={
                     "description": "Brand icon (square, 200x200 recommended)",
@@ -838,7 +791,6 @@ NATIVE_FORMATS = [
             AssetsRequired(
                 asset_id="cta_text",
                 asset_type=AssetType.text,
-                asset_role="cta_text",
                 required=True,
                 requirements={
                     "description": "Call-to-action text",
@@ -847,7 +799,6 @@ NATIVE_FORMATS = [
             AssetsRequired(
                 asset_id="sponsored_by",
                 asset_type=AssetType.text,
-                asset_role="sponsored_by",
                 required=True,
                 requirements={
                     "description": "Advertiser name for disclosure",
@@ -866,7 +817,6 @@ NATIVE_FORMATS = [
             AssetsRequired(
                 asset_id="headline",
                 asset_type=AssetType.text,
-                asset_role="headline",
                 required=True,
                 requirements={
                     "description": "Editorial-style headline (60 chars recommended)",
@@ -875,7 +825,6 @@ NATIVE_FORMATS = [
             AssetsRequired(
                 asset_id="body",
                 asset_type=AssetType.text,
-                asset_role="body",
                 required=True,
                 requirements={
                     "description": "Article-style body copy (200 chars recommended)",
@@ -884,7 +833,6 @@ NATIVE_FORMATS = [
             AssetsRequired(
                 asset_id="thumbnail",
                 asset_type=AssetType.image,
-                asset_role="thumbnail",
                 required=True,
                 requirements={
                     "description": "Thumbnail image (square, 300x300 recommended)",
@@ -893,7 +841,6 @@ NATIVE_FORMATS = [
             AssetsRequired(
                 asset_id="author",
                 asset_type=AssetType.text,
-                asset_role="author",
                 required=False,
                 requirements={
                     "description": "Author name for editorial context",
@@ -902,7 +849,6 @@ NATIVE_FORMATS = [
             AssetsRequired(
                 asset_id="click_url",
                 asset_type=AssetType.url,
-                asset_role="click_url",
                 required=True,
                 requirements={
                     "description": "Landing page URL",
@@ -911,7 +857,6 @@ NATIVE_FORMATS = [
             AssetsRequired(
                 asset_id="disclosure",
                 asset_type=AssetType.text,
-                asset_role="disclosure",
                 required=True,
                 requirements={
                     "description": "Sponsored content disclosure text",
@@ -934,7 +879,6 @@ AUDIO_FORMATS = [
             AssetsRequired(
                 asset_id="audio_file",
                 asset_type=AssetType.audio,
-                asset_role="audio_file",
                 required=True,
                 requirements={
                     "duration_seconds": 15,
@@ -954,7 +898,6 @@ AUDIO_FORMATS = [
             AssetsRequired(
                 asset_id="audio_file",
                 asset_type=AssetType.audio,
-                asset_role="audio_file",
                 required=True,
                 requirements={
                     "duration_seconds": 30,
@@ -974,7 +917,6 @@ AUDIO_FORMATS = [
             AssetsRequired(
                 asset_id="audio_file",
                 asset_type=AssetType.audio,
-                asset_role="audio_file",
                 required=True,
                 requirements={
                     "duration_seconds": 60,
@@ -999,7 +941,6 @@ DOOH_FORMATS = [
             AssetsRequired(
                 asset_id="billboard_image",
                 asset_type=AssetType.image,
-                asset_role="billboard_image",
                 required=True,
                 requirements={
                     "width": 1920,
@@ -1020,7 +961,6 @@ DOOH_FORMATS = [
             AssetsRequired(
                 asset_id="billboard_image",
                 asset_type=AssetType.image,
-                asset_role="billboard_image",
                 required=True,
                 requirements={
                     "acceptable_formats": ["jpg", "png"],
@@ -1040,7 +980,6 @@ DOOH_FORMATS = [
             AssetsRequired(
                 asset_id="billboard_image",
                 asset_type=AssetType.image,
-                asset_role="billboard_image",
                 required=True,
                 requirements={
                     "acceptable_formats": ["jpg", "png"],
@@ -1061,7 +1000,6 @@ DOOH_FORMATS = [
             AssetsRequired(
                 asset_id="screen_image",
                 asset_type=AssetType.image,
-                asset_role="screen_image",
                 required=True,
                 requirements={
                     "width": 1920,
