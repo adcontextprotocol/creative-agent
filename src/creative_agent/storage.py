@@ -76,14 +76,16 @@ def generate_preview_html(format_obj: Any, manifest: Any, input_set: Any) -> str
     Returns:
         HTML string ready to display in iframe
     """
-    # Extract dimensions if available
+    # Extract dimensions from first render if available
     width = 300
     height = 250
-    if format_obj.dimensions:
-        parts = format_obj.dimensions.split("x")
-        if len(parts) == 2:
-            width = int(parts[0])
-            height = int(parts[1])
+    if format_obj.renders and len(format_obj.renders) > 0:
+        first_render = format_obj.renders[0]
+        if first_render.dimensions:
+            if first_render.dimensions.width is not None:
+                width = int(first_render.dimensions.width)
+            if first_render.dimensions.height is not None:
+                height = int(first_render.dimensions.height)
 
     # Get primary image asset
     image_url = None
