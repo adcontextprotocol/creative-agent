@@ -238,7 +238,10 @@
   "format_extension_guide": {
     "description": "Publishers can extend standard formats using the 'extends' field",
     "example_extension": {
-      "format_id": "publisher_premium_canvas",
+      "format_id": {
+        "agent_url": "https://publisher.example.com/.well-known/adcp/sales",
+        "id": "publisher_premium_canvas"
+      },
       "extends": "foundational_immersive_canvas",
       "publisher": "example_publisher",
       "modifications": {

@@ -307,7 +307,10 @@ class TestManifestValidation:
     def test_valid_manifest(self):
         """Valid manifest should pass."""
         manifest = {
-            "format_id": "display_300x250",
+            "format_id": {
+                "agent_url": "https://creative.adcontextprotocol.org",
+                "id": "display_300x250",
+            },
             "assets": {
                 "headline": {
                     "asset_type": "text",
@@ -331,7 +334,10 @@ class TestManifestValidation:
     def test_manifest_with_invalid_asset(self):
         """Manifest with invalid asset should return errors."""
         manifest = {
-            "format_id": "display_300x250",
+            "format_id": {
+                "agent_url": "https://creative.adcontextprotocol.org",
+                "id": "display_300x250",
+            },
             "assets": {
                 "headline": {
                     "asset_type": "text",
@@ -347,7 +353,10 @@ class TestManifestValidation:
     def test_manifest_multiple_errors(self):
         """Manifest with multiple invalid assets should return all errors."""
         manifest = {
-            "format_id": "display_300x250",
+            "format_id": {
+                "agent_url": "https://creative.adcontextprotocol.org",
+                "id": "display_300x250",
+            },
             "assets": {
                 "headline": {
                     "asset_type": "text",
@@ -367,7 +376,10 @@ class TestManifestValidation:
     def test_manifest_without_assets_fails(self):
         """Manifest without assets field should fail."""
         manifest = {
-            "format_id": "display_300x250",
+            "format_id": {
+                "agent_url": "https://creative.adcontextprotocol.org",
+                "id": "display_300x250",
+            },
         }
         errors = validate_manifest_assets(manifest)
         assert len(errors) == 1
