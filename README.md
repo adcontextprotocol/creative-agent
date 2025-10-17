@@ -13,39 +13,59 @@ The AdCP Creative Agent is a stateless service that:
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────┐
-│  MCP Client (Claude, Agent, etc.)               │
-└───────────────┬─────────────────────────────────┘
-                │
-                │ MCP Protocol (stdio or HTTP)
-                │
-┌───────────────▼─────────────────────────────────┐
-│  AdCP Creative Agent                            │
-│  ┌───────────────────────────────────────────┐  │
-│  │ list_creative_formats                     │  │
-│  │ - Returns all standard format specs       │  │
-│  └───────────────────────────────────────────┘  │
-│  ┌───────────────────────────────────────────┐  │
-│  │ build_creative (AI-powered)               │  │
-│  │ - Generates creative using Gemini API     │  │
-│  │ - Uses brand assets + user message        │  │
-│  └───────────────────────────────────────────┘  │
-│  ┌───────────────────────────────────────────┐  │
-│  │ preview_creative                          │  │
-│  │ - Renders creative to HTML                │  │
-│  │ - Uploads to Tigris storage               │  │
-│  └───────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────┘
-                │
-                │ S3 API
-                │
-┌───────────────▼─────────────────────────────────┐
-│  Tigris Global Object Storage                   │
-│  - Public bucket: adcp-previews                 │
-│  - Preview HTML files cached for 1 hour         │
-│  - Public URLs: https://[bucket].fly.storage... │
-└─────────────────────────────────────────────────┘
+┌──────────────────────────────────┐    ┌──────────────────────────────────┐
+│  MCP Clients                     │    │  ADCP HTTP Clients               │
+│  (Claude, Agents)                │    │  (TypeScript, Python)            │
+└────────┬─────────────────────────┘    └────────┬─────────────────────────┘
+         │                                       │
+         │ MCP Protocol                          │ HTTP JSON
+         │ (stdio or HTTP at /mcp)               │ (at /adcp/*)
+         │                                       │
+┌────────▼───────────────────────────────────────▼────────────────────────┐
+│  AdCP Creative Agent (Combined Server)                                  │
+│                                                                          │
+│  /mcp - MCP Protocol Endpoint      /adcp - ADCP HTTP Endpoints          │
+│  (JSON-RPC wrapped responses)      (Direct ADCP JSON responses)         │
+│                                                                          │
+│  ┌─────────────────────────────────────────────────────────────────┐   │
+│  │ list_creative_formats - Returns all standard format specs       │   │
+│  └─────────────────────────────────────────────────────────────────┘   │
+│  ┌─────────────────────────────────────────────────────────────────┐   │
+│  │ build_creative - AI-powered creative generation (Gemini)        │   │
+│  └─────────────────────────────────────────────────────────────────┘   │
+│  ┌─────────────────────────────────────────────────────────────────┐   │
+│  │ preview_creative - Renders creative to HTML, uploads to Tigris  │   │
+│  └─────────────────────────────────────────────────────────────────┘   │
+└──────────────────────────────────┬───────────────────────────────────────┘
+                                   │
+                                   │ S3 API
+                                   │
+┌──────────────────────────────────▼───────────────────────────────────────┐
+│  Tigris Global Object Storage                                            │
+│  - Public bucket: adcp-previews                                          │
+│  - Preview HTML files cached for 1 hour                                  │
+│  - Public URLs: https://[bucket].fly.storage.tigris.dev/...             │
+└──────────────────────────────────────────────────────────────────────────┘
 ```
+
+## Endpoints
+
+The server provides two protocols for accessing the same tools:
+
+### MCP Endpoint (`/mcp`)
+For MCP clients (like Claude Desktop, MCP client libraries):
+- Follows MCP JSON-RPC protocol specification
+- Responses wrapped in `{"result": {"content": [{"type": "text", "text": "..."}]}}`
+- Use with MCP client libraries or Claude Desktop integration
+
+### ADCP HTTP Endpoints (`/adcp/*`)
+For direct HTTP clients that expect unwrapped ADCP responses:
+- `GET /adcp/list-creative-formats` - List all available formats
+- `POST /adcp/list-creative-formats` - List formats with filters (JSON body)
+- `POST /adcp/preview-creative` - Generate creative preview
+- `POST /adcp/build-creative` - AI-powered creative generation
+
+Returns clean ADCP JSON responses without MCP protocol wrapping.
 
 ## Quick Start
 
