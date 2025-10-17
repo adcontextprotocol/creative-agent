@@ -269,12 +269,17 @@ def validate_asset(asset_data: dict[str, Any], check_remote_mime: bool = False) 
         raise AssetValidationError(f"Unknown asset_type: {asset_type}")
 
 
-def validate_manifest_assets(manifest: Any, check_remote_mime: bool = False) -> list[str]:
+def validate_manifest_assets(
+    manifest: Any,
+    check_remote_mime: bool = False,
+    format_obj: Any = None,
+) -> list[str]:
     """Validate all assets in a creative manifest.
 
     Args:
         manifest: Creative manifest (should be dictionary with assets field)
         check_remote_mime: If True, verify MIME types for remote URLs (slower)
+        format_obj: Format object to validate required assets against (optional)
 
     Returns:
         List of validation error messages (empty if all valid)
@@ -290,6 +295,17 @@ def validate_manifest_assets(manifest: Any, check_remote_mime: bool = False) -> 
 
     if not isinstance(assets, dict):
         return ["Manifest assets must be a dictionary"]
+
+    # Check required assets if format provided
+    if format_obj and hasattr(format_obj, "assets_required") and format_obj.assets_required:
+        for required_asset in format_obj.assets_required:
+            # Check if this is a required (non-optional) asset
+            is_required = getattr(required_asset, "required", True)
+            asset_role = getattr(required_asset, "asset_role", None)
+
+            if is_required and asset_role and asset_role not in assets:
+                asset_type = getattr(required_asset, "asset_type", "asset")
+                errors.append(f"Missing required {asset_type} asset: '{asset_role}'")
 
     # Validate each asset
     for asset_role, asset_data in assets.items():

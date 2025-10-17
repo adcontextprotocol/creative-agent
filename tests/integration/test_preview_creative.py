@@ -268,3 +268,39 @@ class TestPreviewCreativeIntegration:
         assert response.previews is not None
         assert response.expires_at is not None
         assert len(response.previews) == 3  # desktop, mobile, tablet
+
+    def test_preview_creative_fails_with_missing_required_asset(self, mock_s3_upload):
+        """Test that preview_creative returns clear error when required asset is missing."""
+        # Create manifest missing required click_url
+        manifest = CreativeManifest(
+            format_id=FormatId(agent_url=AGENT_URL, id="display_300x250_image"),
+            assets={
+                "banner_image": ImageAsset(
+                    asset_type="image",
+                    url="https://example.com/banner.png",
+                    width=300,
+                    height=250,
+                ),
+                # Missing required click_url!
+            },
+        )
+
+        result_json = preview_creative(
+            format_id="display_300x250_image",
+            creative_manifest=manifest.model_dump(mode="json"),
+        )
+
+        result = json.loads(result_json)
+
+        # Must return error, not crash
+        assert "error" in result, "Should return error for missing required asset"
+        assert "validation" in result["error"].lower(), "Error should mention validation"
+
+        # Should have specific validation errors
+        assert "validation_errors" in result, "Should include validation_errors array"
+        errors = result["validation_errors"]
+        assert len(errors) > 0, "Should have at least one validation error"
+
+        # Should mention the missing asset
+        error_messages = [str(err) for err in errors]
+        assert any("click_url" in str(msg).lower() for msg in error_messages), "Should mention missing click_url"

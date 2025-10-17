@@ -200,7 +200,11 @@ def preview_creative(
         # Validate manifest assets
         from .validation import validate_manifest_assets
 
-        validation_errors = validate_manifest_assets(request.creative_manifest, check_remote_mime=False)
+        validation_errors = validate_manifest_assets(
+            request.creative_manifest,
+            check_remote_mime=False,
+            format_obj=fmt,
+        )
         if validation_errors:
             return json.dumps(
                 {
@@ -246,15 +250,34 @@ def preview_creative(
         # Calculate expiration (24 hours from now)
         expires_at = datetime.now(UTC) + timedelta(hours=24)
 
-        from pydantic import AnyUrl
+        from pydantic import AnyUrl, ValidationError
 
         from .schemas_generated._schemas_v1_creative_preview_creative_response_json import (
             Preview,
         )
 
+        # Validate previews with detailed error reporting
+        try:
+            validated_previews = []
+            for idx, preview_dict in enumerate(previews):
+                try:
+                    validated_previews.append(Preview.model_validate(preview_dict))
+                except ValidationError as e:
+                    return json.dumps(
+                        {
+                            "error": f"Preview validation failed for variant {idx + 1}",
+                            "validation_errors": e.errors(),
+                        },
+                        indent=2,
+                    )
+
+            interactive_url = AnyUrl(f"{AGENT_URL}/preview/{preview_id}/interactive")
+        except ValidationError as e:
+            return json.dumps({"error": f"Invalid URL construction: {e}"}, indent=2)
+
         response = PreviewCreativeResponse(
-            previews=[Preview.model_validate(p) for p in previews],
-            interactive_url=AnyUrl(f"{AGENT_URL}/preview/{preview_id}/interactive"),
+            previews=validated_previews,
+            interactive_url=interactive_url,
             expires_at=expires_at,
         )
 
@@ -312,14 +335,18 @@ def _generate_preview_variant(
 
     # Create the single render (all formats render as HTML pages)
     from pydantic import AnyUrl as PydanticUrl
+    from pydantic import ValidationError
 
-    render = Render(
-        render_id=f"{preview_id}-primary",
-        preview_url=PydanticUrl(preview_url),
-        role="primary",
-        dimensions=dimensions,
-        embedding=embedding,
-    )
+    try:
+        render = Render(
+            render_id=f"{preview_id}-primary",
+            preview_url=PydanticUrl(preview_url),
+            role="primary",
+            dimensions=dimensions,
+            embedding=embedding,
+        )
+    except ValidationError as e:
+        raise ValueError(f"Invalid preview URL '{preview_url}': {e}") from e
 
     # Create input echo
     input_echo = Input(
@@ -740,7 +767,11 @@ Return ONLY the JSON manifest, no additional text."""
         # Validate generated manifest assets
         from .validation import validate_manifest_assets
 
-        validation_errors = validate_manifest_assets(manifest_data, check_remote_mime=False)
+        validation_errors = validate_manifest_assets(
+            manifest_data,
+            check_remote_mime=False,
+            format_obj=target_format,
+        )
         if validation_errors:
             return json.dumps(
                 {

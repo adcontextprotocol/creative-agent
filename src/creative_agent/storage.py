@@ -15,6 +15,29 @@ AWS_REGION = os.getenv("AWS_REGION", "auto")
 BUCKET_NAME = os.getenv("BUCKET_NAME", "adcp-previews")
 
 
+def _validate_s3_config() -> None:
+    """Validate S3 configuration on module load.
+
+    Only validates in production to allow tests without credentials.
+    """
+    if os.getenv("ENVIRONMENT") not in ("production", "prod"):
+        return
+
+    required = {
+        "AWS_ACCESS_KEY_ID": AWS_ACCESS_KEY_ID,
+        "AWS_SECRET_ACCESS_KEY": AWS_SECRET_ACCESS_KEY,
+        "AWS_ENDPOINT_URL_S3": AWS_ENDPOINT_URL,
+    }
+
+    missing = [k for k, v in required.items() if not v]
+    if missing:
+        raise RuntimeError(f"Missing required S3 configuration: {', '.join(missing)}")
+
+
+# Validate config on import (only in production)
+_validate_s3_config()
+
+
 def get_s3_client() -> Any:
     """Get configured S3 client for Tigris."""
     return boto3.client(
@@ -37,24 +60,39 @@ def upload_preview_html(preview_id: str, variant_name: str, html_content: str) -
 
     Returns:
         Public URL to the uploaded HTML
+
+    Raises:
+        ValueError: If upload fails due to configuration or network issues
     """
-    s3 = get_s3_client()
+    from botocore.exceptions import ClientError, NoCredentialsError
 
-    # Create S3 key: previews/{preview_id}/{variant_name}.html
-    key = f"previews/{preview_id}/{variant_name}.html"
+    try:
+        s3 = get_s3_client()
 
-    # Upload with correct content type
-    s3.put_object(
-        Bucket=BUCKET_NAME,
-        Key=key,
-        Body=html_content.encode("utf-8"),
-        ContentType="text/html",
-        CacheControl="public, max-age=3600",  # Cache for 1 hour
-    )
+        # Create S3 key: previews/{preview_id}/{variant_name}.html
+        key = f"previews/{preview_id}/{variant_name}.html"
 
-    # For public buckets, use virtual-hosted-style URL format
-    # Format: https://{bucket}.fly.storage.tigris.dev/{key}
-    return f"https://{BUCKET_NAME}.fly.storage.tigris.dev/{key}"
+        # Upload with correct content type
+        s3.put_object(
+            Bucket=BUCKET_NAME,
+            Key=key,
+            Body=html_content.encode("utf-8"),
+            ContentType="text/html",
+            CacheControl="public, max-age=3600",  # Cache for 1 hour
+        )
+
+        # For public buckets, use virtual-hosted-style URL format
+        # Format: https://{bucket}.fly.storage.tigris.dev/{key}
+        return f"https://{BUCKET_NAME}.fly.storage.tigris.dev/{key}"
+
+    except NoCredentialsError as e:
+        msg = "S3 credentials not configured. Check AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY."
+        raise ValueError(msg) from e
+    except ClientError as e:
+        error_code = e.response.get("Error", {}).get("Code", "Unknown")
+        raise ValueError(f"S3 upload failed ({error_code}): {e}") from e
+    except Exception as e:
+        raise ValueError(f"Unexpected error during S3 upload: {e}") from e
 
 
 def sanitize_url(url: str) -> str:
@@ -89,7 +127,17 @@ def generate_preview_html(format_obj: Any, manifest: Any, input_set: Any) -> str
 
     # Get primary image asset
     image_url = None
-    manifest_assets = manifest.get("assets", {}) if isinstance(manifest, dict) else manifest.assets
+
+    # Handle manifest as dict, Pydantic object, or None
+    if manifest is None:
+        manifest_assets = {}
+    elif isinstance(manifest, dict):
+        manifest_assets = manifest.get("assets", {})
+    elif hasattr(manifest, "assets"):
+        manifest_assets = manifest.assets
+    else:
+        raise TypeError(f"Invalid manifest type: {type(manifest)}")
+
     for _asset_role, asset_data in manifest_assets.items():
         if isinstance(asset_data, dict) and asset_data.get("asset_type") == "image":
             image_url = asset_data.get("url")

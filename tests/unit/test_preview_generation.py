@@ -154,32 +154,6 @@ class TestGeneratePreviewHtml:
         assert isinstance(html, str)
         assert "<!DOCTYPE html>" in html
 
-    def test_manifest_schema_allows_any_assets_validation_happens_at_tool_level(self):
-        """Test that manifest schema accepts any assets; validation happens in preview_creative.
-
-        The ADCP schema doesn't enforce required assets at Pydantic level.
-        Instead, validation occurs at the tool level via validate_manifest_assets().
-        """
-        # This creates successfully - schema validation is permissive
-        manifest = CreativeManifest(
-            format_id=FormatId(agent_url=AGENT_URL, id="display_300x250_image"),
-            assets={
-                "banner_image": ImageAsset(
-                    asset_type="image",
-                    url="https://example.com/test.png",
-                    width=300,
-                    height=250,
-                )
-                # Missing required click_url - but Pydantic doesn't enforce this
-            },
-        )
-
-        # Schema accepts it
-        assert manifest.assets is not None
-        assert "banner_image" in manifest.assets
-
-        # But the tool-level validation will catch it (tested in integration tests)
-
     def test_pydantic_validation_catches_invalid_dimensions(self):
         """Test that Pydantic validates image dimensions per schema."""
         from pydantic import ValidationError
