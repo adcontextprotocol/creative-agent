@@ -121,6 +121,25 @@ class TestListCreativeFormatsResponseFormat:
             f"Response must have required keys {expected_keys}, got {actual_keys}"
         )
 
+    def test_assets_required_have_asset_id(self):
+        """Per ADCP PR #135, all AssetsRequired must have asset_id field."""
+        result = list_creative_formats()
+        response = ListCreativeFormatsResponse.model_validate(result.structured_content)
+
+        formats_with_assets = [fmt for fmt in response.formats if fmt.assets_required]
+        assert len(formats_with_assets) > 0, "Should have formats with assets_required"
+
+        for fmt in formats_with_assets:
+            for asset in fmt.assets_required:
+                # Access asset_id - will raise AttributeError if missing
+                asset_dict = asset.model_dump() if hasattr(asset, "model_dump") else dict(asset)
+                assert "asset_id" in asset_dict, (
+                    f"Format {fmt.format_id.id} has asset without asset_id: {asset_dict}"
+                )
+                assert asset_dict["asset_id"], (
+                    f"Format {fmt.format_id.id} has empty asset_id: {asset_dict}"
+                )
+
 
 class TestPreviewCreativeResponseFormat:
     """Test that preview_creative returns valid ADCP PreviewCreativeResponse.
