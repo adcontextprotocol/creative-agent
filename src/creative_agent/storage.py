@@ -89,14 +89,15 @@ def generate_preview_html(format_obj: Any, manifest: Any, input_set: Any) -> str
 
     # Get primary image asset
     image_url = None
-    for _asset_role, asset_data in manifest.assets.items():
+    manifest_assets = manifest.get("assets", {}) if isinstance(manifest, dict) else manifest.assets
+    for _asset_role, asset_data in manifest_assets.items():
         if isinstance(asset_data, dict) and asset_data.get("asset_type") == "image":
             image_url = asset_data.get("url")
             break
 
     # Get click URL
     click_url = None
-    for _asset_role, asset_data in manifest.assets.items():
+    for _asset_role, asset_data in manifest_assets.items():
         if isinstance(asset_data, dict) and asset_data.get("asset_type") == "url":
             click_url = asset_data.get("url")
             break
