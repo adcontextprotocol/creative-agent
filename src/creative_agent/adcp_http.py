@@ -8,11 +8,39 @@ from typing import Any, cast
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastmcp.tools.tool import ToolResult
 from pydantic import BaseModel
 
 from .server import build_creative as build_creative_fn
 from .server import list_creative_formats as list_creative_formats_fn
 from .server import preview_creative as preview_creative_fn
+
+
+def _handle_tool_result(result: ToolResult) -> dict[str, Any]:
+    """Extract structured content from ToolResult and raise HTTPException for errors.
+
+    Args:
+        result: ToolResult from an MCP tool function
+
+    Returns:
+        Dictionary containing the structured response data
+
+    Raises:
+        HTTPException: If structured_content is None or contains an error
+    """
+    if result.structured_content is None:
+        raise HTTPException(
+            status_code=500,
+            detail={"error": "Internal server error: no structured content"},
+        )
+
+    structured = cast("dict[str, Any]", result.structured_content)
+
+    if "error" in structured:
+        raise HTTPException(status_code=400, detail=structured)
+
+    return structured
+
 
 app = FastAPI(
     title="AdCP Creative Agent",
@@ -126,7 +154,7 @@ async def list_creative_formats_get(
         name_search=name_search,
     )
 
-    return cast("dict[str, Any]", result.structured_content)
+    return _handle_tool_result(result)
 
 
 @app.post("/list-creative-formats")
@@ -145,7 +173,7 @@ async def list_creative_formats_post(request: ListCreativeFormatsRequest) -> dic
         name_search=request.name_search,
     )
 
-    return cast("dict[str, Any]", result.structured_content)
+    return _handle_tool_result(result)
 
 
 @app.post("/preview-creative")
@@ -161,13 +189,7 @@ async def preview_creative(request: PreviewCreativeRequest) -> dict[str, Any]:
         asset_filters=request.asset_filters,
     )
 
-    structured = cast("dict[str, Any]", result.structured_content)
-
-    # Check if this is an error response
-    if "error" in structured:
-        raise HTTPException(status_code=400, detail=structured)
-
-    return structured
+    return _handle_tool_result(result)
 
 
 @app.post("/build-creative")
@@ -187,10 +209,4 @@ async def build_creative(request: BuildCreativeRequest) -> dict[str, Any]:
         finalize=request.finalize,
     )
 
-    structured = cast("dict[str, Any]", result.structured_content)
-
-    # Check if this is an error response
-    if "error" in structured:
-        raise HTTPException(status_code=400, detail=structured)
-
-    return structured
+    return _handle_tool_result(result)

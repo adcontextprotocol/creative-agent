@@ -3,6 +3,8 @@
 All tests use generated Pydantic schemas to ensure 100% ADCP spec compliance.
 """
 
+from datetime import UTC, datetime
+
 import pytest
 from pytest_mock import MockerFixture
 
@@ -266,6 +268,46 @@ class TestPreviewCreativeIntegration:
         assert response.previews is not None
         assert response.expires_at is not None
         assert len(response.previews) == 3  # desktop, mobile, tablet
+
+    def test_preview_expiration_is_valid_iso8601_timestamp(self, mock_s3_upload):
+        """Test that expires_at is a valid ISO 8601 timestamp in the future."""
+        manifest = CreativeManifest(
+            format_id=FormatId(agent_url=AGENT_URL, id="display_300x250_image"),
+            assets={
+                "banner_image": ImageAsset(
+                    asset_type="image",
+                    url="https://example.com/banner.png",
+                    width=300,
+                    height=250,
+                    format="png",
+                ),
+                "click_url": UrlAsset(
+                    asset_type="url",
+                    url="https://example.com/landing",
+                ),
+            },
+        )
+
+        result = preview_creative(
+            format_id="display_300x250_image",
+            creative_manifest=manifest.model_dump(mode="json"),
+        )
+
+        structured = result.structured_content
+
+        # Verify expires_at exists and is a string
+        assert "expires_at" in structured
+        expires_at_str = structured["expires_at"]
+        assert isinstance(expires_at_str, str)
+
+        # Verify it's valid ISO 8601 and in the future
+        expires_at = datetime.fromisoformat(expires_at_str.replace("Z", "+00:00"))
+        now = datetime.now(UTC)
+        assert expires_at > now, "expires_at must be in the future"
+
+        # Verify reasonable expiration duration (between 1 min and 48 hours)
+        time_until_expiry = (expires_at - now).total_seconds()
+        assert 60 <= time_until_expiry <= 48 * 3600, "expiration should be reasonable duration"
 
     def test_preview_creative_fails_with_missing_required_asset(self, mock_s3_upload):
         """Test that preview_creative returns clear error when required asset is missing."""
