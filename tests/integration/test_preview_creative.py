@@ -3,8 +3,6 @@
 All tests use generated Pydantic schemas to ensure 100% ADCP spec compliance.
 """
 
-import json
-
 import pytest
 from pytest_mock import MockerFixture
 
@@ -57,20 +55,20 @@ class TestPreviewCreativeIntegration:
         )
 
         # Convert to dict as server.py does
-        result_json = preview_creative(
+        result = preview_creative(
             format_id="display_300x250_image",
             creative_manifest=manifest.model_dump(mode="json"),
         )
 
-        result = json.loads(result_json)
+        structured = result.structured_content
 
         # Verify response structure
-        assert "previews" in result
-        assert isinstance(result["previews"], list)
-        assert len(result["previews"]) == 3  # desktop, mobile, tablet
+        assert "previews" in structured
+        assert isinstance(structured["previews"], list)
+        assert len(structured["previews"]) == 3  # desktop, mobile, tablet
 
         # Verify each preview variant per ADCP spec
-        for preview in result["previews"]:
+        for preview in structured["previews"]:
             assert "preview_id" in preview, "preview_id is required per spec"
             assert "renders" in preview, "renders is required per spec"
             assert len(preview["renders"]) > 0, "must have at least one render"
@@ -94,7 +92,7 @@ class TestPreviewCreativeIntegration:
             },
         )
 
-        result_json = preview_creative(
+        result = preview_creative(
             format_id="display_300x250_image",
             creative_manifest=manifest.model_dump(mode="json"),
             inputs=[
@@ -103,11 +101,11 @@ class TestPreviewCreativeIntegration:
             ],
         )
 
-        result = json.loads(result_json)
+        structured = result.structured_content
 
-        assert len(result["previews"]) == 2
-        assert result["previews"][0]["input"]["name"] == "US Desktop"
-        assert result["previews"][1]["input"]["name"] == "UK Mobile"
+        assert len(structured["previews"]) == 2
+        assert structured["previews"][0]["input"]["name"] == "US Desktop"
+        assert structured["previews"][1]["input"]["name"] == "UK Mobile"
 
     def test_preview_creative_validates_format_id_mismatch(self, mock_s3_upload):
         """Test that preview_creative rejects manifest with mismatched format_id."""
@@ -125,14 +123,14 @@ class TestPreviewCreativeIntegration:
             },
         )
 
-        result_json = preview_creative(
+        result = preview_creative(
             format_id="display_300x250_image",  # Different!
             creative_manifest=manifest.model_dump(mode="json"),
         )
 
-        result = json.loads(result_json)
-        assert "error" in result
-        assert "does not match" in result["error"]
+        structured = result.structured_content
+        assert "error" in structured
+        assert "does not match" in structured["error"]
 
     def test_preview_creative_validates_malicious_urls(self, mock_s3_upload):
         """Test that preview_creative validates and sanitizes malicious URLs."""
@@ -152,14 +150,14 @@ class TestPreviewCreativeIntegration:
         # Inject malicious URL after validation
         manifest["assets"]["banner_image"]["url"] = "javascript:alert('xss')"
 
-        result_json = preview_creative(
+        result = preview_creative(
             format_id="display_300x250_image",
             creative_manifest=manifest,
         )
 
-        result = json.loads(result_json)
-        assert "error" in result
-        assert "validation" in result["error"].lower()
+        structured = result.structured_content
+        assert "error" in structured
+        assert "validation" in structured["error"].lower()
 
     def test_preview_creative_returns_interactive_url(self, mock_s3_upload):
         """Test that preview response includes interactive_url."""
@@ -176,14 +174,14 @@ class TestPreviewCreativeIntegration:
             },
         )
 
-        result_json = preview_creative(
+        result = preview_creative(
             format_id="display_300x250_image",
             creative_manifest=manifest.model_dump(mode="json"),
         )
 
-        result = json.loads(result_json)
-        assert "interactive_url" in result
-        assert "preview/" in result["interactive_url"]
+        structured = result.structured_content
+        assert "interactive_url" in structured
+        assert "preview/" in structured["interactive_url"]
 
     def test_preview_creative_returns_expiration(self, mock_s3_upload):
         """Test that preview response includes expires_at timestamp."""
@@ -200,16 +198,16 @@ class TestPreviewCreativeIntegration:
             },
         )
 
-        result_json = preview_creative(
+        result = preview_creative(
             format_id="display_300x250_image",
             creative_manifest=manifest.model_dump(mode="json"),
         )
 
-        result = json.loads(result_json)
-        assert "expires_at" in result
+        structured = result.structured_content
+        assert "expires_at" in structured
         # Should be ISO 8601 format
-        assert "T" in result["expires_at"]
-        assert "Z" in result["expires_at"] or "+" in result["expires_at"]
+        assert "T" in structured["expires_at"]
+        assert "Z" in structured["expires_at"] or "+" in structured["expires_at"]
 
     def test_preview_creative_rejects_unknown_format(self, mock_s3_upload):
         """Test that preview_creative rejects unknown format_id."""
@@ -226,14 +224,14 @@ class TestPreviewCreativeIntegration:
             },
         )
 
-        result_json = preview_creative(
+        result = preview_creative(
             format_id="unknown_format_999",
             creative_manifest=manifest.model_dump(mode="json"),
         )
 
-        result = json.loads(result_json)
-        assert "error" in result
-        assert "not found" in result["error"].lower()
+        structured = result.structured_content
+        assert "error" in structured
+        assert "not found" in structured["error"].lower()
 
     def test_preview_creative_returns_spec_compliant_response(self, mock_s3_upload):
         """Test that response matches ADCP PreviewCreativeResponse spec exactly."""
@@ -254,15 +252,15 @@ class TestPreviewCreativeIntegration:
             },
         )
 
-        result_json = preview_creative(
+        result = preview_creative(
             format_id="display_300x250_image",
             creative_manifest=manifest.model_dump(mode="json"),
         )
 
-        result = json.loads(result_json)
+        structured = result.structured_content
 
         # Validate against actual ADCP spec
-        response = PreviewCreativeResponse.model_validate(result)
+        response = PreviewCreativeResponse.model_validate(structured)
 
         # Spec requires these fields
         assert response.previews is not None
@@ -285,20 +283,20 @@ class TestPreviewCreativeIntegration:
             },
         )
 
-        result_json = preview_creative(
+        result = preview_creative(
             format_id="display_300x250_image",
             creative_manifest=manifest.model_dump(mode="json"),
         )
 
-        result = json.loads(result_json)
+        structured = result.structured_content
 
         # Must return error, not crash
-        assert "error" in result, "Should return error for missing required asset"
-        assert "validation" in result["error"].lower(), "Error should mention validation"
+        assert "error" in structured, "Should return error for missing required asset"
+        assert "validation" in structured["error"].lower(), "Error should mention validation"
 
         # Should have specific validation errors
-        assert "validation_errors" in result, "Should include validation_errors array"
-        errors = result["validation_errors"]
+        assert "validation_errors" in structured, "Should include validation_errors array"
+        errors = structured["validation_errors"]
         assert len(errors) > 0, "Should have at least one validation error"
 
         # Should mention the missing asset

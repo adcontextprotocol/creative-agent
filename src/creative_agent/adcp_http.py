@@ -4,7 +4,6 @@ These endpoints provide direct ADCP responses for clients that don't use MCP.
 The MCP endpoint remains available at /mcp for MCP clients.
 """
 
-import json
 from typing import Any, cast
 
 from fastapi import FastAPI, HTTPException
@@ -114,7 +113,7 @@ async def list_creative_formats_get(
     format_ids_list = format_ids.split(",") if format_ids else None
     asset_types_list = asset_types.split(",") if asset_types else None
 
-    result_json = list_creative_formats_fn.fn(
+    result = list_creative_formats_fn.fn(
         format_ids=format_ids_list,
         type=type,
         asset_types=asset_types_list,
@@ -127,13 +126,13 @@ async def list_creative_formats_get(
         name_search=name_search,
     )
 
-    return cast("dict[str, Any]", json.loads(result_json))
+    return cast("dict[str, Any]", result.structured_content)
 
 
 @app.post("/list-creative-formats")
 async def list_creative_formats_post(request: ListCreativeFormatsRequest) -> dict[str, Any]:
     """List creative formats (POST with JSON body)."""
-    result_json = list_creative_formats_fn.fn(
+    result = list_creative_formats_fn.fn(
         format_ids=request.format_ids,
         type=request.type,
         asset_types=request.asset_types,
@@ -146,13 +145,13 @@ async def list_creative_formats_post(request: ListCreativeFormatsRequest) -> dic
         name_search=request.name_search,
     )
 
-    return cast("dict[str, Any]", json.loads(result_json))
+    return cast("dict[str, Any]", result.structured_content)
 
 
 @app.post("/preview-creative")
 async def preview_creative(request: PreviewCreativeRequest) -> dict[str, Any]:
     """Generate creative preview."""
-    result_json = preview_creative_fn.fn(
+    result = preview_creative_fn.fn(
         format_id=request.format_id,
         creative_manifest=request.creative_manifest,
         inputs=request.inputs,
@@ -162,19 +161,19 @@ async def preview_creative(request: PreviewCreativeRequest) -> dict[str, Any]:
         asset_filters=request.asset_filters,
     )
 
-    result = cast("dict[str, Any]", json.loads(result_json))
+    structured = cast("dict[str, Any]", result.structured_content)
 
     # Check if this is an error response
-    if "error" in result:
-        raise HTTPException(status_code=400, detail=result)
+    if "error" in structured:
+        raise HTTPException(status_code=400, detail=structured)
 
-    return result
+    return structured
 
 
 @app.post("/build-creative")
 async def build_creative(request: BuildCreativeRequest) -> dict[str, Any]:
     """Build a creative using AI."""
-    result_json = build_creative_fn.fn(
+    result = build_creative_fn.fn(
         message=request.message,
         format_id=request.format_id,
         gemini_api_key=request.gemini_api_key,
@@ -188,10 +187,10 @@ async def build_creative(request: BuildCreativeRequest) -> dict[str, Any]:
         finalize=request.finalize,
     )
 
-    result = cast("dict[str, Any]", json.loads(result_json))
+    structured = cast("dict[str, Any]", result.structured_content)
 
     # Check if this is an error response
-    if "error" in result:
-        raise HTTPException(status_code=400, detail=result)
+    if "error" in structured:
+        raise HTTPException(status_code=400, detail=structured)
 
-    return result
+    return structured
