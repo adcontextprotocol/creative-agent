@@ -133,12 +133,8 @@ class TestListCreativeFormatsResponseFormat:
             for asset in fmt.assets_required:
                 # Access asset_id - will raise AttributeError if missing
                 asset_dict = asset.model_dump() if hasattr(asset, "model_dump") else dict(asset)
-                assert "asset_id" in asset_dict, (
-                    f"Format {fmt.format_id.id} has asset without asset_id: {asset_dict}"
-                )
-                assert asset_dict["asset_id"], (
-                    f"Format {fmt.format_id.id} has empty asset_id: {asset_dict}"
-                )
+                assert "asset_id" in asset_dict, f"Format {fmt.format_id.id} has asset without asset_id: {asset_dict}"
+                assert asset_dict["asset_id"], f"Format {fmt.format_id.id} has empty asset_id: {asset_dict}"
 
 
 class TestPreviewCreativeResponseFormat:
