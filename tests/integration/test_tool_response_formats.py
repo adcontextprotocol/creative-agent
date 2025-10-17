@@ -97,19 +97,19 @@ class TestListCreativeFormatsResponseFormat:
         result_dict = json.loads(result_json)
 
         # These are common bugs - wrapping valid response in extra structure
-        assert (
-            "result" not in result_dict or result_dict.get("result") != result_dict
-        ), "Response must not be wrapped in 'result' field"
-        assert (
-            "data" not in result_dict or result_dict.get("data") != result_dict
-        ), "Response must not be wrapped in 'data' field"
+        assert "result" not in result_dict or result_dict.get("result") != result_dict, (
+            "Response must not be wrapped in 'result' field"
+        )
+        assert "data" not in result_dict or result_dict.get("data") != result_dict, (
+            "Response must not be wrapped in 'data' field"
+        )
 
         # Top-level keys should match schema exactly
         expected_keys = {"formats", "creative_agents"}
         actual_keys = set(result_dict.keys())
-        assert expected_keys.issubset(
-            actual_keys
-        ), f"Response must have required keys {expected_keys}, got {actual_keys}"
+        assert expected_keys.issubset(actual_keys), (
+            f"Response must have required keys {expected_keys}, got {actual_keys}"
+        )
 
 
 class TestPreviewCreativeResponseFormat:

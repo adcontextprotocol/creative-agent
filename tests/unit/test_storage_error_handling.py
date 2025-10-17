@@ -101,7 +101,9 @@ class TestS3UploadErrorHandling:
         mock_s3.put_object.side_effect = NoCredentialsError()
         mock_get_client.return_value = mock_s3
 
-        with pytest.raises(ValueError, match=r"S3 credentials not configured.*AWS_ACCESS_KEY_ID.*AWS_SECRET_ACCESS_KEY"):
+        with pytest.raises(
+            ValueError, match=r"S3 credentials not configured.*AWS_ACCESS_KEY_ID.*AWS_SECRET_ACCESS_KEY"
+        ):
             upload_preview_html("test-preview-id", "mobile", "<html>test</html>")
 
     @patch("creative_agent.storage.get_s3_client")
