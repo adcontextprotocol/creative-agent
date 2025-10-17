@@ -8,6 +8,7 @@ import json
 import pytest
 from pytest_mock import MockerFixture
 
+from creative_agent import server
 from creative_agent.data.standard_formats import AGENT_URL
 from creative_agent.schemas_generated._schemas_v1_creative_preview_creative_request_json import (
     Assets as ImageAsset,
@@ -17,9 +18,8 @@ from creative_agent.schemas_generated._schemas_v1_creative_preview_creative_requ
 )
 from creative_agent.schemas_generated._schemas_v1_creative_preview_creative_request_json import (
     CreativeManifest,
+    FormatId,
 )
-from creative_agent.schemas_generated._schemas_v1_creative_preview_creative_request_json import FormatId
-from creative_agent import server
 
 # Get the actual function from the FastMCP wrapper
 preview_creative = server.preview_creative.fn

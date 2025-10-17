@@ -15,8 +15,8 @@ from creative_agent.schemas_generated._schemas_v1_creative_preview_creative_requ
 )
 from creative_agent.schemas_generated._schemas_v1_creative_preview_creative_request_json import (
     CreativeManifest,
+    FormatId,
 )
-from creative_agent.schemas_generated._schemas_v1_creative_preview_creative_request_json import FormatId
 from creative_agent.storage import generate_preview_html
 
 
@@ -57,9 +57,7 @@ class TestGeneratePreviewHtml:
         """Create a test input set."""
         return PreviewInput(name="Desktop", macros={"DEVICE_TYPE": "desktop"})
 
-    def test_generate_html_with_spec_compliant_manifest(
-        self, display_format, spec_compliant_manifest_dict, input_set
-    ):
+    def test_generate_html_with_spec_compliant_manifest(self, display_format, spec_compliant_manifest_dict, input_set):
         """Test that generate_preview_html works with spec-compliant dict manifests."""
         html = generate_preview_html(display_format, spec_compliant_manifest_dict, input_set)
 
@@ -69,25 +67,19 @@ class TestGeneratePreviewHtml:
         assert "https://example.com/test.png" in html
         assert "Desktop" in html
 
-    def test_generate_html_extracts_image_url(
-        self, display_format, spec_compliant_manifest_dict, input_set
-    ):
+    def test_generate_html_extracts_image_url(self, display_format, spec_compliant_manifest_dict, input_set):
         """Test that image URL is correctly extracted from manifest."""
         html = generate_preview_html(display_format, spec_compliant_manifest_dict, input_set)
 
         assert 'src="https://example.com/test.png"' in html
 
-    def test_generate_html_extracts_click_url(
-        self, display_format, spec_compliant_manifest_dict, input_set
-    ):
+    def test_generate_html_extracts_click_url(self, display_format, spec_compliant_manifest_dict, input_set):
         """Test that click URL is correctly extracted from manifest."""
         html = generate_preview_html(display_format, spec_compliant_manifest_dict, input_set)
 
         assert 'window.open("https://example.com/landing"' in html
 
-    def test_generate_html_includes_dimensions(
-        self, display_format, spec_compliant_manifest_dict, input_set
-    ):
+    def test_generate_html_includes_dimensions(self, display_format, spec_compliant_manifest_dict, input_set):
         """Test that format dimensions are included in HTML."""
         html = generate_preview_html(display_format, spec_compliant_manifest_dict, input_set)
 
@@ -119,18 +111,14 @@ class TestGeneratePreviewHtml:
         assert "javascript:" not in html
         assert 'src="#"' in html
 
-    def test_generate_html_escapes_format_name(
-        self, display_format, spec_compliant_manifest_dict, input_set
-    ):
+    def test_generate_html_escapes_format_name(self, display_format, spec_compliant_manifest_dict, input_set):
         """Test that format name is HTML escaped."""
         html = generate_preview_html(display_format, spec_compliant_manifest_dict, input_set)
 
         # Format name should be present and properly escaped
         assert display_format.name in html or display_format.name.replace("&", "&amp;") in html
 
-    def test_generate_html_with_different_input_names(
-        self, display_format, spec_compliant_manifest_dict
-    ):
+    def test_generate_html_with_different_input_names(self, display_format, spec_compliant_manifest_dict):
         """Test HTML generation with different input set names."""
         for name in ["Mobile", "Tablet", "Desktop", "Custom Device"]:
             input_set = PreviewInput(name=name, macros={})
@@ -194,7 +182,9 @@ class TestGeneratePreviewHtml:
 
     def test_pydantic_validation_catches_invalid_dimensions(self):
         """Test that Pydantic validates image dimensions per schema."""
-        with pytest.raises(Exception):  # Pydantic will raise validation error
+        from pydantic import ValidationError
+
+        with pytest.raises(ValidationError):
             # Width must be >= 1 per schema
             ImageAsset(
                 asset_type="image",
@@ -205,15 +195,15 @@ class TestGeneratePreviewHtml:
 
     def test_pydantic_validation_catches_invalid_urls(self):
         """Test that Pydantic validates URLs per schema."""
-        with pytest.raises(Exception):  # Pydantic will raise validation error
+        from pydantic import ValidationError
+
+        with pytest.raises(ValidationError):
             UrlAsset(
                 asset_type="url",
                 url="not-a-valid-url",  # Invalid URL format
             )
 
-    def test_manifest_can_have_optional_assets_not_required_by_format(
-        self, display_format, input_set
-    ):
+    def test_manifest_can_have_optional_assets_not_required_by_format(self, display_format, input_set):
         """Test that manifests can include optional assets beyond format requirements."""
         from creative_agent.schemas_generated._schemas_v1_creative_preview_creative_request_json import (
             Assets30 as TextAsset,
@@ -230,9 +220,7 @@ class TestGeneratePreviewHtml:
                     height=250,
                 ),
                 "click_url": UrlAsset(asset_type="url", url="https://example.com/landing"),
-                "optional_headline": TextAsset(
-                    asset_type="text", content="Buy Now!", format="plain"
-                ),
+                "optional_headline": TextAsset(asset_type="text", content="Buy Now!", format="plain"),
             },
         ).model_dump(mode="json")
 

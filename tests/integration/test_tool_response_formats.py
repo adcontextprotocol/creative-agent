@@ -8,6 +8,7 @@ import json
 
 import pytest
 
+from creative_agent import server
 from creative_agent.data.standard_formats import AGENT_URL
 from creative_agent.schemas_generated._schemas_v1_creative_list_creative_formats_response_json import (
     ListCreativeFormatsResponseCreativeAgent as ListCreativeFormatsResponse,
@@ -25,7 +26,6 @@ from creative_agent.schemas_generated._schemas_v1_creative_preview_creative_requ
 from creative_agent.schemas_generated._schemas_v1_creative_preview_creative_response_json import (
     PreviewCreativeResponse,
 )
-from creative_agent import server
 
 # Get actual functions from FastMCP wrappers
 list_creative_formats = server.list_creative_formats.fn
@@ -97,16 +97,19 @@ class TestListCreativeFormatsResponseFormat:
         result_dict = json.loads(result_json)
 
         # These are common bugs - wrapping valid response in extra structure
-        assert "result" not in result_dict or result_dict.get("result") != result_dict, \
-            "Response must not be wrapped in 'result' field"
-        assert "data" not in result_dict or result_dict.get("data") != result_dict, \
-            "Response must not be wrapped in 'data' field"
+        assert (
+            "result" not in result_dict or result_dict.get("result") != result_dict
+        ), "Response must not be wrapped in 'result' field"
+        assert (
+            "data" not in result_dict or result_dict.get("data") != result_dict
+        ), "Response must not be wrapped in 'data' field"
 
         # Top-level keys should match schema exactly
         expected_keys = {"formats", "creative_agents"}
         actual_keys = set(result_dict.keys())
-        assert expected_keys.issubset(actual_keys), \
-            f"Response must have required keys {expected_keys}, got {actual_keys}"
+        assert expected_keys.issubset(
+            actual_keys
+        ), f"Response must have required keys {expected_keys}, got {actual_keys}"
 
 
 class TestPreviewCreativeResponseFormat:
@@ -217,10 +220,6 @@ class TestToolResponseConsistency:
         result = list_creative_formats()
         assert isinstance(result, str), "list_creative_formats must return JSON string"
 
-        # Can add more tools as they're implemented
-        # result = build_creative(...)
-        # assert isinstance(result, str), "build_creative must return JSON string"
-
     def test_no_tool_returns_double_encoded_json(self, mocker):
         """No tool should ever return JSON-encoded-JSON like '{"result": "{...}"}'."""
         mocker.patch("creative_agent.storage.upload_preview_html", return_value="https://test.com")
@@ -230,7 +229,7 @@ class TestToolResponseConsistency:
         parsed = json.loads(result)
         # If any value is a string that looks like JSON, we have double-encoding
         for value in parsed.values():
-            if isinstance(value, str) and (value.startswith('{') or value.startswith('[')):
+            if isinstance(value, str) and value.startswith(("{", "[")):
                 # Try to parse it - if it parses, we have double-encoding
                 try:
                     json.loads(value)
@@ -257,7 +256,7 @@ class TestToolResponseConsistency:
         )
         parsed = json.loads(result)
         for value in parsed.values():
-            if isinstance(value, str) and (value.startswith('{') or value.startswith('[')):
+            if isinstance(value, str) and value.startswith(("{", "[")):
                 try:
                     json.loads(value)
                     pytest.fail(f"Found double-encoded JSON in field: {value[:100]}")

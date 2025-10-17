@@ -244,11 +244,17 @@ def preview_creative(
             previews.append(preview)
 
         # Calculate expiration (24 hours from now)
-        expires_at = (datetime.now(UTC) + timedelta(hours=24)).isoformat()
+        expires_at = datetime.now(UTC) + timedelta(hours=24)
+
+        from pydantic import AnyUrl
+
+        from .schemas_generated._schemas_v1_creative_preview_creative_response_json import (
+            Preview,
+        )
 
         response = PreviewCreativeResponse(
-            previews=previews,
-            interactive_url=f"{AGENT_URL}/preview/{preview_id}/interactive",
+            previews=[Preview.model_validate(p) for p in previews],
+            interactive_url=AnyUrl(f"{AGENT_URL}/preview/{preview_id}/interactive"),
             expires_at=expires_at,
         )
 
@@ -270,7 +276,7 @@ def _generate_preview_variant(
     input_set: Any,
     preview_id: str,
     preview_url: str,
-) -> dict:
+) -> dict[str, Any]:
     """Generate a single preview variant per ADCP spec.
 
     Returns a Preview dict with:
@@ -278,6 +284,7 @@ def _generate_preview_variant(
     - renders array (required)
     - input (required)
     """
+    from .schemas_generated._schemas_v1_core_format_json import Type
     from .schemas_generated._schemas_v1_creative_preview_creative_response_json import (
         Dimensions,
         Embedding,
@@ -285,7 +292,6 @@ def _generate_preview_variant(
         Preview,
         Render,
     )
-    from .schemas_generated._schemas_v1_core_format_json import Type
 
     # Extract dimensions from format
     dimensions = None
@@ -305,9 +311,11 @@ def _generate_preview_variant(
     )
 
     # Create the single render (all formats render as HTML pages)
+    from pydantic import AnyUrl as PydanticUrl
+
     render = Render(
         render_id=f"{preview_id}-primary",
-        preview_url=preview_url,
+        preview_url=PydanticUrl(preview_url),
         role="primary",
         dimensions=dimensions,
         embedding=embedding,
@@ -317,7 +325,7 @@ def _generate_preview_variant(
     input_echo = Input(
         name=input_set.name,
         macros=input_set.macros,
-        context_description=input_set.context_description if hasattr(input_set, 'context_description') else None,
+        context_description=input_set.context_description if hasattr(input_set, "context_description") else None,
     )
 
     # Build Preview per spec
