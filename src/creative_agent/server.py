@@ -143,7 +143,6 @@ def list_creative_formats(
         return ToolResult(
             content=[TextContent(type="text", text=f"Error: Invalid input - {e}")],
             structured_content=error_response,
-            isError=True,
         )
     except Exception as e:
         import traceback
@@ -152,7 +151,6 @@ def list_creative_formats(
         return ToolResult(
             content=[TextContent(type="text", text=f"Error: Server error - {e}")],
             structured_content=error_response,
-            isError=True,
         )
 
 
@@ -165,7 +163,7 @@ def preview_creative(
     brand_card: dict[str, Any] | None = None,
     promoted_products: dict[str, Any] | None = None,
     asset_filters: dict[str, Any] | None = None,
-) -> str:
+) -> ToolResult:
     """Generate preview renderings of a creative manifest.
 
     Args:
@@ -178,7 +176,7 @@ def preview_creative(
         asset_filters: Filters to select specific assets from brand card (tags, asset_types, exclude_tags)
 
     Returns:
-        JSON string with preview response containing array of preview variants
+        ToolResult with human-readable message and structured preview data
     """
     try:
         # Import schema types
@@ -205,9 +203,10 @@ def preview_creative(
         # Validate format exists
         fmt = get_format_by_id(request.format_id)
         if not fmt:
-            return json.dumps(
-                {"error": f"Format {request.format_id} not found"},
-                indent=2,
+            error_msg = f"Format {request.format_id} not found"
+            return ToolResult(
+                content=[TextContent(type="text", text=f"Error: {error_msg}")],
+                structured_content={"error": error_msg},
             )
 
         # Validate manifest format_id matches
@@ -217,11 +216,12 @@ def preview_creative(
             manifest_norm = normalize_format_id_for_comparison(manifest_format_id)
             request_norm = normalize_format_id_for_comparison(request.format_id)
             if manifest_norm != request_norm:
-                return json.dumps(
-                    {
-                        "error": f"Manifest format_id '{manifest_format_id}' does not match request format_id '{request.format_id}'"
-                    },
-                    indent=2,
+                error_msg = (
+                    f"Manifest format_id '{manifest_format_id}' does not match request format_id '{request.format_id}'"
+                )
+                return ToolResult(
+                    content=[TextContent(type="text", text=f"Error: {error_msg}")],
+                    structured_content={"error": error_msg},
                 )
 
         # Validate manifest assets
@@ -233,12 +233,10 @@ def preview_creative(
             format_obj=fmt,
         )
         if validation_errors:
-            return json.dumps(
-                {
-                    "error": "Asset validation failed",
-                    "validation_errors": validation_errors,
-                },
-                indent=2,
+            error_msg = "Asset validation failed"
+            return ToolResult(
+                content=[TextContent(type="text", text=f"Error: {error_msg}")],
+                structured_content={"error": error_msg, "validation_errors": validation_errors},
             )
 
         # Generate preview variants
@@ -290,17 +288,19 @@ def preview_creative(
                 try:
                     validated_previews.append(Preview.model_validate(preview_dict))
                 except ValidationError as e:
-                    return json.dumps(
-                        {
-                            "error": f"Preview validation failed for variant {idx + 1}",
-                            "validation_errors": e.errors(),
-                        },
-                        indent=2,
+                    error_msg = f"Preview validation failed for variant {idx + 1}"
+                    return ToolResult(
+                        content=[TextContent(type="text", text=f"Error: {error_msg}")],
+                        structured_content={"error": error_msg, "validation_errors": e.errors()},
                     )
 
             interactive_url = AnyUrl(f"{AGENT_URL}/preview/{preview_id}/interactive")
         except ValidationError as e:
-            return json.dumps({"error": f"Invalid URL construction: {e}"}, indent=2)
+            error_msg = f"Invalid URL construction: {e}"
+            return ToolResult(
+                content=[TextContent(type="text", text=f"Error: {error_msg}")],
+                structured_content={"error": error_msg},
+            )
 
         response = PreviewCreativeResponse(
             previews=validated_previews,
@@ -308,15 +308,27 @@ def preview_creative(
             expires_at=expires_at,
         )
 
-        return response.model_dump_json(indent=2)
+        # Return ToolResult with human message and structured data
+        preview_count = len(validated_previews)
+        message = f"Generated {preview_count} preview{'s' if preview_count != 1 else ''} for {format_id}"
+
+        return ToolResult(
+            content=[TextContent(type="text", text=message)],
+            structured_content=response.model_dump(mode="json"),
+        )
     except ValueError as e:
-        return json.dumps({"error": f"Invalid input: {e}"}, indent=2)
+        error_msg = f"Invalid input: {e}"
+        return ToolResult(
+            content=[TextContent(type="text", text=f"Error: {error_msg}")],
+            structured_content={"error": error_msg},
+        )
     except Exception as e:
         import traceback
 
-        return json.dumps(
-            {"error": f"Preview generation failed: {e}", "traceback": traceback.format_exc()[-500:]},
-            indent=2,
+        error_msg = f"Preview generation failed: {e}"
+        return ToolResult(
+            content=[TextContent(type="text", text=f"Error: {error_msg}")],
+            structured_content={"error": error_msg, "traceback": traceback.format_exc()[-500:]},
         )
 
 
@@ -405,7 +417,7 @@ def build_creative(
     output_mode: str = "manifest",
     preview_options: dict[str, Any] | None = None,
     finalize: bool = False,
-) -> str:
+) -> ToolResult:
     """Build a creative manifest using AI generation (requires user's Gemini API key).
 
     Args:
@@ -422,24 +434,25 @@ def build_creative(
         finalize: Set to true to finalize the creative
 
     Returns:
-        JSON string with build response containing creative manifest
+        ToolResult with human-readable message and structured build response
     """
     try:
         # Validate message length
         if not message or len(message) > 10000:
-            return json.dumps(
-                {"error": "Message must be between 1 and 10000 characters"},
-                indent=2,
+            error_msg = "Message must be between 1 and 10000 characters"
+            return ToolResult(
+                content=[TextContent(type="text", text=f"Error: {error_msg}")],
+                structured_content={"error": error_msg},
             )
 
         # Validate API key is provided
         if not gemini_api_key:
-            return json.dumps(
-                {
-                    "error": "gemini_api_key is required. Please provide your own Gemini API key. "
-                    "Get one at https://ai.google.dev/"
-                },
-                indent=2,
+            error_msg = (
+                "gemini_api_key is required. Please provide your own Gemini API key. Get one at https://ai.google.dev/"
+            )
+            return ToolResult(
+                content=[TextContent(type="text", text=f"Error: {error_msg}")],
+                structured_content={"error": error_msg},
             )
 
         # Import schema types
@@ -465,9 +478,10 @@ def build_creative(
 
         # Validate output_mode
         if output_mode not in ["manifest", "code"]:
-            return json.dumps(
-                {"error": f"Invalid output_mode '{output_mode}'. Must be 'manifest' or 'code'"},
-                indent=2,
+            error_msg = f"Invalid output_mode '{output_mode}'. Must be 'manifest' or 'code'"
+            return ToolResult(
+                content=[TextContent(type="text", text=f"Error: {error_msg}")],
+                structured_content={"error": error_msg},
             )
 
         # Parse request
@@ -488,9 +502,10 @@ def build_creative(
         fmt_id = FormatId(agent_url=AGENT_URL, id=request.format_id)
         fmt = get_format_by_id(fmt_id)
         if not fmt:
-            return json.dumps(
-                {"error": f"Format {request.format_id} not found"},
-                indent=2,
+            error_msg = f"Format {request.format_id} not found"
+            return ToolResult(
+                content=[TextContent(type="text", text=f"Error: {error_msg}")],
+                structured_content={"error": error_msg},
             )
 
         # For generative formats (identified by having output_format_ids),
@@ -500,9 +515,10 @@ def build_creative(
             # Use the first output format ID
             output_fmt_result = get_format_by_id(fmt.output_format_ids[0])
             if not output_fmt_result:
-                return json.dumps(
-                    {"error": f"Output format {fmt.output_format_ids[0]} not found"},
-                    indent=2,
+                error_msg = f"Output format {fmt.output_format_ids[0]} not found"
+                return ToolResult(
+                    content=[TextContent(type="text", text=f"Error: {error_msg}")],
+                    structured_content={"error": error_msg},
                 )
             output_fmt = output_fmt_result
 
@@ -800,13 +816,18 @@ Return ONLY the JSON manifest, no additional text."""
             format_obj=target_format,
         )
         if validation_errors:
-            return json.dumps(
-                {
-                    "error": "AI-generated creative failed validation",
+            error_msg = "AI-generated creative failed validation"
+            return ToolResult(
+                content=[
+                    TextContent(
+                        type="text", text=f"Error: {error_msg}. Please try again with more specific instructions."
+                    )
+                ],
+                structured_content={
+                    "error": error_msg,
                     "validation_errors": validation_errors,
                     "hint": "The AI generated invalid assets. Please try again with more specific instructions.",
                 },
-                indent=2,
             )
 
         # Generate session context ID
@@ -847,27 +868,41 @@ Return ONLY the JSON manifest, no additional text."""
             else [],
         )
 
-        return build_response.model_dump_json(indent=2)
+        # Return ToolResult with human message and structured data
+        message = f"Generated {fmt.name} creative. Status: {status}"
+        if request.finalize:
+            message += " (finalized and ready to use)"
+
+        return ToolResult(
+            content=[TextContent(type="text", text=message)],
+            structured_content=build_response.model_dump(mode="json"),
+        )
 
     except json.JSONDecodeError as e:
-        return json.dumps(
-            {
-                "error": f"Failed to parse AI-generated creative: {e}",
+        error_msg = f"Failed to parse AI-generated creative: {e}"
+        return ToolResult(
+            content=[TextContent(type="text", text=f"Error: {error_msg}")],
+            structured_content={
+                "error": error_msg,
                 "context": {"line": e.lineno, "column": e.colno, "format_id": format_id},
             },
-            indent=2,
         )
     except ValueError as e:
-        return json.dumps({"error": f"Invalid input: {e}"}, indent=2)
+        error_msg = f"Invalid input: {e}"
+        return ToolResult(
+            content=[TextContent(type="text", text=f"Error: {error_msg}")],
+            structured_content={"error": error_msg},
+        )
     except Exception as e:
         import traceback
 
-        return json.dumps(
-            {
-                "error": f"Creative generation failed: {e}",
+        error_msg = f"Creative generation failed: {e}"
+        return ToolResult(
+            content=[TextContent(type="text", text=f"Error: {error_msg}")],
+            structured_content={
+                "error": error_msg,
                 "context": {"format_id": format_id, "traceback": traceback.format_exc()[-500:]},
             },
-            indent=2,
         )
 
 

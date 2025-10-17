@@ -155,27 +155,26 @@ class TestPreviewCreativeResponseFormat:
         mock.return_value = "https://adcp-previews.fly.storage.tigris.dev/test.html"
         return mock
 
-    def test_returns_valid_json(self, valid_manifest, mock_s3):
-        """Tool must return valid JSON string (not double-encoded)."""
-        result_json = preview_creative(
+    def test_returns_tool_result(self, valid_manifest, mock_s3):
+        """Tool must return ToolResult with structured content."""
+        result = preview_creative(
             format_id="display_300x250_image",
             creative_manifest=valid_manifest.model_dump(mode="json"),
         )
 
-        # This will fail if response is double-encoded
-        result_dict = json.loads(result_json)
-        assert isinstance(result_dict, dict), "Response must be a JSON object, not nested string"
+        assert hasattr(result, "content"), "Must return ToolResult with content"
+        assert hasattr(result, "structured_content"), "Must return ToolResult with structured_content"
+        assert result.structured_content, "Structured content must not be empty"
 
-    def test_response_matches_adcp_schema(self, valid_manifest, mock_s3):
-        """Response must validate against PreviewCreativeResponse schema."""
-        result_json = preview_creative(
+    def test_structured_content_matches_adcp_schema(self, valid_manifest, mock_s3):
+        """Structured content must validate against PreviewCreativeResponse schema."""
+        result = preview_creative(
             format_id="display_300x250_image",
             creative_manifest=valid_manifest.model_dump(mode="json"),
         )
-        result_dict = json.loads(result_json)
 
         # This validates ALL fields per ADCP spec
-        response = PreviewCreativeResponse.model_validate(result_dict)
+        response = PreviewCreativeResponse.model_validate(result.structured_content)
 
         # Verify required fields per spec
         assert response.previews is not None, "'previews' is required per spec"
@@ -183,12 +182,11 @@ class TestPreviewCreativeResponseFormat:
 
     def test_previews_array_structure(self, valid_manifest, mock_s3):
         """Per spec, previews must be array of Preview objects with renders."""
-        result_json = preview_creative(
+        result = preview_creative(
             format_id="display_300x250_image",
             creative_manifest=valid_manifest.model_dump(mode="json"),
         )
-        result_dict = json.loads(result_json)
-        response = PreviewCreativeResponse.model_validate(result_dict)
+        response = PreviewCreativeResponse.model_validate(result.structured_content)
 
         assert isinstance(response.previews, list), "previews must be array"
         assert len(response.previews) > 0, "must return at least one preview"
@@ -204,46 +202,53 @@ class TestPreviewCreativeResponseFormat:
             assert render.preview_url is not None, "render.preview_url is required"
             assert str(render.preview_url).startswith("http"), "preview_url must be valid HTTP(S) URL"
 
-    def test_error_responses_are_valid_json(self, mock_s3):
-        """Even error responses must be valid JSON (not double-encoded)."""
+    def test_error_responses_have_structured_content(self, mock_s3):
+        """Even error responses must have structured content."""
         # Test with invalid format_id
-        result_json = preview_creative(
+        result = preview_creative(
             format_id="nonexistent_format",
             creative_manifest={"format_id": {}, "assets": {}},
         )
 
-        # Must be parseable JSON
-        result_dict = json.loads(result_json)
-        assert isinstance(result_dict, dict), "Error response must be JSON object"
+        assert hasattr(result, "structured_content"), "Error must have structured_content"
+        assert hasattr(result, "content"), "Error must have content"
 
-        # Error responses should have 'error' field per ADCP error handling
-        assert "error" in result_dict, "Error responses should have 'error' field"
-        assert isinstance(result_dict["error"], str), "Error must be a string description"
+        # Error responses should have 'error' field in structured_content
+        assert "error" in result.structured_content, "Error responses should have 'error' field"
+        assert isinstance(result.structured_content["error"], str), "Error must be a string description"
+
+        # Content should mention error
+        assert "error" in result.content[0].text.lower(), "Content should indicate error"
 
 
 class TestToolResponseConsistency:
     """Test that all tools follow consistent response format patterns."""
 
-    def test_all_tools_return_json_strings(self):
-        """All tools must return JSON strings, never Python objects."""
+    def test_all_tools_return_tool_result(self):
+        """All tools must return ToolResult objects with structured_content."""
         # Test list_creative_formats
         result = list_creative_formats()
-        assert isinstance(result, str), "list_creative_formats must return JSON string"
+        assert hasattr(result, "structured_content"), "list_creative_formats must return ToolResult"
+        assert hasattr(result, "content"), "ToolResult must have content"
 
-    def test_no_tool_returns_double_encoded_json(self, mocker):
-        """No tool should ever return JSON-encoded-JSON like '{"result": "{...}"}'."""
+    def test_structured_content_not_double_encoded(self, mocker):
+        """structured_content should be objects, not JSON strings."""
         mocker.patch("creative_agent.storage.upload_preview_html", return_value="https://test.com")
 
         # Test list_creative_formats
         result = list_creative_formats()
-        parsed = json.loads(result)
-        # If any value is a string that looks like JSON, we have double-encoding
-        for value in parsed.values():
+        structured = result.structured_content
+
+        # structured_content should be a dict, not a string
+        assert isinstance(structured, dict), "structured_content must be dict, not JSON string"
+
+        # Values should not be JSON strings (no double-encoding)
+        for key, value in structured.items():
             if isinstance(value, str) and value.startswith(("{", "[")):
                 # Try to parse it - if it parses, we have double-encoding
                 try:
                     json.loads(value)
-                    pytest.fail(f"Found double-encoded JSON in field: {value[:100]}")
+                    pytest.fail(f"Found double-encoded JSON in field '{key}': {value[:100]}")
                 except json.JSONDecodeError:
                     pass  # Not JSON, that's fine
 
@@ -264,11 +269,13 @@ class TestToolResponseConsistency:
             format_id="display_300x250_image",
             creative_manifest=manifest.model_dump(mode="json"),
         )
-        parsed = json.loads(result)
-        for value in parsed.values():
+        structured = result.structured_content
+        assert isinstance(structured, dict), "structured_content must be dict"
+
+        for key, value in structured.items():
             if isinstance(value, str) and value.startswith(("{", "[")):
                 try:
                     json.loads(value)
-                    pytest.fail(f"Found double-encoded JSON in field: {value[:100]}")
+                    pytest.fail(f"Found double-encoded JSON in field '{key}': {value[:100]}")
                 except json.JSONDecodeError:
                     pass
