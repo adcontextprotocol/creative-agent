@@ -7,6 +7,8 @@ from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from fastmcp import FastMCP
+from fastmcp.tools.tool import ToolResult
+from mcp.types import TextContent
 
 from .data.standard_formats import (
     AGENT_CAPABILITIES,
@@ -56,7 +58,7 @@ def list_creative_formats(
     min_height: int | None = None,
     is_responsive: bool | None = None,
     name_search: str | None = None,
-) -> str:
+) -> ToolResult:
     """List all available AdCP creative formats with optional filtering.
 
     Args:
@@ -72,7 +74,7 @@ def list_creative_formats(
         name_search: Search for formats by name (case-insensitive partial match)
 
     Returns:
-        JSON string with format list response
+        ToolResult with human-readable message and structured ADCP data
     """
     try:
         # Convert string format_ids to FormatId objects (assume they're from our agent)
@@ -120,13 +122,38 @@ def list_creative_formats(
             ],
         )
 
-        return response.model_dump_json(indent=2)
+        # Return ToolResult with both human message and structured data
+        format_count = len(response_formats)
+        filter_desc = []
+        if type:
+            filter_desc.append(f"type={type}")
+        if max_width or max_height:
+            filter_desc.append(f"dimensions<={max_width or '∞'}x{max_height or '∞'}")
+
+        message = f"Found {format_count} creative format{'s' if format_count != 1 else ''}"
+        if filter_desc:
+            message += f" matching filters ({', '.join(filter_desc)})"
+
+        return ToolResult(
+            content=[TextContent(type="text", text=message)],
+            structured_content=response.model_dump(mode="json"),
+        )
     except ValueError as e:
-        return json.dumps({"error": f"Invalid input: {e}"}, indent=2)
+        error_response = {"error": f"Invalid input: {e}"}
+        return ToolResult(
+            content=[TextContent(type="text", text=f"Error: Invalid input - {e}")],
+            structured_content=error_response,
+            isError=True,
+        )
     except Exception as e:
         import traceback
 
-        return json.dumps({"error": f"Server error: {e}", "traceback": traceback.format_exc()[-500:]}, indent=2)
+        error_response = {"error": f"Server error: {e}", "traceback": traceback.format_exc()[-500:]}
+        return ToolResult(
+            content=[TextContent(type="text", text=f"Error: Server error - {e}")],
+            structured_content=error_response,
+            isError=True,
+        )
 
 
 @mcp.tool()

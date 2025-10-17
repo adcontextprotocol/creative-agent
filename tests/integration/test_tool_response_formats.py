@@ -2,6 +2,10 @@
 
 These tests are written BY READING THE SPEC ONLY - not by looking at code.
 They catch bugs like double-JSON-encoding, missing fields, wrong types, etc.
+
+Tests verify that tools return ToolResult with:
+- content: Human-readable message
+- structured_content: ADCP schema-compliant data
 """
 
 import json
@@ -39,18 +43,26 @@ class TestListCreativeFormatsResponseFormat:
     NOT by looking at server.py code.
     """
 
-    def test_returns_valid_json(self):
-        """Tool must return valid JSON string (not double-encoded)."""
-        result_json = list_creative_formats()
+    def test_returns_tool_result_with_structured_content(self):
+        """Tool must return ToolResult with structured_content."""
+        result = list_creative_formats()
 
-        # This will fail if response is double-encoded like: '{"result": "{...}"}'
-        result_dict = json.loads(result_json)
-        assert isinstance(result_dict, dict), "Response must be a JSON object, not nested string"
+        # Verify ToolResult structure
+        assert hasattr(result, "content"), "Must return ToolResult with content"
+        assert hasattr(result, "structured_content"), "Must return ToolResult with structured_content"
+        assert result.content, "Content must not be empty"
+        assert result.structured_content, "Structured content must not be empty"
 
-    def test_response_matches_adcp_schema(self):
-        """Response must validate against ListCreativeFormatsResponse schema."""
-        result_json = list_creative_formats()
-        result_dict = json.loads(result_json)
+        # Verify content is human-readable message
+        assert result.content[0].type == "text"
+        assert "format" in result.content[0].text.lower(), "Content should mention formats"
+
+    def test_structured_content_matches_adcp_schema(self):
+        """Structured content must validate against ListCreativeFormatsResponse schema."""
+        result = list_creative_formats()
+
+        # Get structured_content (already a dict, no JSON parsing needed)
+        result_dict = result.structured_content
 
         # This validates ALL fields, types, constraints per ADCP spec
         response = ListCreativeFormatsResponse.model_validate(result_dict)
@@ -61,9 +73,8 @@ class TestListCreativeFormatsResponseFormat:
 
     def test_formats_array_structure(self):
         """Per spec, formats must be array of Format objects with required fields."""
-        result_json = list_creative_formats()
-        result_dict = json.loads(result_json)
-        response = ListCreativeFormatsResponse.model_validate(result_dict)
+        result = list_creative_formats()
+        response = ListCreativeFormatsResponse.model_validate(result.structured_content)
 
         assert isinstance(response.formats, list), "formats must be array per spec"
         assert len(response.formats) > 0, "formats array must not be empty"
@@ -78,9 +89,8 @@ class TestListCreativeFormatsResponseFormat:
 
     def test_creative_agents_structure(self):
         """Per spec, creative_agents must be array with agent_url, agent_name, capabilities."""
-        result_json = list_creative_formats()
-        result_dict = json.loads(result_json)
-        response = ListCreativeFormatsResponse.model_validate(result_dict)
+        result = list_creative_formats()
+        response = ListCreativeFormatsResponse.model_validate(result.structured_content)
 
         assert isinstance(response.creative_agents, list), "creative_agents must be array"
         assert len(response.creative_agents) > 0, "must include at least one creative agent"
@@ -92,16 +102,16 @@ class TestListCreativeFormatsResponseFormat:
             assert isinstance(agent.capabilities, list), "capabilities must be array"
 
     def test_no_extra_wrapper_fields(self):
-        """Response must not have extra fields like 'result' or 'data' wrapping the schema."""
-        result_json = list_creative_formats()
-        result_dict = json.loads(result_json)
+        """Structured content must match ADCP schema exactly with no wrappers."""
+        result = list_creative_formats()
+        result_dict = result.structured_content
 
         # These are common bugs - wrapping valid response in extra structure
-        assert "result" not in result_dict or result_dict.get("result") != result_dict, (
-            "Response must not be wrapped in 'result' field"
+        assert "result" not in result_dict or not isinstance(result_dict.get("result"), str), (
+            "structured_content must not have JSON string in 'result' field"
         )
         assert "data" not in result_dict or result_dict.get("data") != result_dict, (
-            "Response must not be wrapped in 'data' field"
+            "structured_content must not be wrapped in 'data' field"
         )
 
         # Top-level keys should match schema exactly
