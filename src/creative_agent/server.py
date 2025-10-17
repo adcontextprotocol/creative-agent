@@ -21,10 +21,11 @@ from .schemas import (
     CreativeOutput,
     ListCreativeFormatsResponse,
     PreviewCreativeRequest,
-    PreviewCreativeResponse,
-    PreviewVariant,
 )
 from .schemas_generated._schemas_v1_core_format_json import FormatId
+from .schemas_generated._schemas_v1_creative_preview_creative_response_json import (
+    PreviewCreativeResponse,
+)
 
 mcp = FastMCP("adcp-creative-agent")
 
@@ -269,54 +270,64 @@ def _generate_preview_variant(
     input_set: Any,
     preview_id: str,
     preview_url: str,
-) -> PreviewVariant:
-    """Generate a single preview variant - always returns HTML page."""
-    from .schemas.manifest import PreviewEmbedding, PreviewHints
+) -> dict:
+    """Generate a single preview variant per ADCP spec.
 
-    # Build hints based on format type
-    hints = PreviewHints()
-
-    # Import Type enum for comparisons
+    Returns a Preview dict with:
+    - preview_id (required)
+    - renders array (required)
+    - input (required)
+    """
+    from .schemas_generated._schemas_v1_creative_preview_creative_response_json import (
+        Dimensions,
+        Embedding,
+        Input,
+        Preview,
+        Render,
+    )
     from .schemas_generated._schemas_v1_core_format_json import Type
 
-    if format_obj.type == Type.video:
-        hints.primary_media_type = "video"
-        hints.contains_audio = True
-        if format_obj.requirements and format_obj.requirements.get("duration_seconds"):
-            hints.estimated_duration_seconds = format_obj.requirements["duration_seconds"]
-    elif format_obj.type == Type.audio:
-        hints.primary_media_type = "audio"
-        hints.contains_audio = True
-        if format_obj.requirements and format_obj.requirements.get("duration_seconds"):
-            hints.estimated_duration_seconds = format_obj.requirements["duration_seconds"]
-    elif format_obj.type in [Type.display, Type.native, Type.dooh]:
-        hints.primary_media_type = "image"
-        hints.contains_audio = False
-    else:
-        hints.requires_interaction = True
-
-    # Extract dimensions from renders array
+    # Extract dimensions from format
+    dimensions = None
     if format_obj.renders and len(format_obj.renders) > 0:
         primary_render = format_obj.renders[0]
-        if primary_render.dimensions.width and primary_render.dimensions.height:
-            hints.estimated_dimensions = {
-                "width": int(primary_render.dimensions.width),
-                "height": int(primary_render.dimensions.height),
-            }
+        if primary_render.dimensions and primary_render.dimensions.width and primary_render.dimensions.height:
+            dimensions = Dimensions(
+                width=float(primary_render.dimensions.width),
+                height=float(primary_render.dimensions.height),
+            )
 
-    # Build embedding security metadata
-    embedding = PreviewEmbedding(
+    # Build embedding metadata
+    embedding = Embedding(
         recommended_sandbox="allow-scripts allow-same-origin",
         requires_https=False,
         supports_fullscreen=format_obj.type in [Type.video, Type.rich_media],
     )
 
-    return PreviewVariant(
+    # Create the single render (all formats render as HTML pages)
+    render = Render(
+        render_id=f"{preview_id}-primary",
         preview_url=preview_url,
-        input=input_set,
-        hints=hints,
+        role="primary",
+        dimensions=dimensions,
         embedding=embedding,
     )
+
+    # Create input echo
+    input_echo = Input(
+        name=input_set.name,
+        macros=input_set.macros,
+        context_description=input_set.context_description if hasattr(input_set, 'context_description') else None,
+    )
+
+    # Build Preview per spec
+    preview = Preview(
+        preview_id=preview_id,
+        renders=[render],
+        input=input_echo,
+    )
+
+    return preview.model_dump(mode="json")
 
 
 @mcp.tool()
