@@ -94,10 +94,8 @@ def list_creative_formats(
             for fid in format_ids:
                 if isinstance(fid, str):
                     format_id_objects.append(FormatId(agent_url=AGENT_URL, id=fid))
-                elif isinstance(fid, dict):
+                else:  # dict
                     format_id_objects.append(FormatId(**fid))
-                else:
-                    format_id_objects.append(fid)  # Already a FormatId object
 
         # Cast asset_types to the expected type (filter_formats accepts str or AssetType)
         formats = filter_formats(
@@ -205,14 +203,11 @@ def preview_creative(
             inputs_obj = [PreviewInput(**inp) for inp in inputs]
 
         # Parse request (creative_manifest stays as dict)
-        # Handle format_id as string or FormatId object
+        # Handle format_id as string or FormatId object (dict)
         if isinstance(format_id, str):
             fmt_id = FormatId(agent_url=AGENT_URL, id=format_id)
-        elif isinstance(format_id, dict):
-            # Parse FormatId from dict
+        else:  # dict
             fmt_id = FormatId(**format_id)
-        else:
-            fmt_id = format_id  # Already a FormatId object
         request = PreviewCreativeRequest(
             format_id=fmt_id,
             creative_manifest=creative_manifest,
@@ -334,7 +329,7 @@ def preview_creative(
 
         # Return ToolResult with human message and structured data
         preview_count = len(validated_previews)
-        format_id_str = fmt_id.id if hasattr(fmt_id, 'id') else str(fmt_id)
+        format_id_str = fmt_id.id if hasattr(fmt_id, "id") else str(fmt_id)
         message = f"Generated {preview_count} preview{'s' if preview_count != 1 else ''} for {format_id_str}"
 
         return ToolResult(
@@ -509,10 +504,16 @@ def build_creative(
                 structured_content={"error": error_msg},
             )
 
+        # Extract format_id string (BuildCreativeRequest expects a string)
+        if isinstance(format_id, str):
+            format_id_str = format_id
+        else:  # dict
+            format_id_str = format_id["id"]
+
         # Parse request
         request = BuildCreativeRequest(
             message=message,
-            format_id=format_id,
+            format_id=format_id_str,
             format_source=format_source_url,
             context_id=context_id,
             assets=asset_refs,
@@ -524,7 +525,7 @@ def build_creative(
 
         # Get format definition
         # BuildCreativeRequest.format_id is always a string, convert to FormatId for lookup
-        fmt_id = FormatId(agent_url=AGENT_URL, id=request.format_id)
+        fmt_id = FormatId(agent_url=AGENT_URL, id=format_id_str)
         fmt = get_format_by_id(fmt_id)
         if not fmt:
             error_msg = f"Format {request.format_id} not found"
