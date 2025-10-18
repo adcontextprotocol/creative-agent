@@ -136,6 +136,35 @@ class TestListCreativeFormatsResponseFormat:
                 assert "asset_id" in asset_dict, f"Format {fmt.format_id.id} has asset without asset_id: {asset_dict}"
                 assert asset_dict["asset_id"], f"Format {fmt.format_id.id} has empty asset_id: {asset_dict}"
 
+    def test_accepts_format_ids_as_dicts(self):
+        """Test that list_creative_formats accepts format_ids as FormatId objects (dicts)."""
+        # Filter by format_ids using dict representation
+        result = list_creative_formats(
+            format_ids=[
+                {"agent_url": str(AGENT_URL), "id": "display_300x250_image"},
+                {"agent_url": str(AGENT_URL), "id": "display_728x90_image"},
+            ]
+        )
+
+        response = ListCreativeFormatsResponse.model_validate(result.structured_content)
+        assert len(response.formats) == 2
+        format_ids = {fmt.format_id.id for fmt in response.formats}
+        assert format_ids == {"display_300x250_image", "display_728x90_image"}
+
+    def test_accepts_mixed_format_ids_strings_and_dicts(self):
+        """Test that list_creative_formats accepts mixed string and dict format_ids."""
+        result = list_creative_formats(
+            format_ids=[
+                "display_300x250_image",  # String
+                {"agent_url": str(AGENT_URL), "id": "display_728x90_image"},  # Dict
+            ]
+        )
+
+        response = ListCreativeFormatsResponse.model_validate(result.structured_content)
+        assert len(response.formats) == 2
+        format_ids = {fmt.format_id.id for fmt in response.formats}
+        assert format_ids == {"display_300x250_image", "display_728x90_image"}
+
 
 class TestPreviewCreativeResponseFormat:
     """Test that preview_creative returns valid ADCP PreviewCreativeResponse.

@@ -133,6 +133,34 @@ class TestPreviewCreativeIntegration:
         structured = result.structured_content
         assert "error" in structured
         assert "does not match" in structured["error"]
+        # Verify error message contains the actual IDs for clarity
+        assert "display_728x90_image" in structured["error"]
+        assert "display_300x250_image" in structured["error"]
+
+    def test_preview_creative_accepts_format_id_as_dict(self, mock_s3_upload):
+        """Test that preview_creative accepts format_id as FormatId object (dict)."""
+        manifest = CreativeManifest(
+            format_id=FormatId(agent_url=AGENT_URL, id="display_300x250_image"),
+            assets={
+                "banner_image": ImageAsset(
+                    asset_type="image",
+                    url="https://example.com/banner.png",
+                    width=300,
+                    height=250,
+                ),
+                "click_url": UrlAsset(asset_type="url", url="https://example.com/landing"),
+            },
+        )
+
+        # Pass format_id as dict (FormatId object)
+        result = preview_creative(
+            format_id={"agent_url": str(AGENT_URL), "id": "display_300x250_image"},
+            creative_manifest=manifest.model_dump(mode="json"),
+        )
+
+        structured = result.structured_content
+        assert "previews" in structured
+        assert len(structured["previews"]) == 3
 
     def test_preview_creative_validates_malicious_urls(self, mock_s3_upload):
         """Test that preview_creative validates and sanitizes malicious URLs."""

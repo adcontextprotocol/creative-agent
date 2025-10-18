@@ -112,13 +112,16 @@ class AssetType(Enum):
 
 class AssetsRequired(BaseModel):
     asset_id: Annotated[
-        str, Field(description="Identifier for this asset in the format")
+        str,
+        Field(
+            description="Unique identifier for this asset. Creative manifests MUST use this exact value as the key in the assets object."
+        ),
     ]
     asset_type: Annotated[AssetType, Field(description="Type of asset")]
     asset_role: Annotated[
         Optional[str],
         Field(
-            description="Purpose of this asset (e.g., 'hero_image', 'logo', 'headline', 'cta_button')"
+            description="Optional descriptive label for this asset's purpose (e.g., 'hero_image', 'logo'). Not used for referencing assets in manifests—use asset_id instead. This field is for human-readable documentation and UI display only."
         ),
     ] = None
     required: Annotated[
@@ -141,9 +144,12 @@ class Asset(BaseModel):
         str, Field(description="Identifier for this asset within the group")
     ]
     asset_type: Annotated[AssetType, Field(description="Type of asset")]
-    asset_role: Annotated[Optional[str], Field(description="Purpose of this asset")] = (
-        None
-    )
+    asset_role: Annotated[
+        Optional[str],
+        Field(
+            description="Optional descriptive label for this asset's purpose (e.g., 'hero_image', 'logo'). Not used for referencing assets in manifests—use asset_id instead. This field is for human-readable documentation and UI display only."
+        ),
+    ] = None
     required: Annotated[
         Optional[bool],
         Field(description="Whether this asset is required in each repetition"),
@@ -186,12 +192,6 @@ class Format(BaseModel):
             title="Format ID",
         ),
     ]
-    agent_url: Annotated[
-        Optional[AnyUrl],
-        Field(
-            description="Base URL of the agent that provides this format (authoritative source). E.g., 'https://reference.adcp.org', 'https://dco.example.com'"
-        ),
-    ] = None
     name: Annotated[str, Field(description="Human-readable format name")]
     description: Annotated[
         Optional[str],
@@ -227,7 +227,7 @@ class Format(BaseModel):
     assets_required: Annotated[
         Optional[list[Union[AssetsRequired, AssetsRequired1]]],
         Field(
-            description="Array of required assets or asset groups for this format. Can contain individual assets or repeatable asset sequences (e.g., carousel products, slideshow frames)."
+            description="Array of required assets or asset groups for this format. Each asset is identified by its asset_id, which must be used as the key in creative manifests. Can contain individual assets or repeatable asset sequences (e.g., carousel products, slideshow frames)."
         ),
     ] = None
     delivery: Annotated[

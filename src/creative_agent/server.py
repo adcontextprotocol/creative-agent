@@ -32,23 +32,33 @@ from .schemas_generated._schemas_v1_creative_preview_creative_response_json impo
 mcp = FastMCP("adcp-creative-agent")
 
 
-def normalize_format_id_for_comparison(format_id: FormatId | dict[str, Any] | Any) -> tuple[str, str]:
+def normalize_format_id_for_comparison(format_id: FormatId | dict[str, Any] | str | Any) -> tuple[str, str]:
     """
     Normalize a format_id to (id, agent_url) tuple for comparison.
 
-    Handles FormatId object or dict representations.
+    Handles FormatId object, dict, or string representations.
+    Strings are assumed to be from our agent (AGENT_URL).
     """
     if isinstance(format_id, FormatId):
         return (format_id.id, str(format_id.agent_url))
     if isinstance(format_id, dict):
-        # Handle dict from JSON (e.g., from manifest)
+        # Handle dict from JSON that has explicit id/agent_url
+        if "id" in format_id and "agent_url" in format_id:
+            return (format_id["id"], format_id["agent_url"])
+        # Handle dict that has format_id as direct string value
+        if "format_id" in format_id:
+            return (format_id["format_id"], str(AGENT_URL))
+        # Empty dict or missing keys
         return (format_id.get("id", ""), format_id.get("agent_url", ""))
+    if isinstance(format_id, str):
+        # Plain string format_id - assume it's from our agent
+        return (format_id, str(AGENT_URL))
     return ("", "")
 
 
 @mcp.tool()
 def list_creative_formats(
-    format_ids: list[str] | None = None,
+    format_ids: list[str | dict[str, Any]] | None = None,
     type: str | None = None,
     asset_types: list[str] | None = None,
     dimensions: str | None = None,
@@ -62,7 +72,7 @@ def list_creative_formats(
     """List all available AdCP creative formats with optional filtering.
 
     Args:
-        format_ids: Return only these specific format IDs
+        format_ids: Return only these specific format IDs (strings or FormatId objects)
         type: Filter by format type (audio, video, display, dooh, native, interactive)
         asset_types: Filter to formats that include these asset types
         dimensions: (Deprecated) Filter to formats with specific dimensions (e.g., "300x250"). Use min/max filters instead.
@@ -77,10 +87,17 @@ def list_creative_formats(
         ToolResult with human-readable message and structured ADCP data
     """
     try:
-        # Convert string format_ids to FormatId objects (assume they're from our agent)
+        # Convert format_ids to FormatId objects (handle both strings and dicts)
         format_id_objects = None
         if format_ids:
-            format_id_objects = [FormatId(agent_url=AGENT_URL, id=fid) for fid in format_ids]
+            format_id_objects = []
+            for fid in format_ids:
+                if isinstance(fid, str):
+                    format_id_objects.append(FormatId(agent_url=AGENT_URL, id=fid))
+                elif isinstance(fid, dict):
+                    format_id_objects.append(FormatId(**fid))
+                else:
+                    format_id_objects.append(fid)  # Already a FormatId object
 
         # Cast asset_types to the expected type (filter_formats accepts str or AssetType)
         formats = filter_formats(
@@ -156,7 +173,7 @@ def list_creative_formats(
 
 @mcp.tool()
 def preview_creative(
-    format_id: str,
+    format_id: str | dict[str, Any],
     creative_manifest: dict[str, Any],
     inputs: list[dict[str, Any]] | None = None,
     template_id: str | None = None,
@@ -167,7 +184,7 @@ def preview_creative(
     """Generate preview renderings of a creative manifest.
 
     Args:
-        format_id: Format identifier for rendering
+        format_id: Format identifier for rendering (string or FormatId object with agent_url and id)
         creative_manifest: Complete creative manifest with all required assets
         inputs: Array of input sets for generating multiple preview variants
         template_id: Specific template for custom format rendering
@@ -188,8 +205,14 @@ def preview_creative(
             inputs_obj = [PreviewInput(**inp) for inp in inputs]
 
         # Parse request (creative_manifest stays as dict)
-        # Convert string format_id to FormatId object
-        fmt_id = FormatId(agent_url=AGENT_URL, id=format_id)
+        # Handle format_id as string or FormatId object
+        if isinstance(format_id, str):
+            fmt_id = FormatId(agent_url=AGENT_URL, id=format_id)
+        elif isinstance(format_id, dict):
+            # Parse FormatId from dict
+            fmt_id = FormatId(**format_id)
+        else:
+            fmt_id = format_id  # Already a FormatId object
         request = PreviewCreativeRequest(
             format_id=fmt_id,
             creative_manifest=creative_manifest,
@@ -217,7 +240,8 @@ def preview_creative(
             request_norm = normalize_format_id_for_comparison(request.format_id)
             if manifest_norm != request_norm:
                 error_msg = (
-                    f"Manifest format_id '{manifest_format_id}' does not match request format_id '{request.format_id}'"
+                    f"Manifest format_id (id='{manifest_norm[0]}', agent_url='{manifest_norm[1]}') "
+                    f"does not match request format_id (id='{request_norm[0]}', agent_url='{request_norm[1]}')"
                 )
                 return ToolResult(
                     content=[TextContent(type="text", text=f"Error: {error_msg}")],
@@ -310,7 +334,8 @@ def preview_creative(
 
         # Return ToolResult with human message and structured data
         preview_count = len(validated_previews)
-        message = f"Generated {preview_count} preview{'s' if preview_count != 1 else ''} for {format_id}"
+        format_id_str = fmt_id.id if hasattr(fmt_id, 'id') else str(fmt_id)
+        message = f"Generated {preview_count} preview{'s' if preview_count != 1 else ''} for {format_id_str}"
 
         return ToolResult(
             content=[TextContent(type="text", text=message)],
@@ -407,7 +432,7 @@ def _generate_preview_variant(
 @mcp.tool()
 def build_creative(
     message: str,
-    format_id: str,
+    format_id: str | dict[str, Any],
     gemini_api_key: str,
     format_source: str | None = None,
     context_id: str | None = None,
@@ -422,7 +447,7 @@ def build_creative(
 
     Args:
         message: Creative brief or refinement instructions
-        format_id: Format identifier to build for (use generative formats like display_300x250_generative)
+        format_id: Format identifier to build for (string or FormatId object with agent_url and id)
         gemini_api_key: User's Gemini API key (REQUIRED - we don't store or pay for API calls)
         format_source: Optional sales agent URL for custom format lookup
         context_id: Session ID for iterative refinement
@@ -498,7 +523,7 @@ def build_creative(
         )
 
         # Get format definition
-        # Convert string format_id to FormatId object
+        # BuildCreativeRequest.format_id is always a string, convert to FormatId for lookup
         fmt_id = FormatId(agent_url=AGENT_URL, id=request.format_id)
         fmt = get_format_by_id(fmt_id)
         if not fmt:

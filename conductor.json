@@ -7,6 +7,10 @@
       "command": "uv sync"
     },
     {
+      "name": "Generate schemas",
+      "command": "uv run python scripts/generate_schemas.py"
+    },
+    {
       "name": "Install pre-commit hooks",
       "command": "uv run pre-commit install"
     }

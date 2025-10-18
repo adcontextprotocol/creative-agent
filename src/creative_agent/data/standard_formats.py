@@ -61,7 +61,6 @@ def create_fixed_render(width: int, height: int, role: str = "primary") -> Rende
 GENERATIVE_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("display_300x250_generative"),
-        agent_url=AGENT_URL,
         name="Medium Rectangle - AI Generated",
         type=Type.display,
         description="AI-generated 300x250 banner from brand context and prompt",
@@ -85,7 +84,6 @@ GENERATIVE_FORMATS = [
     ),
     CreativeFormat(
         format_id=create_format_id("display_728x90_generative"),
-        agent_url=AGENT_URL,
         name="Leaderboard - AI Generated",
         type=Type.display,
         description="AI-generated 728x90 banner from brand context and prompt",
@@ -109,7 +107,6 @@ GENERATIVE_FORMATS = [
     ),
     CreativeFormat(
         format_id=create_format_id("display_320x50_generative"),
-        agent_url=AGENT_URL,
         name="Mobile Banner - AI Generated",
         type=Type.display,
         description="AI-generated 320x50 mobile banner from brand context and prompt",
@@ -133,7 +130,6 @@ GENERATIVE_FORMATS = [
     ),
     CreativeFormat(
         format_id=create_format_id("display_160x600_generative"),
-        agent_url=AGENT_URL,
         name="Wide Skyscraper - AI Generated",
         type=Type.display,
         description="AI-generated 160x600 wide skyscraper from brand context and prompt",
@@ -157,7 +153,6 @@ GENERATIVE_FORMATS = [
     ),
     CreativeFormat(
         format_id=create_format_id("display_336x280_generative"),
-        agent_url=AGENT_URL,
         name="Large Rectangle - AI Generated",
         type=Type.display,
         description="AI-generated 336x280 large rectangle from brand context and prompt",
@@ -181,7 +176,6 @@ GENERATIVE_FORMATS = [
     ),
     CreativeFormat(
         format_id=create_format_id("display_300x600_generative"),
-        agent_url=AGENT_URL,
         name="Half Page - AI Generated",
         type=Type.display,
         description="AI-generated 300x600 half page from brand context and prompt",
@@ -205,7 +199,6 @@ GENERATIVE_FORMATS = [
     ),
     CreativeFormat(
         format_id=create_format_id("display_970x250_generative"),
-        agent_url=AGENT_URL,
         name="Billboard - AI Generated",
         type=Type.display,
         description="AI-generated 970x250 billboard from brand context and prompt",
@@ -233,7 +226,6 @@ GENERATIVE_FORMATS = [
 VIDEO_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("video_standard_30s"),
-        agent_url=AGENT_URL,
         name="Standard Video - 30 seconds",
         type=Type.video,
         description="30-second video ad in standard aspect ratios",
@@ -253,7 +245,6 @@ VIDEO_FORMATS = [
     ),
     CreativeFormat(
         format_id=create_format_id("video_standard_15s"),
-        agent_url=AGENT_URL,
         name="Standard Video - 15 seconds",
         type=Type.video,
         description="15-second video ad in standard aspect ratios",
@@ -273,7 +264,6 @@ VIDEO_FORMATS = [
     ),
     CreativeFormat(
         format_id=create_format_id("video_vast_30s"),
-        agent_url=AGENT_URL,
         name="VAST Video - 30 seconds",
         type=Type.video,
         description="30-second video ad via VAST tag",
@@ -291,7 +281,6 @@ VIDEO_FORMATS = [
     ),
     CreativeFormat(
         format_id=create_format_id("video_1920x1080"),
-        agent_url=AGENT_URL,
         name="Full HD Video - 1920x1080",
         type=Type.video,
         description="1920x1080 Full HD video (16:9)",
@@ -313,7 +302,6 @@ VIDEO_FORMATS = [
     ),
     CreativeFormat(
         format_id=create_format_id("video_1280x720"),
-        agent_url=AGENT_URL,
         name="HD Video - 1280x720",
         type=Type.video,
         description="1280x720 HD video (16:9)",
@@ -335,7 +323,6 @@ VIDEO_FORMATS = [
     ),
     CreativeFormat(
         format_id=create_format_id("video_1080x1920"),
-        agent_url=AGENT_URL,
         name="Vertical Video - 1080x1920",
         type=Type.video,
         description="1080x1920 vertical video (9:16) for mobile stories",
@@ -357,7 +344,6 @@ VIDEO_FORMATS = [
     ),
     CreativeFormat(
         format_id=create_format_id("video_1080x1080"),
-        agent_url=AGENT_URL,
         name="Square Video - 1080x1080",
         type=Type.video,
         description="1080x1080 square video (1:1) for social feeds",
@@ -379,7 +365,6 @@ VIDEO_FORMATS = [
     ),
     CreativeFormat(
         format_id=create_format_id("video_ctv_preroll_30s"),
-        agent_url=AGENT_URL,
         name="CTV Pre-Roll - 30 seconds",
         type=Type.video,
         description="30-second pre-roll ad for Connected TV and streaming platforms",
@@ -399,7 +384,6 @@ VIDEO_FORMATS = [
     ),
     CreativeFormat(
         format_id=create_format_id("video_ctv_midroll_30s"),
-        agent_url=AGENT_URL,
         name="CTV Mid-Roll - 30 seconds",
         type=Type.video,
         description="30-second mid-roll ad for Connected TV and streaming platforms",
@@ -423,7 +407,6 @@ VIDEO_FORMATS = [
 DISPLAY_IMAGE_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("display_300x250_image"),
-        agent_url=AGENT_URL,
         name="Medium Rectangle - Image",
         type=Type.display,
         description="300x250 static image banner",
@@ -453,7 +436,6 @@ DISPLAY_IMAGE_FORMATS = [
     ),
     CreativeFormat(
         format_id=create_format_id("display_728x90_image"),
-        agent_url=AGENT_URL,
         name="Leaderboard - Image",
         type=Type.display,
         description="728x90 static image banner",
@@ -480,7 +462,6 @@ DISPLAY_IMAGE_FORMATS = [
     ),
     CreativeFormat(
         format_id=create_format_id("display_320x50_image"),
-        agent_url=AGENT_URL,
         name="Mobile Banner - Image",
         type=Type.display,
         description="320x50 mobile banner",
@@ -507,7 +488,6 @@ DISPLAY_IMAGE_FORMATS = [
     ),
     CreativeFormat(
         format_id=create_format_id("display_160x600_image"),
-        agent_url=AGENT_URL,
         name="Wide Skyscraper - Image",
         type=Type.display,
         description="160x600 wide skyscraper banner",
@@ -534,7 +514,6 @@ DISPLAY_IMAGE_FORMATS = [
     ),
     CreativeFormat(
         format_id=create_format_id("display_336x280_image"),
-        agent_url=AGENT_URL,
         name="Large Rectangle - Image",
         type=Type.display,
         description="336x280 large rectangle banner",
@@ -561,7 +540,6 @@ DISPLAY_IMAGE_FORMATS = [
     ),
     CreativeFormat(
         format_id=create_format_id("display_300x600_image"),
-        agent_url=AGENT_URL,
         name="Half Page - Image",
         type=Type.display,
         description="300x600 half page banner",
@@ -588,7 +566,6 @@ DISPLAY_IMAGE_FORMATS = [
     ),
     CreativeFormat(
         format_id=create_format_id("display_970x250_image"),
-        agent_url=AGENT_URL,
         name="Billboard - Image",
         type=Type.display,
         description="970x250 billboard banner",
@@ -619,7 +596,6 @@ DISPLAY_IMAGE_FORMATS = [
 DISPLAY_HTML_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("display_300x250_html"),
-        agent_url=AGENT_URL,
         name="Medium Rectangle - HTML5",
         type=Type.display,
         description="300x250 HTML5 creative",
@@ -641,7 +617,6 @@ DISPLAY_HTML_FORMATS = [
     ),
     CreativeFormat(
         format_id=create_format_id("display_728x90_html"),
-        agent_url=AGENT_URL,
         name="Leaderboard - HTML5",
         type=Type.display,
         description="728x90 HTML5 creative",
@@ -662,7 +637,6 @@ DISPLAY_HTML_FORMATS = [
     ),
     CreativeFormat(
         format_id=create_format_id("display_160x600_html"),
-        agent_url=AGENT_URL,
         name="Wide Skyscraper - HTML5",
         type=Type.display,
         description="160x600 HTML5 creative",
@@ -683,7 +657,6 @@ DISPLAY_HTML_FORMATS = [
     ),
     CreativeFormat(
         format_id=create_format_id("display_336x280_html"),
-        agent_url=AGENT_URL,
         name="Large Rectangle - HTML5",
         type=Type.display,
         description="336x280 HTML5 creative",
@@ -704,7 +677,6 @@ DISPLAY_HTML_FORMATS = [
     ),
     CreativeFormat(
         format_id=create_format_id("display_300x600_html"),
-        agent_url=AGENT_URL,
         name="Half Page - HTML5",
         type=Type.display,
         description="300x600 HTML5 creative",
@@ -725,7 +697,6 @@ DISPLAY_HTML_FORMATS = [
     ),
     CreativeFormat(
         format_id=create_format_id("display_970x250_html"),
-        agent_url=AGENT_URL,
         name="Billboard - HTML5",
         type=Type.display,
         description="970x250 HTML5 creative",
@@ -750,7 +721,6 @@ DISPLAY_HTML_FORMATS = [
 NATIVE_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("native_standard"),
-        agent_url=AGENT_URL,
         name="IAB Native Standard",
         type=Type.native,
         description="Standard native ad with title, description, image, and CTA",
@@ -808,7 +778,6 @@ NATIVE_FORMATS = [
     ),
     CreativeFormat(
         format_id=create_format_id("native_content"),
-        agent_url=AGENT_URL,
         name="Native Content Placement",
         type=Type.native,
         description="In-article native ad with editorial styling",
@@ -870,7 +839,6 @@ NATIVE_FORMATS = [
 AUDIO_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("audio_standard_15s"),
-        agent_url=AGENT_URL,
         name="Standard Audio - 15 seconds",
         type=Type.audio,
         description="15-second audio ad",
@@ -889,7 +857,6 @@ AUDIO_FORMATS = [
     ),
     CreativeFormat(
         format_id=create_format_id("audio_standard_30s"),
-        agent_url=AGENT_URL,
         name="Standard Audio - 30 seconds",
         type=Type.audio,
         description="30-second audio ad",
@@ -908,7 +875,6 @@ AUDIO_FORMATS = [
     ),
     CreativeFormat(
         format_id=create_format_id("audio_standard_60s"),
-        agent_url=AGENT_URL,
         name="Standard Audio - 60 seconds",
         type=Type.audio,
         description="60-second audio ad",
@@ -931,7 +897,6 @@ AUDIO_FORMATS = [
 DOOH_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("dooh_billboard_1920x1080"),
-        agent_url=AGENT_URL,
         name="Digital Billboard - 1920x1080",
         type=Type.dooh,
         description="Full HD digital billboard",
@@ -952,7 +917,6 @@ DOOH_FORMATS = [
     ),
     CreativeFormat(
         format_id=create_format_id("dooh_billboard_landscape"),
-        agent_url=AGENT_URL,
         name="Digital Billboard - Landscape",
         type=Type.dooh,
         description="Landscape-oriented digital billboard (various sizes)",
@@ -971,7 +935,6 @@ DOOH_FORMATS = [
     ),
     CreativeFormat(
         format_id=create_format_id("dooh_billboard_portrait"),
-        agent_url=AGENT_URL,
         name="Digital Billboard - Portrait",
         type=Type.dooh,
         description="Portrait-oriented digital billboard (various sizes)",
@@ -990,7 +953,6 @@ DOOH_FORMATS = [
     ),
     CreativeFormat(
         format_id=create_format_id("dooh_transit_screen"),
-        agent_url=AGENT_URL,
         name="Transit Screen",
         type=Type.dooh,
         description="Transit and subway screen displays",
