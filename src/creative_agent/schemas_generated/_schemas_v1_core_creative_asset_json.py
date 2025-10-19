@@ -401,7 +401,7 @@ class ProductCatalog(BaseModel):
     feed_url: Annotated[AnyUrl, Field(description="URL to product catalog feed")]
     feed_format: Annotated[
         Optional[FeedFormat], Field(description="Format of the product feed")
-    ] = "google_merchant_center"
+    ] = "google_merchant_center"  # type: ignore[assignment]
     categories: Annotated[
         Optional[list[str]],
         Field(

@@ -248,6 +248,18 @@ AdCP Version: v2.4 (schemas v1)
 
         print("✅ Added header to __init__.py")
 
+        # Fix mypy issue with enum default in ProductCatalog
+        creative_asset_file = output_file / "_schemas_v1_core_creative_asset_json.py"
+        if creative_asset_file.exists():
+            content = creative_asset_file.read_text()
+            # Add type: ignore comment to the problematic line
+            content = content.replace(
+                '] = "google_merchant_center"',
+                '] = "google_merchant_center"  # type: ignore[assignment]',
+            )
+            creative_asset_file.write_text(content)
+            print("✅ Fixed mypy issue in creative-asset schema")
+
     finally:
         # Clean up temp directory
         import shutil
