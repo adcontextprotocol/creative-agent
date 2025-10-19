@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import Annotated, Any, Literal, Optional, Union
+from typing import Annotated, Any, Optional, Union
 
 from pydantic import AnyUrl, AwareDatetime, BaseModel, ConfigDict, EmailStr, Field
 
@@ -28,124 +28,61 @@ class FormatId(BaseModel):
     ]
 
 
-class Format(Enum):
-    jpg = "jpg"
-    jpeg = "jpeg"
-    png = "png"
-    gif = "gif"
-    webp = "webp"
-    svg = "svg"
-
-
 class Assets(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    asset_type: Literal["image"]
-    url: Annotated[AnyUrl, Field(description="URL to hosted image asset")]
-    width: Annotated[int, Field(description="Image width in pixels", ge=1)]
-    height: Annotated[int, Field(description="Image height in pixels", ge=1)]
-    format: Annotated[Optional[Format], Field(description="Image file format")] = None
-    file_size: Annotated[
-        Optional[int], Field(description="File size in bytes", ge=0)
+    url: Annotated[AnyUrl, Field(description="URL to the image asset")]
+    width: Annotated[
+        Optional[int], Field(description="Image width in pixels", ge=1)
     ] = None
-    alt: Annotated[
+    height: Annotated[
+        Optional[int], Field(description="Image height in pixels", ge=1)
+    ] = None
+    format: Annotated[
+        Optional[str],
+        Field(description="Image file format (jpg, png, gif, webp, etc.)"),
+    ] = None
+    alt_text: Annotated[
         Optional[str], Field(description="Alternative text for accessibility")
     ] = None
 
 
-class Format6(Enum):
-    mp4 = "mp4"
-    webm = "webm"
-    mov = "mov"
-
-
-class Codec(Enum):
-    h264 = "h264"
-    h265 = "h265"
-    vp8 = "vp8"
-    vp9 = "vp9"
-    av1 = "av1"
-
-
-class Assets27(BaseModel):
+class Assets30(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    asset_type: Literal["video"]
-    url: Annotated[AnyUrl, Field(description="URL to hosted video asset")]
-    width: Annotated[int, Field(description="Video width in pixels", ge=1)]
-    height: Annotated[int, Field(description="Video height in pixels", ge=1)]
-    duration_seconds: Annotated[
-        float, Field(description="Video duration in seconds", ge=0.0)
-    ]
+    url: Annotated[AnyUrl, Field(description="URL to the video asset")]
+    width: Annotated[
+        Optional[int], Field(description="Video width in pixels", ge=1)
+    ] = None
+    height: Annotated[
+        Optional[int], Field(description="Video height in pixels", ge=1)
+    ] = None
+    duration_ms: Annotated[
+        Optional[int], Field(description="Video duration in milliseconds", ge=0)
+    ] = None
     format: Annotated[
-        Optional[Format6], Field(description="Video container format")
+        Optional[str], Field(description="Video file format (mp4, webm, mov, etc.)")
     ] = None
-    codec: Annotated[Optional[Codec], Field(description="Video codec")] = None
-    bitrate_mbps: Annotated[
-        Optional[float], Field(description="Video bitrate in Mbps", ge=0.0)
-    ] = None
-    file_size: Annotated[
-        Optional[int], Field(description="File size in bytes", ge=0)
-    ] = None
-    aspect_ratio: Annotated[
-        Optional[str],
-        Field(description="Aspect ratio (e.g., '16:9', '9:16')", pattern="^\\d+:\\d+$"),
+    bitrate_kbps: Annotated[
+        Optional[int], Field(description="Video bitrate in kilobits per second", ge=1)
     ] = None
 
 
-class Format7(Enum):
-    mp3 = "mp3"
-    aac = "aac"
-    m4a = "m4a"
-    wav = "wav"
-    ogg = "ogg"
-
-
-class Codec3(Enum):
-    mp3 = "mp3"
-    aac = "aac"
-    opus = "opus"
-    vorbis = "vorbis"
-
-
-class SampleRateHz(Enum):
-    integer_22050 = 22050
-    integer_44100 = 44100
-    integer_48000 = 48000
-    integer_96000 = 96000
-
-
-class Channels(Enum):
-    mono = "mono"
-    stereo = "stereo"
-    field_5_1 = "5.1"
-    field_7_1 = "7.1"
-
-
-class Assets28(BaseModel):
+class Assets31(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    asset_type: Literal["audio"]
-    url: Annotated[AnyUrl, Field(description="URL to hosted audio asset")]
-    duration_seconds: Annotated[
-        float, Field(description="Audio duration in seconds", ge=0.0)
-    ]
-    format: Annotated[Optional[Format7], Field(description="Audio file format")] = None
-    codec: Annotated[Optional[Codec3], Field(description="Audio codec")] = None
+    url: Annotated[AnyUrl, Field(description="URL to the audio asset")]
+    duration_ms: Annotated[
+        Optional[int], Field(description="Audio duration in milliseconds", ge=0)
+    ] = None
+    format: Annotated[
+        Optional[str], Field(description="Audio file format (mp3, wav, aac, etc.)")
+    ] = None
     bitrate_kbps: Annotated[
-        Optional[float], Field(description="Audio bitrate in Kbps", ge=0.0)
-    ] = None
-    sample_rate_hz: Annotated[
-        Optional[SampleRateHz], Field(description="Sample rate in Hz")
-    ] = None
-    channels: Annotated[
-        Optional[Channels], Field(description="Audio channel configuration")
-    ] = None
-    file_size: Annotated[
-        Optional[int], Field(description="File size in bytes", ge=0)
+        Optional[int], Field(description="Audio bitrate in kilobits per second", ge=1)
     ] = None
 
 
@@ -157,55 +94,123 @@ class VastVersion(Enum):
     field_4_2 = "4.2"
 
 
-class Assets29(BaseModel):
+class TrackingEvent(Enum):
+    start = "start"
+    first_quartile = "firstQuartile"
+    midpoint = "midpoint"
+    third_quartile = "thirdQuartile"
+    complete = "complete"
+    impression = "impression"
+    click = "click"
+    pause = "pause"
+    resume = "resume"
+    skip = "skip"
+    mute = "mute"
+    unmute = "unmute"
+    fullscreen = "fullscreen"
+    exit_fullscreen = "exitFullscreen"
+    player_expand = "playerExpand"
+    player_collapse = "playerCollapse"
+
+
+class Assets32(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    asset_type: Literal["vast_tag"]
-    content: Annotated[str, Field(description="Complete VAST XML content")]
-    vast_version: Annotated[
-        VastVersion, Field(description="VAST specification version")
-    ]
-    vpaid_enabled: Annotated[
-        Optional[bool], Field(description="Whether VPAID is used")
-    ] = None
-    duration_seconds: Annotated[
-        Optional[float], Field(description="Expected video duration in seconds", ge=0.0)
-    ] = None
-
-
-class Format8(Enum):
-    plain = "plain"
-    html = "html"
-    markdown = "markdown"
-
-
-class Assets30(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-    )
-    asset_type: Literal["text"]
-    content: Annotated[str, Field(description="Text content")]
-    length: Annotated[Optional[int], Field(description="Character count", ge=0)] = None
-    format: Annotated[Optional[Format8], Field(description="Text format")] = "plain"
-
-
-class Purpose(Enum):
-    clickthrough = "clickthrough"
-    landing_page = "landing_page"
-    tracking_pixel = "tracking_pixel"
-    impression_tracker = "impression_tracker"
-
-
-class Assets31(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-    )
-    asset_type: Literal["url"]
-    url: Annotated[AnyUrl, Field(description="The URL")]
-    purpose: Annotated[Optional[Purpose], Field(description="Purpose of this URL")] = (
+    url: Annotated[AnyUrl, Field(description="URL endpoint that returns VAST XML")]
+    content: Annotated[Optional[str], Field(description="Inline VAST XML content")] = (
         None
     )
+    vast_version: Annotated[
+        Optional[VastVersion], Field(description="VAST specification version")
+    ] = None
+    vpaid_enabled: Annotated[
+        Optional[bool],
+        Field(
+            description="Whether VPAID (Video Player-Ad Interface Definition) is supported"
+        ),
+    ] = None
+    duration_ms: Annotated[
+        Optional[int],
+        Field(description="Expected video duration in milliseconds (if known)", ge=0),
+    ] = None
+    tracking_events: Annotated[
+        Optional[list[TrackingEvent]],
+        Field(description="Tracking events supported by this VAST tag"),
+    ] = None
+
+
+class Assets33(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    url: Annotated[
+        Optional[AnyUrl], Field(description="URL endpoint that returns VAST XML")
+    ] = None
+    content: Annotated[str, Field(description="Inline VAST XML content")]
+    vast_version: Annotated[
+        Optional[VastVersion], Field(description="VAST specification version")
+    ] = None
+    vpaid_enabled: Annotated[
+        Optional[bool],
+        Field(
+            description="Whether VPAID (Video Player-Ad Interface Definition) is supported"
+        ),
+    ] = None
+    duration_ms: Annotated[
+        Optional[int],
+        Field(description="Expected video duration in milliseconds (if known)", ge=0),
+    ] = None
+    tracking_events: Annotated[
+        Optional[list[TrackingEvent]],
+        Field(description="Tracking events supported by this VAST tag"),
+    ] = None
+
+
+class Assets34(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    content: Annotated[str, Field(description="Text content")]
+    language: Annotated[
+        Optional[str], Field(description="Language code (e.g., 'en', 'es', 'fr')")
+    ] = None
+
+
+class Assets35(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    url: Annotated[AnyUrl, Field(description="URL reference")]
+    description: Annotated[
+        Optional[str], Field(description="Description of what this URL points to")
+    ] = None
+
+
+class Assets36(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    content: Annotated[str, Field(description="HTML content")]
+    version: Annotated[
+        Optional[str], Field(description="HTML version (e.g., 'HTML5')")
+    ] = None
+
+
+class ModuleType(Enum):
+    esm = "esm"
+    commonjs = "commonjs"
+    script = "script"
+
+
+class Assets37(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    content: Annotated[str, Field(description="JavaScript content")]
+    module_type: Annotated[
+        Optional[ModuleType], Field(description="JavaScript module type")
+    ] = None
 
 
 class Method(Enum):
@@ -227,154 +232,125 @@ class Method3(Enum):
 
 
 class Security(BaseModel):
-    method: Method3
-    hmac_header: Optional[str] = None
-    api_key_header: Optional[str] = None
+    method: Annotated[Method3, Field(description="Authentication method")]
+    hmac_header: Annotated[
+        Optional[str],
+        Field(description="Header name for HMAC signature (e.g., 'X-Signature')"),
+    ] = None
+    api_key_header: Annotated[
+        Optional[str], Field(description="Header name for API key (e.g., 'X-API-Key')")
+    ] = None
 
 
-class Assets32(BaseModel):
+class Assets38(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    asset_type: Literal["webhook"]
     url: Annotated[AnyUrl, Field(description="Webhook URL to call for dynamic content")]
-    method: Optional[Method] = "POST"
-    timeout_ms: Annotated[Optional[int], Field(ge=10, le=5000)] = 500
+    method: Annotated[Optional[Method], Field(description="HTTP method")] = "POST"
+    timeout_ms: Annotated[
+        Optional[int],
+        Field(
+            description="Maximum time to wait for response in milliseconds",
+            ge=10,
+            le=5000,
+        ),
+    ] = 500
     supported_macros: Annotated[
         Optional[list[str]],
-        Field(description="Universal macros that can be passed to webhook"),
+        Field(
+            description="Universal macros that can be passed to webhook (e.g., {DEVICE_TYPE}, {COUNTRY})"
+        ),
     ] = None
     required_macros: Annotated[
-        Optional[list[str]], Field(description="Universal macros that must be provided")
+        Optional[list[str]],
+        Field(
+            description="Universal macros that must be provided for webhook to function"
+        ),
     ] = None
-    response_type: ResponseType
-    security: Security
-    fallback_required: Optional[bool] = True
-
-
-class Assets33(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-    )
-    asset_type: Literal["html"]
-    content: Annotated[str, Field(description="Complete HTML content")]
-    url: Annotated[
-        Optional[AnyUrl], Field(description="URL to externally hosted HTML file")
-    ] = None
-    width: Annotated[Optional[int], Field(description="Ad width in pixels", ge=1)] = (
-        None
-    )
-    height: Annotated[Optional[int], Field(description="Ad height in pixels", ge=1)] = (
-        None
-    )
-    file_size: Annotated[
-        Optional[int], Field(description="Total file size in bytes", ge=0)
-    ] = None
-
-
-class Assets34(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-    )
-    asset_type: Literal["html"]
-    content: Annotated[Optional[str], Field(description="Complete HTML content")] = None
-    url: Annotated[AnyUrl, Field(description="URL to externally hosted HTML file")]
-    width: Annotated[Optional[int], Field(description="Ad width in pixels", ge=1)] = (
-        None
-    )
-    height: Annotated[Optional[int], Field(description="Ad height in pixels", ge=1)] = (
-        None
-    )
-    file_size: Annotated[
-        Optional[int], Field(description="Total file size in bytes", ge=0)
-    ] = None
-
-
-class Assets35(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-    )
-    asset_type: Literal["javascript"]
-    content: Annotated[str, Field(description="JavaScript code content")]
-    url: Annotated[
-        Optional[AnyUrl], Field(description="URL to external JavaScript file")
-    ] = None
-    inline: Annotated[
-        Optional[bool],
-        Field(description="Whether code should be inlined vs external script tag"),
-    ] = None
-
-
-class Assets36(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-    )
-    asset_type: Literal["javascript"]
-    content: Annotated[Optional[str], Field(description="JavaScript code content")] = (
-        None
-    )
-    url: Annotated[AnyUrl, Field(description="URL to external JavaScript file")]
-    inline: Annotated[
-        Optional[bool],
-        Field(description="Whether code should be inlined vs external script tag"),
-    ] = None
-
-
-class CreativeManifest(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-    )
-    format_id: Annotated[
-        Any, Field(description="Circular reference to /schemas/v1/core/format-id.json")
+    response_type: Annotated[
+        ResponseType, Field(description="Expected content type of webhook response")
     ]
-    promoted_offering: Annotated[
+    security: Annotated[
+        Security, Field(description="Security configuration for webhook calls")
+    ]
+
+
+class Assets39(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    content: Annotated[str, Field(description="CSS content")]
+    media: Annotated[
         Optional[str],
-        Field(
-            description="Product name or offering being advertised. Maps to promoted_offerings in create_media_buy request to associate creative with the product being promoted."
-        ),
+        Field(description="CSS media query context (e.g., 'screen', 'print')"),
     ] = None
-    assets: Annotated[
-        dict[
-            str,
-            Union[
-                Assets,
-                Assets27,
-                Assets28,
-                Assets29,
-                Assets30,
-                Assets31,
-                Assets32,
-                Union[Assets33, Assets34],
-                Union[Assets35, Assets36],
-            ],
-        ],
-        Field(
-            description="Map of asset IDs to actual asset content. Each key MUST match an asset_id from the format's assets_required array (e.g., 'banner_image', 'clickthrough_url', 'video_file', 'vast_tag'). The asset_id is the technical identifier used to match assets to format requirements."
-        ),
-    ]
 
 
-class Input(BaseModel):
+class DaastVersion(Enum):
+    field_1_0 = "1.0"
+    field_1_1 = "1.1"
+
+
+class TrackingEvent14(Enum):
+    start = "start"
+    first_quartile = "firstQuartile"
+    midpoint = "midpoint"
+    third_quartile = "thirdQuartile"
+    complete = "complete"
+    impression = "impression"
+    pause = "pause"
+    resume = "resume"
+    skip = "skip"
+    mute = "mute"
+    unmute = "unmute"
+
+
+class Assets40(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    name: Annotated[
-        str,
-        Field(
-            description="Human-readable name for this input set (e.g., 'Sunny morning on mobile', 'Evening podcast ad', 'Desktop dark mode')"
-        ),
-    ]
-    macros: Annotated[
-        Optional[dict[str, str]],
-        Field(
-            description="Macro values to use for this preview. Supports all universal macros from the format's supported_macros list. See docs/media-buy/creatives/universal-macros.md for available macros."
-        ),
+    url: Annotated[AnyUrl, Field(description="URL endpoint that returns DAAST XML")]
+    content: Annotated[Optional[str], Field(description="Inline DAAST XML content")] = (
+        None
+    )
+    daast_version: Annotated[
+        Optional[DaastVersion], Field(description="DAAST specification version")
     ] = None
-    context_description: Annotated[
-        Optional[str],
-        Field(
-            description="Natural language description of the context for AI-generated content (e.g., 'User just searched for running shoes', 'Podcast discussing weather patterns', 'Article about electric vehicles')"
-        ),
+    duration_ms: Annotated[
+        Optional[int],
+        Field(description="Expected audio duration in milliseconds (if known)", ge=0),
+    ] = None
+    tracking_events: Annotated[
+        Optional[list[TrackingEvent14]],
+        Field(description="Tracking events supported by this DAAST tag"),
+    ] = None
+    companion_ads: Annotated[
+        Optional[bool], Field(description="Whether companion display ads are included")
+    ] = None
+
+
+class Assets41(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    url: Annotated[
+        Optional[AnyUrl], Field(description="URL endpoint that returns DAAST XML")
+    ] = None
+    content: Annotated[str, Field(description="Inline DAAST XML content")]
+    daast_version: Annotated[
+        Optional[DaastVersion], Field(description="DAAST specification version")
+    ] = None
+    duration_ms: Annotated[
+        Optional[int],
+        Field(description="Expected audio duration in milliseconds (if known)", ge=0),
+    ] = None
+    tracking_events: Annotated[
+        Optional[list[TrackingEvent14]],
+        Field(description="Tracking events supported by this DAAST tag"),
+    ] = None
+    companion_ads: Annotated[
+        Optional[bool], Field(description="Whether companion display ads are included")
     ] = None
 
 
@@ -612,13 +588,13 @@ class BrandManifest(BaseModel):
     ] = None
 
 
-Asset9 = Asset
+Asset13 = Asset
 
 
-ProductCatalog7 = ProductCatalog
+ProductCatalog11 = ProductCatalog
 
 
-class BrandManifest6(BaseModel):
+class BrandManifest10(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
@@ -649,13 +625,13 @@ class BrandManifest6(BaseModel):
         None
     )
     assets: Annotated[
-        Optional[list[Asset9]],
+        Optional[list[Asset13]],
         Field(
             description="Brand asset library with explicit assets and tags. Assets are referenced inline with URLs pointing to CDN-hosted files."
         ),
     ] = None
     product_catalog: Annotated[
-        Optional[ProductCatalog7],
+        Optional[ProductCatalog11],
         Field(
             description="Product catalog information for e-commerce advertisers. Enables SKU-level creative generation and product selection."
         ),
@@ -730,7 +706,7 @@ class Offering(BaseModel):
     ] = None
 
 
-class AssetType14(Enum):
+class AssetType20(Enum):
     image = "image"
     video = "video"
     audio = "audio"
@@ -751,7 +727,7 @@ class AssetSelectors(BaseModel):
         ),
     ] = None
     asset_types: Annotated[
-        Optional[list[AssetType14]],
+        Optional[list[AssetType20]],
         Field(description="Filter by asset type (e.g., ['image', 'video'])"),
     ] = None
     exclude_tags: Annotated[
@@ -759,12 +735,12 @@ class AssetSelectors(BaseModel):
     ] = None
 
 
-class PromotedOfferings(BaseModel):
+class Assets42(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
     brand_manifest: Annotated[
-        Union[Union[BrandManifest, BrandManifest6], AnyUrl],
+        Union[Union[BrandManifest, BrandManifest10], AnyUrl],
         Field(
             description="Brand manifest provided either as an inline object or a URL string pointing to a hosted manifest",
             examples=[
@@ -826,6 +802,67 @@ class PromotedOfferings(BaseModel):
     ] = None
 
 
+class CreativeManifest(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    format_id: Annotated[
+        Any, Field(description="Circular reference to /schemas/v1/core/format-id.json")
+    ]
+    promoted_offering: Annotated[
+        Optional[str],
+        Field(
+            description="Product name or offering being advertised. Maps to promoted_offerings in create_media_buy request to associate creative with the product being promoted."
+        ),
+    ] = None
+    assets: Annotated[
+        dict[
+            str,
+            Union[
+                Assets,
+                Assets30,
+                Assets31,
+                Union[Assets32, Assets33],
+                Assets34,
+                Assets35,
+                Assets36,
+                Assets37,
+                Assets38,
+                Assets39,
+                Union[Assets40, Assets41],
+                Assets42,
+            ],
+        ],
+        Field(
+            description="Map of asset IDs to actual asset content. Each key MUST match an asset_id from the format's assets_required array (e.g., 'banner_image', 'clickthrough_url', 'video_file', 'vast_tag'). The asset_id is the technical identifier used to match assets to format requirements.\n\nIMPORTANT: Creative manifest validation MUST be performed in the context of the format specification. The format defines what type each asset_id should be, which eliminates any validation ambiguity."
+        ),
+    ]
+
+
+class Input(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    name: Annotated[
+        str,
+        Field(
+            description="Human-readable name for this input set (e.g., 'Sunny morning on mobile', 'Evening podcast ad', 'Desktop dark mode')"
+        ),
+    ]
+    macros: Annotated[
+        Optional[dict[str, str]],
+        Field(
+            description="Macro values to use for this preview. Supports all universal macros from the format's supported_macros list. See docs/media-buy/creatives/universal-macros.md for available macros."
+        ),
+    ] = None
+    context_description: Annotated[
+        Optional[str],
+        Field(
+            description="Natural language description of the context for AI-generated content (e.g., 'User just searched for running shoes', 'Podcast discussing weather patterns', 'Article about electric vehicles')"
+        ),
+    ] = None
+
+
 class PreviewCreativeRequest(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -855,19 +892,8 @@ class PreviewCreativeRequest(BaseModel):
         Field(description="Specific template ID for custom format rendering"),
     ] = None
     promoted_offerings: Annotated[
-        Optional[PromotedOfferings],
+        Optional[Any],
         Field(
-            description="Complete offering specification combining brand manifest, product selectors, and asset filters. Provides all context needed for creative generation about what is being promoted.",
-            examples=[
-                {
-                    "brand_manifest": {"url": "https://brand.com"},
-                    "product_selectors": {"manifest_skus": ["SKU-123", "SKU-456"]},
-                    "asset_selectors": {
-                        "tags": ["holiday"],
-                        "asset_types": ["image", "video"],
-                    },
-                }
-            ],
-            title="Promoted Offerings",
+            description="Circular reference to /schemas/v1/core/promoted-offerings.json"
         ),
     ] = None

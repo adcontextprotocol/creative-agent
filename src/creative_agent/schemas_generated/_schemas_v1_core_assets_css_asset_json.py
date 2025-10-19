@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 
-from typing import Annotated, Literal, Optional
+from typing import Annotated, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -12,7 +12,6 @@ class CssAsset(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    asset_type: Literal["css"]
     content: Annotated[str, Field(description="CSS content")]
     media: Annotated[
         Optional[str],

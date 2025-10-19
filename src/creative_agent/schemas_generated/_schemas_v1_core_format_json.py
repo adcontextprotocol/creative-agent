@@ -103,11 +103,15 @@ class AssetType(Enum):
     image = "image"
     video = "video"
     audio = "audio"
+    vast = "vast"
+    daast = "daast"
     text = "text"
     html = "html"
+    css = "css"
     javascript = "javascript"
     url = "url"
-    brand_manifest = "brand_manifest"
+    webhook = "webhook"
+    promoted_offerings = "promoted_offerings"
 
 
 class AssetsRequired(BaseModel):

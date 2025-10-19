@@ -180,13 +180,11 @@ class TestPreviewCreativeResponseFormat:
             format_id=FormatId(agent_url=AGENT_URL, id="display_300x250_image"),
             assets={
                 "banner_image": ImageAsset(
-                    asset_type="image",
                     url="https://example.com/test.png",
                     width=300,
                     height=250,
                 ),
                 "click_url": UrlAsset(
-                    asset_type="url",
                     url="https://example.com/landing",
                 ),
             },
@@ -301,12 +299,11 @@ class TestToolResponseConsistency:
             format_id=FormatId(agent_url=AGENT_URL, id="display_300x250_image"),
             assets={
                 "banner_image": ImageAsset(
-                    asset_type="image",
                     url="https://example.com/test.png",
                     width=300,
                     height=250,
                 ),
-                "click_url": UrlAsset(asset_type="url", url="https://example.com/landing"),
+                "click_url": UrlAsset(url="https://example.com/landing"),
             },
         )
         result = preview_creative(

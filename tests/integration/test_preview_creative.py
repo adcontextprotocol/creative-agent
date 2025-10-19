@@ -43,14 +43,12 @@ class TestPreviewCreativeIntegration:
             format_id=FormatId(agent_url=AGENT_URL, id="display_300x250_image"),
             assets={
                 "banner_image": ImageAsset(
-                    asset_type="image",
                     url="https://example.com/banner.png",
                     width=300,
                     height=250,
                     format="png",
                 ),
                 "click_url": UrlAsset(
-                    asset_type="url",
                     url="https://example.com/landing",
                 ),
             },
@@ -85,12 +83,11 @@ class TestPreviewCreativeIntegration:
             format_id=FormatId(agent_url=AGENT_URL, id="display_300x250_image"),
             assets={
                 "banner_image": ImageAsset(
-                    asset_type="image",
                     url="https://example.com/banner.png",
                     width=300,
                     height=250,
                 ),
-                "click_url": UrlAsset(asset_type="url", url="https://example.com/landing"),
+                "click_url": UrlAsset(url="https://example.com/landing"),
             },
         )
 
@@ -116,12 +113,11 @@ class TestPreviewCreativeIntegration:
             format_id=FormatId(agent_url=AGENT_URL, id="display_728x90_image"),
             assets={
                 "banner_image": ImageAsset(
-                    asset_type="image",
                     url="https://example.com/banner.png",
                     width=728,
                     height=90,
                 ),
-                "click_url": UrlAsset(asset_type="url", url="https://example.com/landing"),
+                "click_url": UrlAsset(url="https://example.com/landing"),
             },
         )
 
@@ -143,12 +139,11 @@ class TestPreviewCreativeIntegration:
             format_id=FormatId(agent_url=AGENT_URL, id="display_300x250_image"),
             assets={
                 "banner_image": ImageAsset(
-                    asset_type="image",
                     url="https://example.com/banner.png",
                     width=300,
                     height=250,
                 ),
-                "click_url": UrlAsset(asset_type="url", url="https://example.com/landing"),
+                "click_url": UrlAsset(url="https://example.com/landing"),
             },
         )
 
@@ -168,12 +163,11 @@ class TestPreviewCreativeIntegration:
             format_id=FormatId(agent_url=AGENT_URL, id="display_300x250_image"),
             assets={
                 "banner_image": ImageAsset(
-                    asset_type="image",
                     url="https://example.com/banner.png",
                     width=300,
                     height=250,
                 ),
-                "click_url": UrlAsset(asset_type="url", url="https://example.com/landing"),
+                "click_url": UrlAsset(url="https://example.com/landing"),
             },
         ).model_dump(mode="json")
 
@@ -195,12 +189,11 @@ class TestPreviewCreativeIntegration:
             format_id=FormatId(agent_url=AGENT_URL, id="display_300x250_image"),
             assets={
                 "banner_image": ImageAsset(
-                    asset_type="image",
                     url="https://example.com/banner.png",
                     width=300,
                     height=250,
                 ),
-                "click_url": UrlAsset(asset_type="url", url="https://example.com/landing"),
+                "click_url": UrlAsset(url="https://example.com/landing"),
             },
         )
 
@@ -219,12 +212,11 @@ class TestPreviewCreativeIntegration:
             format_id=FormatId(agent_url=AGENT_URL, id="display_300x250_image"),
             assets={
                 "banner_image": ImageAsset(
-                    asset_type="image",
                     url="https://example.com/banner.png",
                     width=300,
                     height=250,
                 ),
-                "click_url": UrlAsset(asset_type="url", url="https://example.com/landing"),
+                "click_url": UrlAsset(url="https://example.com/landing"),
             },
         )
 
@@ -245,12 +237,11 @@ class TestPreviewCreativeIntegration:
             format_id=FormatId(agent_url=AGENT_URL, id="display_300x250_image"),
             assets={
                 "banner_image": ImageAsset(
-                    asset_type="image",
                     url="https://example.com/banner.png",
                     width=300,
                     height=250,
                 ),
-                "click_url": UrlAsset(asset_type="url", url="https://example.com/landing"),
+                "click_url": UrlAsset(url="https://example.com/landing"),
             },
         )
 
@@ -273,12 +264,11 @@ class TestPreviewCreativeIntegration:
             format_id=FormatId(agent_url=AGENT_URL, id="display_300x250_image"),
             assets={
                 "banner_image": ImageAsset(
-                    asset_type="image",
                     url="https://example.com/banner.png",
                     width=300,
                     height=250,
                 ),
-                "click_url": UrlAsset(asset_type="url", url="https://example.com/landing"),
+                "click_url": UrlAsset(url="https://example.com/landing"),
             },
         )
 
@@ -303,14 +293,12 @@ class TestPreviewCreativeIntegration:
             format_id=FormatId(agent_url=AGENT_URL, id="display_300x250_image"),
             assets={
                 "banner_image": ImageAsset(
-                    asset_type="image",
                     url="https://example.com/banner.png",
                     width=300,
                     height=250,
                     format="png",
                 ),
                 "click_url": UrlAsset(
-                    asset_type="url",
                     url="https://example.com/landing",
                 ),
             },
@@ -344,7 +332,6 @@ class TestPreviewCreativeIntegration:
             format_id=FormatId(agent_url=AGENT_URL, id="display_300x250_image"),
             assets={
                 "banner_image": ImageAsset(
-                    asset_type="image",
                     url="https://example.com/banner.png",
                     width=300,
                     height=250,

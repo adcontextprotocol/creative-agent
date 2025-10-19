@@ -11,7 +11,13 @@ from creative_agent.schemas_generated._schemas_v1_creative_preview_creative_requ
     Assets as ImageAsset,
 )
 from creative_agent.schemas_generated._schemas_v1_creative_preview_creative_request_json import (
+    Assets30 as VideoAsset,
+)
+from creative_agent.schemas_generated._schemas_v1_creative_preview_creative_request_json import (
     Assets31 as UrlAsset,
+)
+from creative_agent.schemas_generated._schemas_v1_creative_preview_creative_request_json import (
+    Assets34 as TextAsset,
 )
 from creative_agent.schemas_generated._schemas_v1_creative_preview_creative_request_json import (
     CreativeManifest,
@@ -39,13 +45,12 @@ class TestGeneratePreviewHtml:
             format_id=FormatId(agent_url=AGENT_URL, id="display_300x250_image"),
             assets={
                 "banner_image": ImageAsset(
-                    asset_type="image",
                     url="https://example.com/test.png",
                     width=300,
                     height=250,
                     format="png",
                 ),
-                "click_url": UrlAsset(asset_type="url", url="https://example.com/landing"),
+                "click_url": UrlAsset(url="https://example.com/landing"),
             },
         )
 
@@ -93,12 +98,11 @@ class TestGeneratePreviewHtml:
             format_id=FormatId(agent_url=AGENT_URL, id="display_300x250_image"),
             assets={
                 "banner_image": ImageAsset(
-                    asset_type="image",
                     url="https://example.com/safe.png",  # Must pass Pydantic validation
                     width=300,
                     height=250,
                 ),
-                "click_url": UrlAsset(asset_type="url", url="https://example.com/landing"),
+                "click_url": UrlAsset(url="https://example.com/landing"),
             },
         ).model_dump(mode="json")
 
@@ -128,24 +132,18 @@ class TestGeneratePreviewHtml:
 
     def test_generate_html_with_video_format(self, input_set):
         """Test HTML generation with video format."""
-        from creative_agent.schemas_generated._schemas_v1_creative_preview_creative_request_json import (
-            Assets27 as VideoAsset,
-        )
-
         video_format = get_format_by_id(FormatId(agent_url=AGENT_URL, id="video_standard_15s"))
 
         manifest = CreativeManifest(
             format_id=FormatId(agent_url=AGENT_URL, id="video_standard_15s"),
             assets={
                 "video_file": VideoAsset(
-                    asset_type="video",
                     url="https://example.com/video.mp4",
                     width=1920,
                     height=1080,
-                    duration_seconds=15.0,
                     format="mp4",
                 ),
-                "click_url": UrlAsset(asset_type="url", url="https://example.com/landing"),
+                "click_url": UrlAsset(url="https://example.com/landing"),
             },
         ).model_dump(mode="json")
 
@@ -161,7 +159,6 @@ class TestGeneratePreviewHtml:
         with pytest.raises(ValidationError):
             # Width must be >= 1 per schema
             ImageAsset(
-                asset_type="image",
                 url="https://example.com/test.png",
                 width=0,  # Invalid!
                 height=250,
@@ -173,28 +170,22 @@ class TestGeneratePreviewHtml:
 
         with pytest.raises(ValidationError):
             UrlAsset(
-                asset_type="url",
                 url="not-a-valid-url",  # Invalid URL format
             )
 
     def test_manifest_can_have_optional_assets_not_required_by_format(self, display_format, input_set):
         """Test that manifests can include optional assets beyond format requirements."""
-        from creative_agent.schemas_generated._schemas_v1_creative_preview_creative_request_json import (
-            Assets30 as TextAsset,
-        )
-
         # Include optional headline text asset (not required by format)
         manifest = CreativeManifest(
             format_id=FormatId(agent_url=AGENT_URL, id="display_300x250_image"),
             assets={
                 "banner_image": ImageAsset(
-                    asset_type="image",
                     url="https://example.com/test.png",
                     width=300,
                     height=250,
                 ),
-                "click_url": UrlAsset(asset_type="url", url="https://example.com/landing"),
-                "optional_headline": TextAsset(asset_type="text", content="Buy Now!", format="plain"),
+                "click_url": UrlAsset(url="https://example.com/landing"),
+                "optional_headline": TextAsset(content="Buy Now!"),
             },
         ).model_dump(mode="json")
 

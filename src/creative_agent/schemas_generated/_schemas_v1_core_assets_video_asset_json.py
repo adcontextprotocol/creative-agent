@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 
-from typing import Annotated, Literal, Optional
+from typing import Annotated, Optional
 
 from pydantic import AnyUrl, BaseModel, ConfigDict, Field
 
@@ -12,7 +12,6 @@ class VideoAsset(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    asset_type: Literal["video"]
     url: Annotated[AnyUrl, Field(description="URL to the video asset")]
     width: Annotated[
         Optional[int], Field(description="Video width in pixels", ge=1)

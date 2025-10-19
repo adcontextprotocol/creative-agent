@@ -56,8 +56,7 @@ def create_fixed_render(width: int, height: int, role: str = "primary") -> Rende
 
 
 # Generative Formats - AI-powered creative generation
-# These use type='display' (what they generate) and output_format_ids
-# to specify what standard formats they can produce
+# These use promoted_offerings asset type which provides brand context and product info
 GENERATIVE_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("display_300x250_generative"),
@@ -69,10 +68,10 @@ GENERATIVE_FORMATS = [
         supported_macros=COMMON_MACROS,
         assets_required=[
             AssetsRequired(
-                asset_id="brand_context",
-                asset_type=AssetType.brand_manifest,
+                asset_id="promoted_offerings",
+                asset_type=AssetType.promoted_offerings,
                 required=True,
-                requirements={"description": "Brand information and product offerings for AI generation"},
+                requirements={"description": "Brand manifest and product offerings for AI generation"},
             ),
             AssetsRequired(
                 asset_id="generation_prompt",
@@ -92,10 +91,10 @@ GENERATIVE_FORMATS = [
         supported_macros=COMMON_MACROS,
         assets_required=[
             AssetsRequired(
-                asset_id="brand_context",
-                asset_type=AssetType.brand_manifest,
+                asset_id="promoted_offerings",
+                asset_type=AssetType.promoted_offerings,
                 required=True,
-                requirements={"description": "Brand information and product offerings for AI generation"},
+                requirements={"description": "Brand manifest and product offerings for AI generation"},
             ),
             AssetsRequired(
                 asset_id="generation_prompt",
@@ -115,10 +114,10 @@ GENERATIVE_FORMATS = [
         supported_macros=COMMON_MACROS,
         assets_required=[
             AssetsRequired(
-                asset_id="brand_context",
-                asset_type=AssetType.brand_manifest,
+                asset_id="promoted_offerings",
+                asset_type=AssetType.promoted_offerings,
                 required=True,
-                requirements={"description": "Brand information and product offerings for AI generation"},
+                requirements={"description": "Brand manifest and product offerings for AI generation"},
             ),
             AssetsRequired(
                 asset_id="generation_prompt",
@@ -138,10 +137,10 @@ GENERATIVE_FORMATS = [
         supported_macros=COMMON_MACROS,
         assets_required=[
             AssetsRequired(
-                asset_id="brand_context",
-                asset_type=AssetType.brand_manifest,
+                asset_id="promoted_offerings",
+                asset_type=AssetType.promoted_offerings,
                 required=True,
-                requirements={"description": "Brand information and product offerings for AI generation"},
+                requirements={"description": "Brand manifest and product offerings for AI generation"},
             ),
             AssetsRequired(
                 asset_id="generation_prompt",
@@ -161,10 +160,10 @@ GENERATIVE_FORMATS = [
         supported_macros=COMMON_MACROS,
         assets_required=[
             AssetsRequired(
-                asset_id="brand_context",
-                asset_type=AssetType.brand_manifest,
+                asset_id="promoted_offerings",
+                asset_type=AssetType.promoted_offerings,
                 required=True,
-                requirements={"description": "Brand information and product offerings for AI generation"},
+                requirements={"description": "Brand manifest and product offerings for AI generation"},
             ),
             AssetsRequired(
                 asset_id="generation_prompt",
@@ -184,10 +183,10 @@ GENERATIVE_FORMATS = [
         supported_macros=COMMON_MACROS,
         assets_required=[
             AssetsRequired(
-                asset_id="brand_context",
-                asset_type=AssetType.brand_manifest,
+                asset_id="promoted_offerings",
+                asset_type=AssetType.promoted_offerings,
                 required=True,
-                requirements={"description": "Brand information and product offerings for AI generation"},
+                requirements={"description": "Brand manifest and product offerings for AI generation"},
             ),
             AssetsRequired(
                 asset_id="generation_prompt",
@@ -207,10 +206,10 @@ GENERATIVE_FORMATS = [
         supported_macros=COMMON_MACROS,
         assets_required=[
             AssetsRequired(
-                asset_id="brand_context",
-                asset_type=AssetType.brand_manifest,
+                asset_id="promoted_offerings",
+                asset_type=AssetType.promoted_offerings,
                 required=True,
-                requirements={"description": "Brand information and product offerings for AI generation"},
+                requirements={"description": "Brand manifest and product offerings for AI generation"},
             ),
             AssetsRequired(
                 asset_id="generation_prompt",

@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import Annotated, Literal, Optional, Union
+from typing import Annotated, Optional, Union
 
 from pydantic import AnyUrl, BaseModel, ConfigDict, Field, RootModel
 
@@ -40,7 +40,6 @@ class VastAsset1(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    asset_type: Literal["vast"]
     url: Annotated[AnyUrl, Field(description="URL endpoint that returns VAST XML")]
     content: Annotated[Optional[str], Field(description="Inline VAST XML content")] = (
         None
@@ -53,10 +52,6 @@ class VastAsset1(BaseModel):
         Field(
             description="Whether VPAID (Video Player-Ad Interface Definition) is supported"
         ),
-    ] = None
-    max_wrapper_depth: Annotated[
-        Optional[int],
-        Field(description="Maximum allowed wrapper/redirect depth", ge=0, le=10),
     ] = None
     duration_ms: Annotated[
         Optional[int],
@@ -72,7 +67,6 @@ class VastAsset2(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    asset_type: Literal["vast"]
     url: Annotated[
         Optional[AnyUrl], Field(description="URL endpoint that returns VAST XML")
     ] = None
@@ -85,10 +79,6 @@ class VastAsset2(BaseModel):
         Field(
             description="Whether VPAID (Video Player-Ad Interface Definition) is supported"
         ),
-    ] = None
-    max_wrapper_depth: Annotated[
-        Optional[int],
-        Field(description="Maximum allowed wrapper/redirect depth", ge=0, le=10),
     ] = None
     duration_ms: Annotated[
         Optional[int],

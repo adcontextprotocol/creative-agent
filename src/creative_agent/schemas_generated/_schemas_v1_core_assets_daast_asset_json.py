@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import Annotated, Literal, Optional, Union
+from typing import Annotated, Optional, Union
 
 from pydantic import AnyUrl, BaseModel, ConfigDict, Field, RootModel
 
@@ -32,7 +32,6 @@ class DaastAsset1(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    asset_type: Literal["daast"]
     url: Annotated[AnyUrl, Field(description="URL endpoint that returns DAAST XML")]
     content: Annotated[Optional[str], Field(description="Inline DAAST XML content")] = (
         None
@@ -57,7 +56,6 @@ class DaastAsset2(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    asset_type: Literal["daast"]
     url: Annotated[
         Optional[AnyUrl], Field(description="URL endpoint that returns DAAST XML")
     ] = None

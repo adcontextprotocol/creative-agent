@@ -8,11 +8,11 @@ from typing import Annotated, Any
 from pydantic import Field, RootModel
 
 
-class AdcpAssetTypeDefinitionsRegistry(RootModel[Any]):
+class AdcpAssetTypeRegistry(RootModel[Any]):
     root: Annotated[
         Any,
         Field(
-            description="Standardized definitions for all asset types used in AdCP creative manifests. These asset types are used when providing actual creative content that fulfills format requirements.",
-            title="AdCP Asset Type Definitions Registry",
+            description="Registry of asset types used in AdCP creative manifests. Each asset type defines the structure of actual content payloads (what you send), not requirements or constraints (which belong in format specifications).",
+            title="AdCP Asset Type Registry",
         ),
     ]

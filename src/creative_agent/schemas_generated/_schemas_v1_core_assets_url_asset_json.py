@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 
-from typing import Annotated, Literal, Optional
+from typing import Annotated, Optional
 
 from pydantic import AnyUrl, BaseModel, ConfigDict, Field
 
@@ -12,7 +12,6 @@ class UrlAsset(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    asset_type: Literal["url"]
     url: Annotated[AnyUrl, Field(description="URL reference")]
     description: Annotated[
         Optional[str], Field(description="Description of what this URL points to")

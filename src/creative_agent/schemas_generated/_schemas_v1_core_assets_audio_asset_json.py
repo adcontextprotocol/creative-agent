@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 
-from typing import Annotated, Literal, Optional
+from typing import Annotated, Optional
 
 from pydantic import AnyUrl, BaseModel, ConfigDict, Field
 
@@ -12,7 +12,6 @@ class AudioAsset(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    asset_type: Literal["audio"]
     url: Annotated[AnyUrl, Field(description="URL to the audio asset")]
     duration_ms: Annotated[
         Optional[int], Field(description="Audio duration in milliseconds", ge=0)

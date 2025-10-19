@@ -188,11 +188,18 @@ def validate_image_url(url: str, check_mime: bool = False) -> None:
             raise AssetValidationError(f"Error verifying image URL: {e}") from e
 
 
-def validate_asset(asset_data: dict[str, Any], check_remote_mime: bool = False) -> None:
+def validate_asset(
+    asset_data: dict[str, Any], asset_type: str, check_remote_mime: bool = False
+) -> None:
     """Validate a single asset based on its type.
 
+    IMPORTANT: As of ADCP v2.0.0, asset_type is determined by the format specification,
+    not included in the asset payload. The asset_type parameter comes from the format's
+    assets_required definition for the given asset_id.
+
     Args:
-        asset_data: Asset dictionary with asset_type and content
+        asset_data: Asset dictionary (WITHOUT asset_type field)
+        asset_type: Expected asset type from format specification
         check_remote_mime: If True, verify MIME types for remote URLs (slower)
 
     Raises:
@@ -201,9 +208,8 @@ def validate_asset(asset_data: dict[str, Any], check_remote_mime: bool = False) 
     if not isinstance(asset_data, dict):
         raise AssetValidationError("Asset must be a dictionary")
 
-    asset_type = asset_data.get("asset_type")
     if not asset_type:
-        raise AssetValidationError("Asset must have asset_type field")
+        raise AssetValidationError("asset_type parameter is required for validation")
 
     # Validate based on asset type
     if asset_type == "html":
@@ -265,50 +271,6 @@ def validate_asset(asset_data: dict[str, Any], check_remote_mime: bool = False) 
             raise AssetValidationError(f"{asset_type.capitalize()} asset must have string url")
         validate_url(url)
 
-    elif asset_type == "brand_manifest":
-        # Brand manifest can be inline object OR URL reference per ADCP brand-manifest-ref.json
-        # When inline: full brand manifest object (requires url OR name per brand-manifest.json)
-        # Note: The asset_data is the full asset object, not just the manifest content
-
-        # Check if this is a URL reference (string) in content field
-        content = asset_data.get("content")
-        if content is not None:
-            if isinstance(content, str):
-                # URL reference to hosted manifest
-                validate_url(content)
-            elif isinstance(content, dict):
-                # Inline brand manifest object - must have url OR name
-                url = content.get("url")
-                name = content.get("name")
-
-                if not url and not name:
-                    raise AssetValidationError("Inline brand manifest must have either url or name")
-
-                if url:
-                    if not isinstance(url, str):
-                        raise AssetValidationError("Brand manifest url must be a string")
-                    validate_url(url)
-
-                if name and not isinstance(name, str):
-                    raise AssetValidationError("Brand manifest name must be a string")
-            else:
-                raise AssetValidationError("Brand manifest content must be a URL string or brand manifest object")
-        else:
-            # Legacy: check for direct url/name fields
-            url = asset_data.get("url")
-            name = asset_data.get("name")
-
-            if not url and not name:
-                raise AssetValidationError("Brand manifest asset must have either url or name")
-
-            if url:
-                if not isinstance(url, str):
-                    raise AssetValidationError("Brand manifest url must be a string")
-                validate_url(url)
-
-            if name and not isinstance(name, str):
-                raise AssetValidationError("Brand manifest name must be a string")
-
     elif asset_type == "vast":
         # VAST asset requires either url OR content (oneOf per ADCP spec)
         url = asset_data.get("url")
@@ -348,14 +310,39 @@ def validate_asset(asset_data: dict[str, Any], check_remote_mime: bool = False) 
             raise AssetValidationError("DAAST content must be a string")
 
     elif asset_type == "webhook":
-        # Webhook validation - spec references this type but schema file doesn't exist yet
-        # Minimal validation: webhook should have a url
+        # Webhook validation
         url = asset_data.get("url")
         if not url:
             raise AssetValidationError("Webhook asset must have url")
         if not isinstance(url, str):
             raise AssetValidationError("Webhook url must be a string")
         validate_url(url)
+
+    elif asset_type == "promoted_offerings":
+        # Promoted offerings validation - used for generative creative formats
+        # Contains brand manifest and product selectors
+        # Per spec: can be inline object OR URL reference
+
+        # Check if there's a brand_manifest field (can be URL or object)
+        brand_manifest = asset_data.get("brand_manifest")
+        if brand_manifest:
+            if isinstance(brand_manifest, str):
+                # URL reference to hosted manifest
+                validate_url(brand_manifest)
+            elif isinstance(brand_manifest, dict):
+                # Inline brand manifest - must have url OR name
+                url = brand_manifest.get("url")
+                name = brand_manifest.get("name")
+                if not url and not name:
+                    raise AssetValidationError("Inline brand manifest must have either url or name")
+                if url:
+                    if not isinstance(url, str):
+                        raise AssetValidationError("Brand manifest url must be a string")
+                    validate_url(url)
+                if name and not isinstance(name, str):
+                    raise AssetValidationError("Brand manifest name must be a string")
+            else:
+                raise AssetValidationError("brand_manifest must be a URL string or object")
 
     else:
         raise AssetValidationError(f"Unknown asset_type: {asset_type}")
@@ -388,21 +375,49 @@ def validate_manifest_assets(
     if not isinstance(assets, dict):
         return ["Manifest assets must be a dictionary"]
 
-    # Check required assets if format provided
+    # Build a map of asset_id -> asset_type from format if provided
+    asset_type_map = {}
     if format_obj and hasattr(format_obj, "assets_required") and format_obj.assets_required:
         for required_asset in format_obj.assets_required:
+            asset_id = getattr(required_asset, "asset_id", None)
+            asset_type = getattr(required_asset, "asset_type", None)
+
+            if asset_id and asset_type:
+                # Handle enum or string asset_type
+                if hasattr(asset_type, "value"):
+                    asset_type_map[asset_id] = asset_type.value
+                else:
+                    asset_type_map[asset_id] = str(asset_type)
+
             # Check if this is a required (non-optional) asset
             is_required = getattr(required_asset, "required", True)
-            asset_id = getattr(required_asset, "asset_id", None)
-
             if is_required and asset_id and asset_id not in assets:
-                asset_type = getattr(required_asset, "asset_type", "asset")
-                errors.append(f"Missing required {asset_type} asset: '{asset_id}'")
+                errors.append(f"Required asset missing: {asset_id}")
 
     # Validate each asset
     for asset_id, asset_data in assets.items():
+        # Get expected asset type from format spec
+        expected_type = asset_type_map.get(asset_id)
+
+        if not expected_type:
+            # No format provided or asset not in format spec
+            # Try to infer type from asset data (for backward compatibility during transition)
+            if "url" in asset_data and "width" in asset_data and "height" in asset_data:
+                expected_type = "image"
+            elif "url" in asset_data and "duration_seconds" in asset_data:
+                expected_type = "video"  # or audio, hard to distinguish
+            elif "content" in asset_data:
+                expected_type = "text"  # could be html/js/css too
+            elif "url" in asset_data:
+                expected_type = "url"
+            else:
+                errors.append(
+                    f"Asset '{asset_id}': Cannot determine asset type (format not provided or asset_id not in format spec)"
+                )
+                continue
+
         try:
-            validate_asset(asset_data, check_remote_mime=check_remote_mime)
+            validate_asset(asset_data, expected_type, check_remote_mime=check_remote_mime)
         except AssetValidationError as e:
             errors.append(f"Asset '{asset_id}': {e}")
 

@@ -243,13 +243,13 @@ class BrandManifest(BaseModel):
     ] = None
 
 
-Asset6 = Asset
+Asset10 = Asset
 
 
-ProductCatalog5 = ProductCatalog
+ProductCatalog9 = ProductCatalog
 
 
-class BrandManifest4(BaseModel):
+class BrandManifest8(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
@@ -280,13 +280,13 @@ class BrandManifest4(BaseModel):
         None
     )
     assets: Annotated[
-        Optional[list[Asset6]],
+        Optional[list[Asset10]],
         Field(
             description="Brand asset library with explicit assets and tags. Assets are referenced inline with URLs pointing to CDN-hosted files."
         ),
     ] = None
     product_catalog: Annotated[
-        Optional[ProductCatalog5],
+        Optional[ProductCatalog9],
         Field(
             description="Product catalog information for e-commerce advertisers. Enables SKU-level creative generation and product selection."
         ),
@@ -361,7 +361,7 @@ class Offering(BaseModel):
     ] = None
 
 
-class AssetType8(Enum):
+class AssetType14(Enum):
     image = "image"
     video = "video"
     audio = "audio"
@@ -382,7 +382,7 @@ class AssetSelectors(BaseModel):
         ),
     ] = None
     asset_types: Annotated[
-        Optional[list[AssetType8]],
+        Optional[list[AssetType14]],
         Field(description="Filter by asset type (e.g., ['image', 'video'])"),
     ] = None
     exclude_tags: Annotated[
@@ -395,7 +395,7 @@ class PromotedOfferings(BaseModel):
         extra="forbid",
     )
     brand_manifest: Annotated[
-        Union[Union[BrandManifest, BrandManifest4], AnyUrl],
+        Union[Union[BrandManifest, BrandManifest8], AnyUrl],
         Field(
             description="Brand manifest provided either as an inline object or a URL string pointing to a hosted manifest",
             examples=[

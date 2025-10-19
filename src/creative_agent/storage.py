@@ -138,15 +138,29 @@ def generate_preview_html(format_obj: Any, manifest: Any, input_set: Any) -> str
     else:
         raise TypeError(f"Invalid manifest type: {type(manifest)}")
 
-    for _asset_role, asset_data in manifest_assets.items():
-        if isinstance(asset_data, dict) and asset_data.get("asset_type") == "image":
+    # Build asset_id -> asset_type map from format specification
+    asset_type_map = {}
+    if hasattr(format_obj, "assets_required") and format_obj.assets_required:
+        for required_asset in format_obj.assets_required:
+            asset_id = getattr(required_asset, "asset_id", None)
+            asset_type = getattr(required_asset, "asset_type", None)
+            if asset_id and asset_type:
+                # Handle enum or string asset_type
+                if hasattr(asset_type, "value"):
+                    asset_type_map[asset_id] = asset_type.value
+                else:
+                    asset_type_map[asset_id] = str(asset_type)
+
+    # Find first image asset using format specification
+    for asset_id, asset_data in manifest_assets.items():
+        if isinstance(asset_data, dict) and asset_type_map.get(asset_id) == "image":
             image_url = asset_data.get("url")
             break
 
-    # Get click URL
+    # Get click URL using format specification
     click_url = None
-    for _asset_role, asset_data in manifest_assets.items():
-        if isinstance(asset_data, dict) and asset_data.get("asset_type") == "url":
+    for asset_id, asset_data in manifest_assets.items():
+        if isinstance(asset_data, dict) and asset_type_map.get(asset_id) == "url":
             click_url = asset_data.get("url")
             break
 
