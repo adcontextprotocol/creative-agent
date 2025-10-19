@@ -314,8 +314,7 @@ class TestAssetValidation:
 
     def test_vast_without_url_or_content_fails(self):
         """VAST asset without url or content should fail."""
-        asset = {
-        }
+        asset = {}
         with pytest.raises(AssetValidationError, match="must have either url or content"):
             validate_asset(asset, "vast")
 
@@ -344,8 +343,7 @@ class TestAssetValidation:
 
     def test_daast_without_url_or_content_fails(self):
         """DAAST asset without url or content should fail."""
-        asset = {
-        }
+        asset = {}
         with pytest.raises(AssetValidationError, match="must have either url or content"):
             validate_asset(asset, "daast")
 
@@ -358,8 +356,7 @@ class TestAssetValidation:
 
     def test_webhook_without_url_fails(self):
         """Webhook asset without url should fail."""
-        asset = {
-        }
+        asset = {}
         with pytest.raises(AssetValidationError, match="Webhook asset must have url"):
             validate_asset(asset, "webhook")
 

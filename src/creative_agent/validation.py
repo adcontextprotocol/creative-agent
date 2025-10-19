@@ -188,9 +188,7 @@ def validate_image_url(url: str, check_mime: bool = False) -> None:
             raise AssetValidationError(f"Error verifying image URL: {e}") from e
 
 
-def validate_asset(
-    asset_data: dict[str, Any], asset_type: str, check_remote_mime: bool = False
-) -> None:
+def validate_asset(asset_data: dict[str, Any], asset_type: str, check_remote_mime: bool = False) -> None:
     """Validate a single asset based on its type.
 
     IMPORTANT: As of ADCP v2.0.0, asset_type is determined by the format specification,
