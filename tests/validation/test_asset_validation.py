@@ -300,6 +300,148 @@ class TestAssetValidation:
         with pytest.raises(AssetValidationError, match="Unknown asset_type"):
             validate_asset(asset)
 
+    def test_valid_brand_manifest_url_reference(self):
+        """Valid brand manifest with URL reference should pass."""
+        asset = {
+            "asset_type": "brand_manifest",
+            "content": "https://cdn.example.com/brand-manifest.json",
+        }
+        validate_asset(asset)
+
+    def test_valid_brand_manifest_inline_with_url(self):
+        """Valid brand manifest inline object with url should pass."""
+        asset = {
+            "asset_type": "brand_manifest",
+            "content": {
+                "url": "https://example.com",
+                "name": "Test Brand",
+                "colors": {"primary": "#FF6B35"},
+            },
+        }
+        validate_asset(asset)
+
+    def test_valid_brand_manifest_inline_with_name(self):
+        """Valid brand manifest inline object with name should pass."""
+        asset = {
+            "asset_type": "brand_manifest",
+            "content": {
+                "name": "Test Brand",
+                "colors": {"primary": "#FF6B35"},
+            },
+        }
+        validate_asset(asset)
+
+    def test_brand_manifest_inline_without_url_or_name_fails(self):
+        """Brand manifest inline object without url or name should fail."""
+        asset = {
+            "asset_type": "brand_manifest",
+            "content": {
+                "colors": {"primary": "#FF6B35"},
+            },
+        }
+        with pytest.raises(AssetValidationError, match="must have either url or name"):
+            validate_asset(asset)
+
+    def test_brand_manifest_legacy_format_with_url(self):
+        """Legacy brand manifest format with direct url field should pass."""
+        asset = {
+            "asset_type": "brand_manifest",
+            "url": "https://example.com",
+        }
+        validate_asset(asset)
+
+    def test_brand_manifest_legacy_format_with_name(self):
+        """Legacy brand manifest format with direct name field should pass."""
+        asset = {
+            "asset_type": "brand_manifest",
+            "name": "Test Brand",
+        }
+        validate_asset(asset)
+
+    def test_valid_vast_with_url(self):
+        """Valid VAST asset with url should pass."""
+        asset = {
+            "asset_type": "vast",
+            "url": "https://example.com/vast.xml",
+        }
+        validate_asset(asset)
+
+    def test_valid_vast_with_content(self):
+        """Valid VAST asset with content should pass."""
+        asset = {
+            "asset_type": "vast",
+            "content": "<VAST version='4.0'>...</VAST>",
+        }
+        validate_asset(asset)
+
+    def test_vast_with_both_url_and_content_fails(self):
+        """VAST asset with both url and content should fail."""
+        asset = {
+            "asset_type": "vast",
+            "url": "https://example.com/vast.xml",
+            "content": "<VAST version='4.0'>...</VAST>",
+        }
+        with pytest.raises(AssetValidationError, match="must have url or content, not both"):
+            validate_asset(asset)
+
+    def test_vast_without_url_or_content_fails(self):
+        """VAST asset without url or content should fail."""
+        asset = {
+            "asset_type": "vast",
+        }
+        with pytest.raises(AssetValidationError, match="must have either url or content"):
+            validate_asset(asset)
+
+    def test_valid_daast_with_url(self):
+        """Valid DAAST asset with url should pass."""
+        asset = {
+            "asset_type": "daast",
+            "url": "https://example.com/daast.xml",
+        }
+        validate_asset(asset)
+
+    def test_valid_daast_with_content(self):
+        """Valid DAAST asset with content should pass."""
+        asset = {
+            "asset_type": "daast",
+            "content": "<DAAST version='1.0'>...</DAAST>",
+        }
+        validate_asset(asset)
+
+    def test_daast_with_both_url_and_content_fails(self):
+        """DAAST asset with both url and content should fail."""
+        asset = {
+            "asset_type": "daast",
+            "url": "https://example.com/daast.xml",
+            "content": "<DAAST version='1.0'>...</DAAST>",
+        }
+        with pytest.raises(AssetValidationError, match="must have url or content, not both"):
+            validate_asset(asset)
+
+    def test_daast_without_url_or_content_fails(self):
+        """DAAST asset without url or content should fail."""
+        asset = {
+            "asset_type": "daast",
+        }
+        with pytest.raises(AssetValidationError, match="must have either url or content"):
+            validate_asset(asset)
+
+    def test_valid_webhook(self):
+        """Valid webhook asset should pass."""
+        asset = {
+            "asset_type": "webhook",
+            "url": "https://example.com/webhook",
+        }
+        validate_asset(asset)
+
+    def test_webhook_without_url_fails(self):
+        """Webhook asset without url should fail."""
+        asset = {
+            "asset_type": "webhook",
+        }
+        with pytest.raises(AssetValidationError, match="Webhook asset must have url"):
+            validate_asset(asset)
+
 
 class TestManifestValidation:
     """Test full manifest validation."""

@@ -265,6 +265,98 @@ def validate_asset(asset_data: dict[str, Any], check_remote_mime: bool = False) 
             raise AssetValidationError(f"{asset_type.capitalize()} asset must have string url")
         validate_url(url)
 
+    elif asset_type == "brand_manifest":
+        # Brand manifest can be inline object OR URL reference per ADCP brand-manifest-ref.json
+        # When inline: full brand manifest object (requires url OR name per brand-manifest.json)
+        # Note: The asset_data is the full asset object, not just the manifest content
+
+        # Check if this is a URL reference (string) in content field
+        content = asset_data.get("content")
+        if content is not None:
+            if isinstance(content, str):
+                # URL reference to hosted manifest
+                validate_url(content)
+            elif isinstance(content, dict):
+                # Inline brand manifest object - must have url OR name
+                url = content.get("url")
+                name = content.get("name")
+
+                if not url and not name:
+                    raise AssetValidationError("Inline brand manifest must have either url or name")
+
+                if url:
+                    if not isinstance(url, str):
+                        raise AssetValidationError("Brand manifest url must be a string")
+                    validate_url(url)
+
+                if name and not isinstance(name, str):
+                    raise AssetValidationError("Brand manifest name must be a string")
+            else:
+                raise AssetValidationError("Brand manifest content must be a URL string or brand manifest object")
+        else:
+            # Legacy: check for direct url/name fields
+            url = asset_data.get("url")
+            name = asset_data.get("name")
+
+            if not url and not name:
+                raise AssetValidationError("Brand manifest asset must have either url or name")
+
+            if url:
+                if not isinstance(url, str):
+                    raise AssetValidationError("Brand manifest url must be a string")
+                validate_url(url)
+
+            if name and not isinstance(name, str):
+                raise AssetValidationError("Brand manifest name must be a string")
+
+    elif asset_type == "vast":
+        # VAST asset requires either url OR content (oneOf per ADCP spec)
+        url = asset_data.get("url")
+        content = asset_data.get("content")
+
+        if not url and not content:
+            raise AssetValidationError("VAST asset must have either url or content")
+
+        if url and content:
+            raise AssetValidationError("VAST asset must have url or content, not both")
+
+        if url:
+            if not isinstance(url, str):
+                raise AssetValidationError("VAST url must be a string")
+            validate_url(url)
+
+        if content and not isinstance(content, str):
+            raise AssetValidationError("VAST content must be a string")
+
+    elif asset_type == "daast":
+        # DAAST asset requires either url OR content (oneOf per ADCP spec)
+        url = asset_data.get("url")
+        content = asset_data.get("content")
+
+        if not url and not content:
+            raise AssetValidationError("DAAST asset must have either url or content")
+
+        if url and content:
+            raise AssetValidationError("DAAST asset must have url or content, not both")
+
+        if url:
+            if not isinstance(url, str):
+                raise AssetValidationError("DAAST url must be a string")
+            validate_url(url)
+
+        if content and not isinstance(content, str):
+            raise AssetValidationError("DAAST content must be a string")
+
+    elif asset_type == "webhook":
+        # Webhook validation - spec references this type but schema file doesn't exist yet
+        # Minimal validation: webhook should have a url
+        url = asset_data.get("url")
+        if not url:
+            raise AssetValidationError("Webhook asset must have url")
+        if not isinstance(url, str):
+            raise AssetValidationError("Webhook url must be a string")
+        validate_url(url)
+
     else:
         raise AssetValidationError(f"Unknown asset_type: {asset_type}")
 
