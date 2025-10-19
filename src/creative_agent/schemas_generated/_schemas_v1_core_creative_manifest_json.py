@@ -225,14 +225,14 @@ class ResponseType(Enum):
     javascript = "javascript"
 
 
-class Method1(Enum):
+class Method3(Enum):
     hmac_sha256 = "hmac_sha256"
     api_key = "api_key"
     none = "none"
 
 
 class Security(BaseModel):
-    method: Annotated[Method1, Field(description="Authentication method")]
+    method: Annotated[Method3, Field(description="Authentication method")]
     hmac_header: Annotated[
         Optional[str],
         Field(description="Header name for HMAC signature (e.g., 'X-Signature')"),
