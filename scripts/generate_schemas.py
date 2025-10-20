@@ -260,6 +260,18 @@ AdCP Version: v2.4 (schemas v1)
             creative_asset_file.write_text(content)
             print("✅ Fixed mypy issue in creative-asset schema")
 
+        # Fix mypy issue with webhook method default in build-creative-response
+        build_response_file = output_file / "_schemas_v1_media_buy_build_creative_response_json.py"
+        if build_response_file.exists():
+            content = build_response_file.read_text()
+            # Add type: ignore comment to the problematic line
+            content = content.replace(
+                'Field(description="HTTP method")] = "POST"',
+                'Field(description="HTTP method")] = "POST"  # type: ignore[assignment]',
+            )
+            build_response_file.write_text(content)
+            print("✅ Fixed mypy issue in build-creative-response schema")
+
     finally:
         # Clean up temp directory
         import shutil
