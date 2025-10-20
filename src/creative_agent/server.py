@@ -666,9 +666,9 @@ After generating the images, output ONLY a JSON creative manifest with this stru
   "format_id": "{output_format_id}",
   "assets": {{
     // Map each required asset_id to appropriate asset data
-    // For images: {{"asset_type": "image", "url": "GENERATED_IMAGE_PLACEHOLDER", "width": X, "height": Y, "format": "png"}}
-    // For text: {{"asset_type": "text", "content": "..."}}
-    // For urls: {{"asset_type": "url", "url": "..."}}
+    // For images: {{"url": "GENERATED_IMAGE_PLACEHOLDER", "width": X, "height": Y, "format": "png"}}
+    // For text: {{"content": "..."}}
+    // For urls: {{"url": "..."}}
   }},
   "metadata": {{
     "generated_by": "AdCP Creative Agent",
@@ -689,8 +689,8 @@ Generate a JSON creative manifest with the following structure:
   "format_id": "{output_format_id}",
   "assets": {{
     // Map each required asset_id to appropriate asset data
-    // For text: {{"asset_type": "text", "content": "..."}}
-    // For urls: {{"asset_type": "url", "url": "..."}}
+    // For text: {{"content": "..."}}
+    // For urls: {{"url": "..."}}
   }},
   "metadata": {{
     "generated_by": "AdCP Creative Agent",
