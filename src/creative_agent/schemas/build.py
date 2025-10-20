@@ -39,8 +39,6 @@ class BuildCreativeRequest(BaseModel):
     assets: list[AssetReference] = []
     preview_options: PreviewOptions | None = None
     finalize: bool = False
-    # User must provide their own Gemini API key
-    gemini_api_key: str | None = None
 
 
 class CreativeOutput(BaseModel):

@@ -417,7 +417,6 @@ def build_creative(
     target_format_id: str | dict[str, Any],
     creative_manifest: dict[str, Any] | None = None,
     message: str | None = None,
-    gemini_api_key: str | None = None,
 ) -> ToolResult:
     """Transform or generate a creative manifest using AI.
 
@@ -425,10 +424,12 @@ def build_creative(
         target_format_id: Format ID to generate (string or FormatId object with agent_url and id)
         creative_manifest: Source creative manifest with input assets (e.g., promoted_offerings for generative formats)
         message: Natural language instructions for transformation or generation
-        gemini_api_key: User's Gemini API key for AI generation
 
     Returns:
         ToolResult with creative_manifest in structured_content
+
+    Note:
+        Requires GEMINI_API_KEY environment variable to be set for generative formats.
     """
     try:
         # Parse target_format_id
@@ -474,9 +475,10 @@ def build_creative(
                     structured_content={"error": error_msg},
                 )
 
-            # Validate gemini_api_key is provided for generation
+            # Get Gemini API key from environment
+            gemini_api_key = os.getenv("GEMINI_API_KEY")
             if not gemini_api_key:
-                error_msg = "gemini_api_key is required for generative formats. Get one at https://ai.google.dev/"
+                error_msg = "GEMINI_API_KEY environment variable is required for generative formats. Get a key at https://ai.google.dev/"
                 return ToolResult(
                     content=[TextContent(type="text", text=f"Error: {error_msg}")],
                     structured_content={"error": error_msg},
