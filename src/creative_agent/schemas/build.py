@@ -32,7 +32,7 @@ class BuildCreativeRequest(BaseModel):
     """Request to build a creative (AdCP spec)."""
 
     message: str  # Creative brief or refinement instructions
-    format_id: str
+    target_format_id: str
     format_source: HttpUrl | None = None
     output_mode: Literal["manifest", "code"] = "manifest"
     context_id: str | None = None  # For iterative refinement
