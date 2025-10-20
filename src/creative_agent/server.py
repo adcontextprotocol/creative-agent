@@ -414,7 +414,8 @@ def _generate_preview_variant(
 
 @mcp.tool()
 def build_creative(
-    target_format_id: str | dict[str, Any],
+    target_format_id: str | dict[str, Any] | None = None,
+    format_id: str | dict[str, Any] | None = None,
     creative_manifest: dict[str, Any] | None = None,
     message: str | None = None,
     gemini_api_key: str | None = None,
@@ -422,7 +423,8 @@ def build_creative(
     """Transform or generate a creative manifest using AI.
 
     Args:
-        target_format_id: Format ID to generate (string or FormatId object with agent_url and id)
+        target_format_id: Format ID to generate (string or FormatId object with agent_url and id). Per ADCP spec.
+        format_id: DEPRECATED alias for target_format_id. Some clients use this incorrectly.
         creative_manifest: Source creative manifest with input assets (e.g., promoted_offerings for generative formats)
         message: Natural language instructions for transformation or generation
         gemini_api_key: User's Gemini API key for AI generation
@@ -431,11 +433,20 @@ def build_creative(
         ToolResult with creative_manifest in structured_content
     """
     try:
-        # Parse target_format_id
-        if isinstance(target_format_id, str):
-            fmt_id = FormatId(agent_url=AGENT_URL, id=target_format_id)
+        # Handle both parameter names (ADCP spec uses target_format_id)
+        format_id_value = target_format_id or format_id
+        if not format_id_value:
+            error_msg = "target_format_id is required (note: some clients incorrectly use 'format_id')"
+            return ToolResult(
+                content=[TextContent(type="text", text=f"Error: {error_msg}")],
+                structured_content={"error": error_msg},
+            )
+
+        # Parse format_id
+        if isinstance(format_id_value, str):
+            fmt_id = FormatId(agent_url=AGENT_URL, id=format_id_value)
         else:
-            fmt_id = FormatId(**target_format_id)
+            fmt_id = FormatId(**format_id_value)
 
         # Get format definition
         fmt = get_format_by_id(fmt_id)
