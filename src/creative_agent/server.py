@@ -414,7 +414,7 @@ def _generate_preview_variant(
 
 @mcp.tool()
 def build_creative(
-    format_id: str | dict[str, Any],
+    target_format_id: str | dict[str, Any],
     creative_manifest: dict[str, Any] | None = None,
     message: str | None = None,
     gemini_api_key: str | None = None,
@@ -422,7 +422,7 @@ def build_creative(
     """Transform or generate a creative manifest using AI.
 
     Args:
-        format_id: Format ID to generate (string or FormatId object with agent_url and id)
+        target_format_id: Format ID to generate (string or FormatId object with agent_url and id)
         creative_manifest: Source creative manifest with input assets (e.g., promoted_offerings for generative formats)
         message: Natural language instructions for transformation or generation
         gemini_api_key: User's Gemini API key for AI generation
@@ -431,11 +431,11 @@ def build_creative(
         ToolResult with creative_manifest in structured_content
     """
     try:
-        # Parse format_id
-        if isinstance(format_id, str):
-            fmt_id = FormatId(agent_url=AGENT_URL, id=format_id)
+        # Parse target_format_id
+        if isinstance(target_format_id, str):
+            fmt_id = FormatId(agent_url=AGENT_URL, id=target_format_id)
         else:
-            fmt_id = FormatId(**format_id)
+            fmt_id = FormatId(**target_format_id)
 
         # Get format definition
         fmt = get_format_by_id(fmt_id)
