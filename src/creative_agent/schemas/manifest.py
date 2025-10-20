@@ -22,12 +22,9 @@ class PreviewCreativeRequest(BaseModel):
     """Request for preview_creative task."""
 
     format_id: FormatId
-    creative_manifest: dict[str, Any]  # AdCP CreativeAsset structure
+    creative_manifest: dict[str, Any]  # AdCP CreativeAsset structure (including promoted_offerings if required)
     inputs: list[PreviewInput] | None = None
     template_id: str | None = None
-    brand_card: dict[str, Any] | None = None
-    promoted_products: dict[str, Any] | None = None
-    asset_filters: dict[str, Any] | None = None
 
 
 class PreviewHints(BaseModel):

@@ -48,7 +48,7 @@ class Assets(BaseModel):
     ] = None
 
 
-class Assets30(BaseModel):
+class Assets28(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
@@ -70,7 +70,7 @@ class Assets30(BaseModel):
     ] = None
 
 
-class Assets31(BaseModel):
+class Assets29(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
@@ -113,7 +113,7 @@ class TrackingEvent(Enum):
     player_collapse = "playerCollapse"
 
 
-class Assets32(BaseModel):
+class Assets30(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
@@ -140,7 +140,7 @@ class Assets32(BaseModel):
     ] = None
 
 
-class Assets33(BaseModel):
+class Assets31(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
@@ -167,7 +167,7 @@ class Assets33(BaseModel):
     ] = None
 
 
-class Assets34(BaseModel):
+class Assets32(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
@@ -177,7 +177,7 @@ class Assets34(BaseModel):
     ] = None
 
 
-class Assets35(BaseModel):
+class Assets33(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
@@ -187,7 +187,7 @@ class Assets35(BaseModel):
     ] = None
 
 
-class Assets36(BaseModel):
+class Assets34(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
@@ -203,7 +203,7 @@ class ModuleType(Enum):
     script = "script"
 
 
-class Assets37(BaseModel):
+class Assets35(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
@@ -242,7 +242,7 @@ class Security(BaseModel):
     ] = None
 
 
-class Assets38(BaseModel):
+class Assets36(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
@@ -276,7 +276,7 @@ class Assets38(BaseModel):
     ]
 
 
-class Assets39(BaseModel):
+class Assets37(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
@@ -306,7 +306,7 @@ class TrackingEvent14(Enum):
     unmute = "unmute"
 
 
-class Assets40(BaseModel):
+class Assets38(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
@@ -330,7 +330,7 @@ class Assets40(BaseModel):
     ] = None
 
 
-class Assets41(BaseModel):
+class Assets39(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
@@ -735,7 +735,7 @@ class AssetSelectors(BaseModel):
     ] = None
 
 
-class Assets42(BaseModel):
+class Assets40(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
@@ -820,17 +820,17 @@ class CreativeManifest(BaseModel):
             str,
             Union[
                 Assets,
-                Assets30,
-                Assets31,
-                Union[Assets32, Assets33],
+                Assets28,
+                Assets29,
+                Union[Assets30, Assets31],
+                Assets32,
+                Assets33,
                 Assets34,
                 Assets35,
                 Assets36,
                 Assets37,
-                Assets38,
-                Assets39,
-                Union[Assets40, Assets41],
-                Assets42,
+                Union[Assets38, Assets39],
+                Assets40,
             ],
         ],
         Field(
@@ -890,10 +890,4 @@ class PreviewCreativeRequest(BaseModel):
     template_id: Annotated[
         Optional[str],
         Field(description="Specific template ID for custom format rendering"),
-    ] = None
-    promoted_offerings: Annotated[
-        Optional[Any],
-        Field(
-            description="Circular reference to /schemas/v1/core/promoted-offerings.json"
-        ),
     ] = None
