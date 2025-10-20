@@ -11,13 +11,13 @@ from creative_agent.schemas_generated._schemas_v1_creative_preview_creative_requ
     Assets as ImageAsset,
 )
 from creative_agent.schemas_generated._schemas_v1_creative_preview_creative_request_json import (
-    Assets30 as VideoAsset,
+    Assets28 as VideoAsset,
 )
 from creative_agent.schemas_generated._schemas_v1_creative_preview_creative_request_json import (
-    Assets31 as UrlAsset,
+    Assets32 as TextAsset,
 )
 from creative_agent.schemas_generated._schemas_v1_creative_preview_creative_request_json import (
-    Assets34 as TextAsset,
+    Assets33 as UrlAsset,
 )
 from creative_agent.schemas_generated._schemas_v1_creative_preview_creative_request_json import (
     CreativeManifest,

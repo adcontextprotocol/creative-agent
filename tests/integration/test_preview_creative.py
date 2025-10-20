@@ -14,7 +14,7 @@ from creative_agent.schemas_generated._schemas_v1_creative_preview_creative_requ
     Assets as ImageAsset,
 )
 from creative_agent.schemas_generated._schemas_v1_creative_preview_creative_request_json import (
-    Assets31 as UrlAsset,
+    Assets33 as UrlAsset,
 )
 from creative_agent.schemas_generated._schemas_v1_creative_preview_creative_request_json import (
     CreativeManifest,
