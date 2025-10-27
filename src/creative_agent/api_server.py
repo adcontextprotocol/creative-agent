@@ -53,7 +53,7 @@ async def health() -> dict[str, str]:
 @app.get("/formats")
 async def list_formats() -> list[dict[str, Any]]:
     """List all available creative formats."""
-    return [fmt.model_dump(mode="json") for fmt in STANDARD_FORMATS]
+    return [fmt.model_dump(mode="json", exclude_none=True) for fmt in STANDARD_FORMATS]
 
 
 @app.get("/formats/{format_id}")
@@ -68,7 +68,7 @@ async def get_format(format_id: str) -> dict[str, Any]:
     fmt = get_format_by_id(fmt_id)
     if not fmt:
         raise HTTPException(status_code=404, detail=f"Format {format_id} not found")
-    result: dict[str, Any] = fmt.model_dump(mode="json")
+    result: dict[str, Any] = fmt.model_dump(mode="json", exclude_none=True)
     return result
 
 

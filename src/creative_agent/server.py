@@ -121,7 +121,7 @@ def list_creative_formats(
         capabilities_enum = [Capability(cap) for cap in AGENT_CAPABILITIES]
 
         # Convert core Format objects to response Format objects
-        response_formats = [ResponseFormat(**fmt.model_dump(mode="json", exclude_unset=True)) for fmt in formats]
+        response_formats = [ResponseFormat(**fmt.model_dump(mode="json", exclude_none=True)) for fmt in formats]
 
         response = ListCreativeFormatsResponse(
             formats=response_formats,
@@ -148,7 +148,7 @@ def list_creative_formats(
 
         return ToolResult(
             content=[TextContent(type="text", text=message)],
-            structured_content=response.model_dump(mode="json"),
+            structured_content=response.model_dump(mode="json", exclude_none=True),
         )
     except ValueError as e:
         error_response = {"error": f"Invalid input: {e}"}
@@ -322,7 +322,7 @@ def preview_creative(
 
         return ToolResult(
             content=[TextContent(type="text", text=message)],
-            structured_content=response.model_dump(mode="json"),
+            structured_content=response.model_dump(mode="json", exclude_none=True),
         )
     except ValueError as e:
         error_msg = f"Invalid input: {e}"
@@ -409,7 +409,7 @@ def _generate_preview_variant(
         input=input_echo,
     )
 
-    return preview.model_dump(mode="json")
+    return preview.model_dump(mode="json", exclude_none=True)
 
 
 @mcp.tool()
