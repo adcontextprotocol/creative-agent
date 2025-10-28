@@ -511,7 +511,7 @@ For Tigris-dependent tests, set environment variables in `.env`.
 
 ## License
 
-MIT License - see LICENSE file
+Apache 2.0 License - see LICENSE file
 
 ## Spec Reference
 
