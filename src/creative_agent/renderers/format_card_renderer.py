@@ -4,9 +4,36 @@ import html as html_module
 import json
 from typing import Any
 
+import bleach  # type: ignore[import-untyped]
 import markdown  # type: ignore[import-untyped]
 
 from .base import BaseRenderer
+
+# Allowed HTML tags and attributes for markdown content
+ALLOWED_TAGS = [
+    "p",
+    "br",
+    "strong",
+    "em",
+    "u",
+    "h1",
+    "h2",
+    "h3",
+    "h4",
+    "h5",
+    "h6",
+    "ul",
+    "ol",
+    "li",
+    "blockquote",
+    "code",
+    "pre",
+]
+ALLOWED_ATTRIBUTES = {
+    "a": ["href", "title"],
+    "code": ["class"],
+}
+ALLOWED_PROTOCOLS = ["http", "https", "mailto"]
 
 
 class FormatCardRenderer(BaseRenderer):
@@ -120,6 +147,27 @@ class FormatCardRenderer(BaseRenderer):
             "supported_macros": format_json.get("supported_macros", []),
         }
 
+    def _sanitize_markdown(self, markdown_text: str) -> str:
+        """Convert markdown to safe HTML, sanitizing any potentially dangerous content.
+
+        Args:
+            markdown_text: Markdown-formatted text
+
+        Returns:
+            Sanitized HTML string
+        """
+        # Convert markdown to HTML
+        html = markdown.markdown(markdown_text, extensions=["extra", "nl2br"])
+
+        # Sanitize HTML to prevent XSS
+        return bleach.clean(  # type: ignore[no-any-return]
+            html,
+            tags=ALLOWED_TAGS,
+            attributes=ALLOWED_ATTRIBUTES,
+            protocols=ALLOWED_PROTOCOLS,
+            strip=True,
+        )
+
     def _render_standard_card(
         self,
         format_obj: Any,
@@ -140,9 +188,9 @@ class FormatCardRenderer(BaseRenderer):
         Returns:
             HTML string
         """
-        # Convert description markdown to HTML
+        # Convert description markdown to safe HTML
         description = format_data.get("description", "")
-        description_html = markdown.markdown(description, extensions=["extra", "nl2br"])
+        description_html = self._sanitize_markdown(description)
 
         # Safe escape
         format_name = html_module.escape(format_data.get("name", "Format"))
@@ -275,9 +323,9 @@ class FormatCardRenderer(BaseRenderer):
         Returns:
             HTML string
         """
-        # Convert description markdown to HTML
+        # Convert description markdown to safe HTML
         description = format_data.get("description", "")
-        description_html = markdown.markdown(description, extensions=["extra", "nl2br"])
+        description_html = self._sanitize_markdown(description)
 
         # Safe escape
         format_name = html_module.escape(format_data.get("name", "Format"))

@@ -3,9 +3,38 @@
 import html as html_module
 from typing import Any
 
+import bleach  # type: ignore[import-untyped]
 import markdown  # type: ignore[import-untyped]
 
+from creative_agent.utils import sanitize_url
+
 from .base import BaseRenderer
+
+# Allowed HTML tags and attributes for markdown content
+ALLOWED_TAGS = [
+    "p",
+    "br",
+    "strong",
+    "em",
+    "u",
+    "h1",
+    "h2",
+    "h3",
+    "h4",
+    "h5",
+    "h6",
+    "ul",
+    "ol",
+    "li",
+    "blockquote",
+    "code",
+    "pre",
+]
+ALLOWED_ATTRIBUTES = {
+    "a": ["href", "title"],
+    "code": ["class"],
+}
+ALLOWED_PROTOCOLS = ["http", "https", "mailto"]
 
 
 class ProductCardRenderer(BaseRenderer):
@@ -86,6 +115,27 @@ class ProductCardRenderer(BaseRenderer):
             "primary_asset_type": get_text_content("primary_asset_type"),
         }
 
+    def _sanitize_markdown(self, markdown_text: str) -> str:
+        """Convert markdown to safe HTML, sanitizing any potentially dangerous content.
+
+        Args:
+            markdown_text: Markdown-formatted text
+
+        Returns:
+            Sanitized HTML string
+        """
+        # Convert markdown to HTML
+        html = markdown.markdown(markdown_text, extensions=["extra", "nl2br"])
+
+        # Sanitize HTML to prevent XSS
+        return bleach.clean(  # type: ignore[no-any-return]
+            html,
+            tags=ALLOWED_TAGS,
+            attributes=ALLOWED_ATTRIBUTES,
+            protocols=ALLOWED_PROTOCOLS,
+            strip=True,
+        )
+
     def _render_standard_card(
         self,
         format_obj: Any,
@@ -106,12 +156,14 @@ class ProductCardRenderer(BaseRenderer):
         Returns:
             HTML string
         """
-        # Get image URL
+        # Get image URL and sanitize it
         image_url = product_data.get("image_url")
+        if image_url:
+            image_url = sanitize_url(image_url)
 
-        # Convert description markdown to HTML
+        # Convert description markdown to safe HTML
         description = product_data.get("description", "")
-        description_html = markdown.markdown(description, extensions=["extra", "nl2br"])
+        description_html = self._sanitize_markdown(description)
 
         # Format pricing
         price_str = ""
@@ -293,12 +345,14 @@ class ProductCardRenderer(BaseRenderer):
         Returns:
             HTML string
         """
-        # Get image URL
+        # Get image URL and sanitize it
         image_url = product_data.get("image_url")
+        if image_url:
+            image_url = sanitize_url(image_url)
 
-        # Convert description markdown to HTML
+        # Convert description markdown to safe HTML
         description = product_data.get("description", "")
-        description_html = markdown.markdown(description, extensions=["extra", "nl2br"])
+        description_html = self._sanitize_markdown(description)
 
         # Format pricing
         price_str = ""
