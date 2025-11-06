@@ -214,3 +214,8 @@ __marimo__/
 
 # Schema generation temporary files
 temp_resolved_schemas/
+
+# Test output files
+output/
+PREVIEW_RENDERING_ANALYSIS.md
+new_formats.txt
