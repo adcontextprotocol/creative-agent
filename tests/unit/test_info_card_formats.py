@@ -1,11 +1,11 @@
-"""Tests for meta format definitions."""
+"""Tests for info card format definitions."""
 
-from creative_agent.data.standard_formats import AGENT_URL, META_FORMATS, filter_formats
+from creative_agent.data.standard_formats import AGENT_URL, INFO_CARD_FORMATS, filter_formats
 from creative_agent.schemas_generated._schemas_v1_core_format_json import AssetType, FormatId, Type
 
 
-class TestMetaFormatsExist:
-    """Test that all meta formats are properly defined."""
+class TestInfoCardFormatsExist:
+    """Test that all info card formats are properly defined."""
 
     def test_product_card_standard_exists(self):
         """Product card standard format is defined."""
@@ -188,8 +188,8 @@ class TestFormatCardDetailed:
         assert asset.required is True
 
 
-class TestMetaFormatsFiltering:
-    """Test filtering behavior with meta formats."""
+class TestInfoCardFormatsFiltering:
+    """Test filtering behavior with info card formats."""
 
     def test_filter_by_300x400_dimensions(self):
         """Filter by 300x400 returns both standard card formats."""
@@ -200,7 +200,7 @@ class TestMetaFormatsFiltering:
         assert "format_card_standard" in result_ids
 
     def test_filter_by_name_card(self):
-        """Name search for 'card' returns all meta formats."""
+        """Name search for 'card' returns all info card formats."""
         results = filter_formats(name_search="card")
         meta_format_ids = {fmt.format_id.id for fmt in results if "card" in fmt.format_id.id}
         assert "product_card_standard" in meta_format_ids
@@ -227,15 +227,15 @@ class TestMetaFormatsFiltering:
         assert "product_card_detailed" in result_ids
 
 
-class TestMetaFormatsCount:
-    """Test that meta formats are included in total count."""
+class TestInfoCardFormatsCount:
+    """Test that info card formats are included in total count."""
 
-    def test_meta_formats_list_has_four_items(self):
-        """META_FORMATS constant has exactly 4 formats."""
-        assert len(META_FORMATS) == 4
+    def test_info_card_formats_list_has_four_items(self):
+        """INFO_CARD_FORMATS constant has exactly 4 formats."""
+        assert len(INFO_CARD_FORMATS) == 4
 
-    def test_all_formats_includes_meta(self):
-        """All formats includes meta formats."""
+    def test_all_formats_includes_info_cards(self):
+        """All formats includes info card formats."""
         all_formats = filter_formats()
         meta_formats = [fmt for fmt in all_formats if "card" in fmt.format_id.id]
         assert len(meta_formats) >= 4

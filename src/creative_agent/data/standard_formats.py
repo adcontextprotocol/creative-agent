@@ -986,8 +986,8 @@ DOOH_FORMATS = [
     ),
 ]
 
-# Meta Formats - For visualizing products and formats in user interfaces
-META_FORMATS = [
+# Info Card Formats - For visualizing products and formats in user interfaces
+INFO_CARD_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("product_card_standard"),
         name="Product Card - Standard",
@@ -1183,7 +1183,7 @@ STANDARD_FORMATS = (
     + NATIVE_FORMATS
     + AUDIO_FORMATS
     + DOOH_FORMATS
-    + META_FORMATS
+    + INFO_CARD_FORMATS
 )
 
 

@@ -207,10 +207,10 @@ class TestNoFilters:
     def test_no_filters_returns_all_formats(self):
         """No filters returns all standard formats."""
         results = filter_formats()
-        # Should return all formats including audio, video, display, native, dooh, meta
+        # Should return all formats including audio, video, display, native, dooh, info card
         assert (
             len(results) == 42
-        )  # 7 generative + 9 video + 7 display_image + 6 display_html + 2 native + 3 audio + 4 dooh + 4 meta
+        )  # 7 generative + 9 video + 7 display_image + 6 display_html + 2 native + 3 audio + 4 dooh + 4 info card
         # Verify we have multiple types
         types = {fmt.type for fmt in results}
         assert Type.audio in types
