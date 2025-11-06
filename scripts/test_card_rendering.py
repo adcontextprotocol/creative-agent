@@ -42,28 +42,34 @@ def test_product_card_standard() -> None:
     formats = filter_formats(format_ids=[format_id])
     format_obj = formats[0]
 
-    # Create sample manifest
+    # Create sample manifest with media product
     manifest = {
         "format_id": {"agent_url": "https://creative.adcontextprotocol.org", "id": "product_card_standard"},
         "assets": {
-            "product": {
-                "offering": {
-                    "name": "Premium Wireless Headphones",
-                    "description": "**Immersive Sound Quality**\n\nExperience crystal-clear audio with active noise cancellation and 30-hour battery life.\n\n*Perfect for music lovers and professionals.*",
-                    "price": 299.99,
-                    "currency": "USD",
-                    "images": ["https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400"],
-                    "url": "https://example.com/headphones",
-                    "categories": ["electronics", "audio"],
-                },
-                "brand": {
-                    "name": "AudioTech",
-                    "colors": {
-                        "primary": "#FF6B6B",
-                        "text": "#2C3E50",
-                    },
-                },
-            }
+            "product_image": {
+                "url": "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=800&h=400&fit=crop",
+            },
+            "product_name": {
+                "content": "Homepage Leaderboard",
+            },
+            "product_description": {
+                "content": "**Premium above-the-fold placement**\n\nHigh-impact display ad at the top of our homepage. Perfect for brand awareness campaigns.\n\n*Average CTR: 2.5%*",
+            },
+            "pricing_model": {
+                "content": "CPM",
+            },
+            "pricing_amount": {
+                "content": "15.00",
+            },
+            "pricing_currency": {
+                "content": "USD",
+            },
+            "delivery_type": {
+                "content": "guaranteed",
+            },
+            "primary_asset_type": {
+                "content": "display",
+            },
         },
     }
 
@@ -93,47 +99,54 @@ def test_product_card_detailed() -> None:
     formats = filter_formats(format_ids=[format_id])
     format_obj = formats[0]
 
-    # Create sample manifest with multiple images
+    # Create sample manifest with media product
     manifest = {
         "format_id": {"agent_url": "https://creative.adcontextprotocol.org", "id": "product_card_detailed"},
         "assets": {
-            "product": {
-                "offering": {
-                    "name": "Professional Camera Kit",
-                    "description": """## Full-Frame Excellence
+            "product_image": {
+                "url": "https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=800&h=400&fit=crop",
+            },
+            "product_name": {
+                "content": "Video Pre-Roll Package",
+            },
+            "product_description": {
+                "content": """## Premium Video Advertising
 
-Capture stunning images with our professional camera system featuring:
+Engage your audience with compelling video content across our streaming network.
 
-- **42 Megapixel Sensor** - Incredible detail and dynamic range
-- **5-Axis Image Stabilization** - Sharp shots even in low light
-- **4K Video Recording** - Cinema-quality footage at 60fps
-- **Weather-Sealed Body** - Built to withstand the elements
+### Features
+
+- **15-30 second spots** - Flexible duration options
+- **HD Quality** - 1920x1080 video playback
+- **Skippable after 5s** - Industry standard format
+- **Completion rate: 75%** - High viewer engagement
 
 ### Perfect For
 
-Professional photographers, content creators, and serious enthusiasts who demand the best image quality.
+Brand awareness campaigns, product launches, and storytelling. Our streaming audience is highly engaged with premium content.
 
-### What's Included
+### Inventory Details
 
-Complete kit with body, 24-70mm lens, battery grip, and professional carrying case.""",
-                    "price": 3499.00,
-                    "currency": "USD",
-                    "images": [
-                        "https://images.unsplash.com/photo-1606980663614-0b7f2f4f3b66?w=800",
-                        "https://images.unsplash.com/photo-1585459895799-12cbde16ad67?w=800",
-                        "https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=800",
-                    ],
-                    "url": "https://example.com/camera-kit",
-                    "categories": ["photography", "professional", "cameras"],
-                },
-                "brand": {
-                    "name": "VisionPro",
-                    "colors": {
-                        "primary": "#1E40AF",
-                        "text": "#111827",
-                    },
-                },
-            }
+- Over 5M monthly video views
+- Demographics: 25-54, 60% mobile
+- Categories: Entertainment, News, Sports
+- Geographic targeting available""",
+            },
+            "pricing_model": {
+                "content": "CPM",
+            },
+            "pricing_amount": {
+                "content": "25.00",
+            },
+            "pricing_currency": {
+                "content": "USD",
+            },
+            "delivery_type": {
+                "content": "bidded",
+            },
+            "primary_asset_type": {
+                "content": "video",
+            },
         },
     }
 

@@ -992,16 +992,72 @@ META_FORMATS = [
         format_id=create_format_id("product_card_standard"),
         name="Product Card - Standard",
         type=Type.display,
-        description="Standard visual card (300x400px) for displaying products in user interfaces",
+        description="Standard visual card (300x400px) for displaying ad inventory products",
         supported_macros=COMMON_MACROS,
         renders=[create_fixed_render(300, 400)],
         assets_required=[
             AssetsRequired(
-                asset_id="product",
-                asset_type=AssetType.promoted_offerings,
+                asset_id="product_image",
+                asset_type=AssetType.image,
                 required=True,
                 requirements={
-                    "description": "Product data to visualize on the card",
+                    "description": "Primary product image or placement preview",
+                },
+            ),
+            AssetsRequired(
+                asset_id="product_name",
+                asset_type=AssetType.text,
+                required=True,
+                requirements={
+                    "description": "Display name of the product (e.g., 'Homepage Leaderboard')",
+                },
+            ),
+            AssetsRequired(
+                asset_id="product_description",
+                asset_type=AssetType.text,
+                required=True,
+                requirements={
+                    "description": "Short description of the product (supports markdown)",
+                },
+            ),
+            AssetsRequired(
+                asset_id="pricing_model",
+                asset_type=AssetType.text,
+                required=False,
+                requirements={
+                    "description": "Pricing model (e.g., 'CPM', 'flat_rate', 'CPC')",
+                },
+            ),
+            AssetsRequired(
+                asset_id="pricing_amount",
+                asset_type=AssetType.text,
+                required=False,
+                requirements={
+                    "description": "Price amount (e.g., '15.00')",
+                },
+            ),
+            AssetsRequired(
+                asset_id="pricing_currency",
+                asset_type=AssetType.text,
+                required=False,
+                requirements={
+                    "description": "Currency code (e.g., 'USD')",
+                },
+            ),
+            AssetsRequired(
+                asset_id="delivery_type",
+                asset_type=AssetType.text,
+                required=False,
+                requirements={
+                    "description": "Delivery type: 'guaranteed' or 'bidded'",
+                },
+            ),
+            AssetsRequired(
+                asset_id="primary_asset_type",
+                asset_type=AssetType.text,
+                required=False,
+                requirements={
+                    "description": "Primary asset type: 'display', 'video', 'audio', 'native'",
                 },
             ),
         ],
@@ -1015,11 +1071,67 @@ META_FORMATS = [
         renders=[create_responsive_render()],
         assets_required=[
             AssetsRequired(
-                asset_id="product",
-                asset_type=AssetType.promoted_offerings,
+                asset_id="product_image",
+                asset_type=AssetType.image,
                 required=True,
                 requirements={
-                    "description": "Product data with full specifications for detailed card",
+                    "description": "Primary product image or placement preview",
+                },
+            ),
+            AssetsRequired(
+                asset_id="product_name",
+                asset_type=AssetType.text,
+                required=True,
+                requirements={
+                    "description": "Display name of the product (e.g., 'Homepage Leaderboard')",
+                },
+            ),
+            AssetsRequired(
+                asset_id="product_description",
+                asset_type=AssetType.text,
+                required=True,
+                requirements={
+                    "description": "Detailed description of the product (supports markdown)",
+                },
+            ),
+            AssetsRequired(
+                asset_id="pricing_model",
+                asset_type=AssetType.text,
+                required=False,
+                requirements={
+                    "description": "Pricing model (e.g., 'CPM', 'flat_rate', 'CPC')",
+                },
+            ),
+            AssetsRequired(
+                asset_id="pricing_amount",
+                asset_type=AssetType.text,
+                required=False,
+                requirements={
+                    "description": "Price amount (e.g., '15.00')",
+                },
+            ),
+            AssetsRequired(
+                asset_id="pricing_currency",
+                asset_type=AssetType.text,
+                required=False,
+                requirements={
+                    "description": "Currency code (e.g., 'USD')",
+                },
+            ),
+            AssetsRequired(
+                asset_id="delivery_type",
+                asset_type=AssetType.text,
+                required=False,
+                requirements={
+                    "description": "Delivery type: 'guaranteed' or 'bidded'",
+                },
+            ),
+            AssetsRequired(
+                asset_id="primary_asset_type",
+                asset_type=AssetType.text,
+                required=False,
+                requirements={
+                    "description": "Primary asset type: 'display', 'video', 'audio', 'native'",
                 },
             ),
         ],

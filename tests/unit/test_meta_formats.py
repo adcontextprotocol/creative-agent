@@ -63,17 +63,31 @@ class TestProductCardStandard:
         assert fmt.renders[0].dimensions.responsive.width is False
         assert fmt.renders[0].dimensions.responsive.height is False
 
-    def test_requires_product_asset(self):
-        """Product card standard requires promoted_offerings asset."""
+    def test_requires_product_assets(self):
+        """Product card standard requires individual product assets."""
         format_id = FormatId(agent_url=AGENT_URL, id="product_card_standard")
         results = filter_formats(format_ids=[format_id])
         fmt = results[0]
         assert fmt.assets_required
-        assert len(fmt.assets_required) == 1
-        asset = fmt.assets_required[0]
-        assert asset.asset_id == "product"
-        assert asset.asset_type == AssetType.promoted_offerings
-        assert asset.required is True
+        assert len(fmt.assets_required) == 8
+
+        # Check required assets
+        asset_ids = {asset.asset_id for asset in fmt.assets_required}
+        assert "product_image" in asset_ids
+        assert "product_name" in asset_ids
+        assert "product_description" in asset_ids
+
+        # Check asset types
+        asset_type_map = {asset.asset_id: asset.asset_type for asset in fmt.assets_required}
+        assert asset_type_map["product_image"] == AssetType.image
+        assert asset_type_map["product_name"] == AssetType.text
+        assert asset_type_map["product_description"] == AssetType.text
+
+        # Check required fields
+        required_asset_ids = {asset.asset_id for asset in fmt.assets_required if asset.required}
+        assert "product_image" in required_asset_ids
+        assert "product_name" in required_asset_ids
+        assert "product_description" in required_asset_ids
 
 
 class TestProductCardDetailed:
@@ -91,17 +105,31 @@ class TestProductCardDetailed:
         assert fmt.renders[0].dimensions.responsive.width is True
         assert fmt.renders[0].dimensions.responsive.height is True
 
-    def test_requires_product_asset(self):
-        """Product card detailed requires promoted_offerings asset."""
+    def test_requires_product_assets(self):
+        """Product card detailed requires individual product assets."""
         format_id = FormatId(agent_url=AGENT_URL, id="product_card_detailed")
         results = filter_formats(format_ids=[format_id])
         fmt = results[0]
         assert fmt.assets_required
-        assert len(fmt.assets_required) == 1
-        asset = fmt.assets_required[0]
-        assert asset.asset_id == "product"
-        assert asset.asset_type == AssetType.promoted_offerings
-        assert asset.required is True
+        assert len(fmt.assets_required) == 8
+
+        # Check required assets
+        asset_ids = {asset.asset_id for asset in fmt.assets_required}
+        assert "product_image" in asset_ids
+        assert "product_name" in asset_ids
+        assert "product_description" in asset_ids
+
+        # Check asset types
+        asset_type_map = {asset.asset_id: asset.asset_type for asset in fmt.assets_required}
+        assert asset_type_map["product_image"] == AssetType.image
+        assert asset_type_map["product_name"] == AssetType.text
+        assert asset_type_map["product_description"] == AssetType.text
+
+        # Check required fields
+        required_asset_ids = {asset.asset_id for asset in fmt.assets_required if asset.required}
+        assert "product_image" in required_asset_ids
+        assert "product_name" in required_asset_ids
+        assert "product_description" in required_asset_ids
 
 
 class TestFormatCardStandard:
@@ -189,9 +217,9 @@ class TestMetaFormatsFiltering:
         assert "product_card_detailed" in result_ids
         assert "format_card_detailed" in result_ids
 
-    def test_filter_by_promoted_offerings_asset(self):
-        """Filter by promoted_offerings asset type returns product cards."""
-        results = filter_formats(asset_types=[AssetType.promoted_offerings])
+    def test_filter_by_image_asset(self):
+        """Filter by image asset type returns product cards."""
+        results = filter_formats(asset_types=[AssetType.image])
         product_cards = [fmt for fmt in results if "product_card" in fmt.format_id.id]
         assert len(product_cards) == 2
         result_ids = {fmt.format_id.id for fmt in product_cards}

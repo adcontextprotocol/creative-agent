@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Format Card - Standard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            width: 300px;
+            height: 400px;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+        .format-card {
+            width: 100%;
+            height: 100%;
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .format-preview {
+            width: 100%;
+            height: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            text-align: center;
+            padding: 20px;
+            position: relative;
+        }
+        .format-info {
+            padding: 12px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .format-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #111;
+            margin-bottom: 4px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .format-meta {
+            font-size: 11px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        .format-meta span {
+            margin-right: 12px;
+        }
+        .format-description {
+            font-size: 12px;
+            color: #666;
+            line-height: 1.4;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            flex: 1;
+        }
+        .format-description p {
+            margin: 0;
+        }
+        .preview-label {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 4px 8px;
+            font-size: 10px;
+            border-radius: 4px;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+    <div class="format-card">
+        <div class="format-preview">
+            <div>
+                <div style="font-size: 24px; margin-bottom: 8px;">300x250</div>
+                <div style="font-size: 12px; opacity: 0.9;">display</div>
+            </div>
+            <div class="preview-label">Desktop</div>
+        </div>
+        <div class="format-info">
+            <div class="format-name">Medium Rectangle - Image</div>
+            <div class="format-meta">
+                <span><strong>Type:</strong> display</span>
+                <span><strong>Size:</strong> 300x250</span>
+            </div>
+            <div class="format-description"><p><strong>Standard IAB display format</strong></p>
+<p>The most popular banner size for web advertising. Perfect for sidebar placements and in-content ads.</p></div>
+        </div>
+    </div>
+</body>
+</html>

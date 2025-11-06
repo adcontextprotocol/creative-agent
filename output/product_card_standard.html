@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Card - Standard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            width: 300px;
+            height: 400px;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+        .product-card {
+            width: 100%;
+            height: 100%;
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .product-image {
+            width: 100%;
+            height: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .product-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .product-image.placeholder {
+            color: rgba(255,255,255,0.7);
+            font-size: 12px;
+        }
+        .product-info {
+            padding: 12px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .product-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #111;
+            margin-bottom: 6px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .badges {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .badge-guaranteed {
+            background: #e6f7e6;
+            color: #2d662d;
+        }
+        .badge-bidded {
+            background: #fff4e6;
+            color: #996633;
+        }
+        .badge-asset-type {
+            background: #e6f0ff;
+            color: #2563eb;
+        }
+        .product-description {
+            font-size: 11px;
+            color: #666;
+            line-height: 1.4;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            flex: 1;
+        }
+        .product-description p {
+            margin: 0;
+        }
+        .price {
+            font-size: 13px;
+            font-weight: 700;
+            color: #111;
+            margin-top: 8px;
+        }
+        .preview-label {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 4px 8px;
+            font-size: 10px;
+            border-radius: 4px;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+    <div class="product-card">
+        <div class="product-image">
+            <img src="https://images.unsplash.com/photo-1557804506-669a67965ba0?w=800&amp;h=400&amp;fit=crop" alt="Homepage Leaderboard">
+            <div class="preview-label">Desktop</div>
+        </div>
+        <div class="product-info">
+            <div class="product-name">Homepage Leaderboard</div>
+            <div class="badges"><span class="badge badge-guaranteed">guaranteed</span><span class="badge badge-asset-type">display</span></div>
+            <div class="product-description"><p><strong>Premium above-the-fold placement</strong></p>
+<p>High-impact display ad at the top of our homepage. Perfect for brand awareness campaigns.</p>
+<p><em>Average CTR: 2.5%</em></p></div>
+            <div class="price">CPM $15.00 USD</div>
+        </div>
+    </div>
+</body>
+</html>

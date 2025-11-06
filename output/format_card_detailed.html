@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Format Card - Detailed</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f9f9f9;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .format-card {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .format-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            position: relative;
+        }
+        .format-title {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+        .format-meta {
+            font-size: 16px;
+            opacity: 0.95;
+        }
+        .format-meta span {
+            margin-right: 20px;
+        }
+        .format-dimensions {
+            position: absolute;
+            top: 20px;
+            right: 40px;
+            font-size: 48px;
+            font-weight: 700;
+            opacity: 0.3;
+        }
+        .format-content {
+            padding: 32px 40px;
+        }
+        .section {
+            margin-bottom: 32px;
+        }
+        .section:last-child {
+            margin-bottom: 0;
+        }
+        h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #111;
+            margin-bottom: 16px;
+        }
+        .format-description {
+            font-size: 16px;
+            line-height: 1.6;
+            color: #333;
+        }
+        .format-description p {
+            margin-bottom: 12px;
+        }
+        .assets-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        .assets-table th {
+            text-align: left;
+            padding: 12px;
+            background: #f5f5f5;
+            font-weight: 600;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        .assets-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .assets-table code {
+            background: #f5f5f5;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+        }
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .badge-required {
+            background: #fee;
+            color: #c33;
+        }
+        .badge-optional {
+            background: #eff;
+            color: #369;
+        }
+        .macros {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .macros code {
+            background: #f5f5f5;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+        }
+        .more {
+            color: #666;
+            font-size: 13px;
+        }
+        .preview-label {
+            position: absolute;
+            top: 20px;
+            left: 40px;
+            background: rgba(0,0,0,0.3);
+            color: white;
+            padding: 6px 12px;
+            font-size: 12px;
+            border-radius: 6px;
+        }
+    </style>
+</head>
+<body>
+    <div class="format-card">
+        <div class="format-header">
+            <div class="preview-label">Desktop</div>
+            <div class="format-dimensions">1920x1080</div>
+            <div class="format-title">Full HD Video - 1920x1080</div>
+            <div class="format-meta">
+                <span><strong>Type:</strong> video</span>
+                <span><strong>Dimensions:</strong> 1920x1080</span>
+            </div>
+        </div>
+        <div class="format-content">
+            <div class="section">
+                <h3>Description</h3>
+                <div class="format-description"><h2>Professional Video Format</h2>
+<p>High-quality video advertising format optimized for desktop and CTV platforms.</p>
+<h3>Technical Specifications</h3>
+<ul>
+<li><strong>Resolution:</strong> 1920x1080 (16:9 aspect ratio)</li>
+<li><strong>Format:</strong> MP4, MOV, or WebM</li>
+<li><strong>Max Duration:</strong> 30 seconds (recommended)</li>
+<li><strong>File Size:</strong> Up to 50MB</li>
+</ul>
+<h3>Best Practices</h3>
+<ol>
+<li>Use high-quality source footage at native resolution</li>
+<li>Encode with H.264 codec for maximum compatibility</li>
+<li>Include burned-in captions for accessibility</li>
+<li>Test playback across multiple devices</li>
+</ol>
+<h3>Common Use Cases</h3>
+<ul>
+<li>Pre-roll video ads on streaming platforms</li>
+<li>In-stream video content on publisher sites</li>
+<li>Connected TV (CTV) advertising campaigns</li>
+<li>High-impact video storytelling</li>
+</ul></div>
+            </div>
+            <div class="section"><h3>Assets Required</h3><table class="assets-table"><thead><tr><th>Asset ID</th><th>Type</th><th>Required</th><th>Description</th></tr></thead><tbody><tr>
+                    <td><code>video_file</code></td>
+                    <td><code>video</code></td>
+                    <td><span class="badge badge-required">Required</span></td>
+                    <td>High-definition video file at 1920x1080 resolution</td>
+                </tr></tbody></table></div>
+            <div class="section"><h3>Supported Macros</h3><div class="macros"><code class="macro">MEDIA_BUY_ID</code> <code class="macro">CREATIVE_ID</code> <code class="macro">CACHEBUSTER</code> <code class="macro">CLICK_URL</code> <code class="macro">IMPRESSION_URL</code> <code class="macro">DEVICE_TYPE</code> <code class="macro">VIDEO_ID</code> <code class="macro">POD_POSITION</code> <code class="macro">CONTENT_GENRE</code> <code class="macro">PLAYER_SIZE</code> <span class="more">+4 more</span></div></div>
+        </div>
+    </div>
+</body>
+</html>
