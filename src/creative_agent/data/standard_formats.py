@@ -55,6 +55,19 @@ def create_fixed_render(width: int, height: int, role: str = "primary") -> Rende
     )
 
 
+def create_responsive_render(role: str = "primary") -> Render:
+    """Create a render with responsive dimensions."""
+    return Render(
+        role=role,
+        dimensions=Dimensions(
+            width=None,
+            height=None,
+            responsive=Responsive(width=True, height=True),
+            unit=Unit.px,
+        ),
+    )
+
+
 # Generative Formats - AI-powered creative generation
 # These use promoted_offerings asset type which provides brand context and product info
 GENERATIVE_FORMATS = [
@@ -973,6 +986,82 @@ DOOH_FORMATS = [
     ),
 ]
 
+# Meta Formats - For visualizing products and formats in user interfaces
+META_FORMATS = [
+    CreativeFormat(
+        format_id=create_format_id("product_card_standard"),
+        name="Product Card - Standard",
+        type=Type.display,
+        description="Standard visual card (300x400px) for displaying products in user interfaces",
+        supported_macros=COMMON_MACROS,
+        renders=[create_fixed_render(300, 400)],
+        assets_required=[
+            AssetsRequired(
+                asset_id="product",
+                asset_type=AssetType.promoted_offerings,
+                required=True,
+                requirements={
+                    "description": "Product data to visualize on the card",
+                },
+            ),
+        ],
+    ),
+    CreativeFormat(
+        format_id=create_format_id("product_card_detailed"),
+        name="Product Card - Detailed",
+        type=Type.display,
+        description="Detailed card with carousel and full specifications for rich product presentation",
+        supported_macros=COMMON_MACROS,
+        renders=[create_responsive_render()],
+        assets_required=[
+            AssetsRequired(
+                asset_id="product",
+                asset_type=AssetType.promoted_offerings,
+                required=True,
+                requirements={
+                    "description": "Product data with full specifications for detailed card",
+                },
+            ),
+        ],
+    ),
+    CreativeFormat(
+        format_id=create_format_id("format_card_standard"),
+        name="Format Card - Standard",
+        type=Type.display,
+        description="Standard visual card (300x400px) for displaying creative formats in user interfaces",
+        supported_macros=COMMON_MACROS,
+        renders=[create_fixed_render(300, 400)],
+        assets_required=[
+            AssetsRequired(
+                asset_id="format",
+                asset_type=AssetType.text,
+                required=True,
+                requirements={
+                    "description": "Creative format specification to visualize on the card",
+                },
+            ),
+        ],
+    ),
+    CreativeFormat(
+        format_id=create_format_id("format_card_detailed"),
+        name="Format Card - Detailed",
+        type=Type.display,
+        description="Detailed card with carousel and full specifications for rich format documentation",
+        supported_macros=COMMON_MACROS,
+        renders=[create_responsive_render()],
+        assets_required=[
+            AssetsRequired(
+                asset_id="format",
+                asset_type=AssetType.text,
+                required=True,
+                requirements={
+                    "description": "Creative format specification with full details for detailed card",
+                },
+            ),
+        ],
+    ),
+]
+
 # Combine all formats
 STANDARD_FORMATS = (
     GENERATIVE_FORMATS
@@ -982,6 +1071,7 @@ STANDARD_FORMATS = (
     + NATIVE_FORMATS
     + AUDIO_FORMATS
     + DOOH_FORMATS
+    + META_FORMATS
 )
 
 
