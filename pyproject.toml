@@ -14,6 +14,8 @@ dependencies = [
     "httpx>=0.28.1",
     "pydantic>=2.0.0",
     "boto3>=1.35.0",
+    "markdown>=3.6",
+    "bleach>=6.3.0",
 ]
 
 [project.scripts]
@@ -43,6 +45,8 @@ dev = [
     # Type stubs
     "boto3-stubs[s3]>=1.35.0",
     "types-pillow>=10.0.0",
+    "types-markdown>=3.6",
+    "types-bleach>=6.3.0.20251029",
 ]
 
 [tool.ruff]

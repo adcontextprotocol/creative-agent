@@ -1,11 +1,12 @@
 """Tigris storage for preview HTML and assets."""
 
-import html as html_module
 import os
 from typing import Any
 
 import boto3
 from botocore.client import Config
+
+from .renderers import FormatCardRenderer, ImageRenderer, ProductCardRenderer
 
 # Get Tigris credentials from environment (set by Fly.io)
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
@@ -95,16 +96,10 @@ def upload_preview_html(preview_id: str, variant_name: str, html_content: str) -
         raise ValueError(f"Unexpected error during S3 upload: {e}") from e
 
 
-def sanitize_url(url: str) -> str:
-    """Sanitize URL for safe HTML insertion."""
-    # Block javascript: and data: URIs
-    if url.lower().startswith(("javascript:", "data:", "vbscript:")):
-        return "#"
-    return html_module.escape(url)
-
-
 def generate_preview_html(format_obj: Any, manifest: Any, input_set: Any) -> str:
     """Generate HTML preview content for a creative manifest.
+
+    Routes to specialized renderers based on format type.
 
     Args:
         format_obj: Format definition
@@ -114,122 +109,16 @@ def generate_preview_html(format_obj: Any, manifest: Any, input_set: Any) -> str
     Returns:
         HTML string ready to display in iframe
     """
-    # Extract dimensions from first render if available
-    width = 300
-    height = 250
-    if format_obj.renders and len(format_obj.renders) > 0:
-        first_render = format_obj.renders[0]
-        if first_render.dimensions:
-            if first_render.dimensions.width is not None:
-                width = int(first_render.dimensions.width)
-            if first_render.dimensions.height is not None:
-                height = int(first_render.dimensions.height)
+    # Get format ID to determine which renderer to use
+    format_id = format_obj.format_id.id if hasattr(format_obj.format_id, "id") else str(format_obj.format_id)
 
-    # Get primary image asset
-    image_url = None
-
-    # Handle manifest as dict, Pydantic object, or None
-    if manifest is None:
-        manifest_assets = {}
-    elif isinstance(manifest, dict):
-        manifest_assets = manifest.get("assets", {})
-    elif hasattr(manifest, "assets"):
-        manifest_assets = manifest.assets
+    # Route to specialized renderers
+    if format_id in ("product_card_standard", "product_card_detailed"):
+        renderer: ImageRenderer | ProductCardRenderer | FormatCardRenderer = ProductCardRenderer()
+    elif format_id in ("format_card_standard", "format_card_detailed"):
+        renderer = FormatCardRenderer()
     else:
-        raise TypeError(f"Invalid manifest type: {type(manifest)}")
+        # Default to image renderer for all other formats
+        renderer = ImageRenderer()
 
-    # Build asset_id -> asset_type map from format specification
-    asset_type_map = {}
-    if hasattr(format_obj, "assets_required") and format_obj.assets_required:
-        for required_asset in format_obj.assets_required:
-            asset_id = getattr(required_asset, "asset_id", None)
-            asset_type = getattr(required_asset, "asset_type", None)
-            if asset_id and asset_type:
-                # Handle enum or string asset_type
-                if hasattr(asset_type, "value"):
-                    asset_type_map[asset_id] = asset_type.value
-                else:
-                    asset_type_map[asset_id] = str(asset_type)
-
-    # Find first image asset using format specification
-    for asset_id, asset_data in manifest_assets.items():
-        if isinstance(asset_data, dict) and asset_type_map.get(asset_id) == "image":
-            image_url = asset_data.get("url")
-            break
-
-    # Get click URL using format specification
-    click_url = None
-    for asset_id, asset_data in manifest_assets.items():
-        if isinstance(asset_data, dict) and asset_type_map.get(asset_id) == "url":
-            click_url = asset_data.get("url")
-            break
-
-    # Generate simple HTML preview
-    html = f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{format_obj.name} - {input_set.name}</title>
-    <style>
-        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-        body {{
-            width: {width}px;
-            height: {height}px;
-            overflow: hidden;
-            font-family: Arial, sans-serif;
-        }}
-        .creative-container {{
-            width: 100%;
-            height: 100%;
-            position: relative;
-            cursor: pointer;
-        }}
-        .creative-container img {{
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }}
-        .preview-label {{
-            position: absolute;
-            top: 5px;
-            left: 5px;
-            background: rgba(0,0,0,0.7);
-            color: white;
-            padding: 2px 6px;
-            font-size: 10px;
-            border-radius: 3px;
-        }}
-    </style>
-</head>
-<body>
-    <div class="creative-container" onclick="handleClick()">
-"""
-
-    if image_url:
-        safe_image_url = sanitize_url(image_url)
-        safe_format_name = html_module.escape(format_obj.name)
-        html += f'        <img src="{safe_image_url}" alt="{safe_format_name}">\n'
-    else:
-        safe_format_name = html_module.escape(format_obj.name)
-        html += f'        <div style="background: #f0f0f0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #666;">{safe_format_name}</div>\n'
-
-    safe_input_name = html_module.escape(input_set.name)
-    html += f"""        <div class="preview-label">{safe_input_name}</div>
-    </div>
-    <script>
-        function handleClick() {{
-"""
-
-    if click_url:
-        safe_click_url = sanitize_url(click_url)
-        html += f'            window.open("{safe_click_url}", "_blank");\n'
-    else:
-        html += '            console.log("Click registered - no URL configured");\n'
-
-    html += """        }
-    </script>
-</body>
-</html>"""
-
-    return html
+    return renderer.render(format_obj, manifest, input_set)

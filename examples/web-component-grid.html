@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADCP Creative Grid - Web Component Demo</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            background: #f9f9f9;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 40px;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+        .grid-item {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        rendered-creative {
+            width: 100%;
+            height: 400px;
+        }
+        .code-example {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+        .code-example pre {
+            margin: 0;
+            font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <h1>ADCP Creative Grid</h1>
+    <p class="subtitle">Using Web Components for easy embedding</p>
+
+    <div class="grid">
+        <div class="grid-item">
+            <rendered-creative
+                src="../output/product_card_standard.html"
+                width="300"
+                height="400">
+            </rendered-creative>
+        </div>
+        <div class="grid-item">
+            <rendered-creative
+                src="../output/format_card_standard.html"
+                width="300"
+                height="400">
+            </rendered-creative>
+        </div>
+        <div class="grid-item">
+            <rendered-creative
+                src="../output/product_card_standard.html"
+                width="300"
+                height="400">
+            </rendered-creative>
+        </div>
+    </div>
+
+    <h2>How to Use</h2>
+    <div class="code-example">
+        <pre>&lt;!-- 1. Include the web component script --&gt;
+&lt;script src="https://creative.adcontextprotocol.org/static/rendered-creative.js"&gt;&lt;/script&gt;
+
+&lt;!-- 2. Use the component anywhere --&gt;
+&lt;div class="grid"&gt;
+    &lt;rendered-creative
+        src="https://preview-url.com/uuid/desktop.html"
+        width="300"
+        height="400"&gt;
+    &lt;/rendered-creative&gt;
+&lt;/div&gt;
+
+&lt;!-- Features: --&gt;
+&lt;!-- - Shadow DOM prevents CSS conflicts --&gt;
+&lt;!-- - Lazy loading for performance --&gt;
+&lt;!-- - Works in any framework (React, Vue, vanilla JS) --&gt;</pre>
+    </div>
+
+    <script src="../src/creative_agent/static/rendered-creative.js"></script>
+</body>
+</html>

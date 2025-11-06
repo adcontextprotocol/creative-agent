@@ -55,6 +55,19 @@ def create_fixed_render(width: int, height: int, role: str = "primary") -> Rende
     )
 
 
+def create_responsive_render(role: str = "primary") -> Render:
+    """Create a render with responsive dimensions."""
+    return Render(
+        role=role,
+        dimensions=Dimensions(
+            width=None,
+            height=None,
+            responsive=Responsive(width=True, height=True),
+            unit=Unit.px,
+        ),
+    )
+
+
 # Generative Formats - AI-powered creative generation
 # These use promoted_offerings asset type which provides brand context and product info
 GENERATIVE_FORMATS = [
@@ -973,6 +986,194 @@ DOOH_FORMATS = [
     ),
 ]
 
+# Info Card Formats - For visualizing products and formats in user interfaces
+INFO_CARD_FORMATS = [
+    CreativeFormat(
+        format_id=create_format_id("product_card_standard"),
+        name="Product Card - Standard",
+        type=Type.display,
+        description="Standard visual card (300x400px) for displaying ad inventory products",
+        supported_macros=COMMON_MACROS,
+        renders=[create_fixed_render(300, 400)],
+        assets_required=[
+            AssetsRequired(
+                asset_id="product_image",
+                asset_type=AssetType.image,
+                required=True,
+                requirements={
+                    "description": "Primary product image or placement preview",
+                },
+            ),
+            AssetsRequired(
+                asset_id="product_name",
+                asset_type=AssetType.text,
+                required=True,
+                requirements={
+                    "description": "Display name of the product (e.g., 'Homepage Leaderboard')",
+                },
+            ),
+            AssetsRequired(
+                asset_id="product_description",
+                asset_type=AssetType.text,
+                required=True,
+                requirements={
+                    "description": "Short description of the product (supports markdown)",
+                },
+            ),
+            AssetsRequired(
+                asset_id="pricing_model",
+                asset_type=AssetType.text,
+                required=False,
+                requirements={
+                    "description": "Pricing model (e.g., 'CPM', 'flat_rate', 'CPC')",
+                },
+            ),
+            AssetsRequired(
+                asset_id="pricing_amount",
+                asset_type=AssetType.text,
+                required=False,
+                requirements={
+                    "description": "Price amount (e.g., '15.00')",
+                },
+            ),
+            AssetsRequired(
+                asset_id="pricing_currency",
+                asset_type=AssetType.text,
+                required=False,
+                requirements={
+                    "description": "Currency code (e.g., 'USD')",
+                },
+            ),
+            AssetsRequired(
+                asset_id="delivery_type",
+                asset_type=AssetType.text,
+                required=False,
+                requirements={
+                    "description": "Delivery type: 'guaranteed' or 'bidded'",
+                },
+            ),
+            AssetsRequired(
+                asset_id="primary_asset_type",
+                asset_type=AssetType.text,
+                required=False,
+                requirements={
+                    "description": "Primary asset type: 'display', 'video', 'audio', 'native'",
+                },
+            ),
+        ],
+    ),
+    CreativeFormat(
+        format_id=create_format_id("product_card_detailed"),
+        name="Product Card - Detailed",
+        type=Type.display,
+        description="Detailed card with carousel and full specifications for rich product presentation",
+        supported_macros=COMMON_MACROS,
+        renders=[create_responsive_render()],
+        assets_required=[
+            AssetsRequired(
+                asset_id="product_image",
+                asset_type=AssetType.image,
+                required=True,
+                requirements={
+                    "description": "Primary product image or placement preview",
+                },
+            ),
+            AssetsRequired(
+                asset_id="product_name",
+                asset_type=AssetType.text,
+                required=True,
+                requirements={
+                    "description": "Display name of the product (e.g., 'Homepage Leaderboard')",
+                },
+            ),
+            AssetsRequired(
+                asset_id="product_description",
+                asset_type=AssetType.text,
+                required=True,
+                requirements={
+                    "description": "Detailed description of the product (supports markdown)",
+                },
+            ),
+            AssetsRequired(
+                asset_id="pricing_model",
+                asset_type=AssetType.text,
+                required=False,
+                requirements={
+                    "description": "Pricing model (e.g., 'CPM', 'flat_rate', 'CPC')",
+                },
+            ),
+            AssetsRequired(
+                asset_id="pricing_amount",
+                asset_type=AssetType.text,
+                required=False,
+                requirements={
+                    "description": "Price amount (e.g., '15.00')",
+                },
+            ),
+            AssetsRequired(
+                asset_id="pricing_currency",
+                asset_type=AssetType.text,
+                required=False,
+                requirements={
+                    "description": "Currency code (e.g., 'USD')",
+                },
+            ),
+            AssetsRequired(
+                asset_id="delivery_type",
+                asset_type=AssetType.text,
+                required=False,
+                requirements={
+                    "description": "Delivery type: 'guaranteed' or 'bidded'",
+                },
+            ),
+            AssetsRequired(
+                asset_id="primary_asset_type",
+                asset_type=AssetType.text,
+                required=False,
+                requirements={
+                    "description": "Primary asset type: 'display', 'video', 'audio', 'native'",
+                },
+            ),
+        ],
+    ),
+    CreativeFormat(
+        format_id=create_format_id("format_card_standard"),
+        name="Format Card - Standard",
+        type=Type.display,
+        description="Standard visual card (300x400px) for displaying creative formats in user interfaces",
+        supported_macros=COMMON_MACROS,
+        renders=[create_fixed_render(300, 400)],
+        assets_required=[
+            AssetsRequired(
+                asset_id="format",
+                asset_type=AssetType.text,
+                required=True,
+                requirements={
+                    "description": "Creative format specification to visualize on the card",
+                },
+            ),
+        ],
+    ),
+    CreativeFormat(
+        format_id=create_format_id("format_card_detailed"),
+        name="Format Card - Detailed",
+        type=Type.display,
+        description="Detailed card with carousel and full specifications for rich format documentation",
+        supported_macros=COMMON_MACROS,
+        renders=[create_responsive_render()],
+        assets_required=[
+            AssetsRequired(
+                asset_id="format",
+                asset_type=AssetType.text,
+                required=True,
+                requirements={
+                    "description": "Creative format specification with full details for detailed card",
+                },
+            ),
+        ],
+    ),
+]
+
 # Combine all formats
 STANDARD_FORMATS = (
     GENERATIVE_FORMATS
@@ -982,6 +1183,7 @@ STANDARD_FORMATS = (
     + NATIVE_FORMATS
     + AUDIO_FORMATS
     + DOOH_FORMATS
+    + INFO_CARD_FORMATS
 )
 
 
