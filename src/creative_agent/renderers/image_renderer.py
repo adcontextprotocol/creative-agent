@@ -10,13 +10,14 @@ from .base import BaseRenderer
 class ImageRenderer(BaseRenderer):
     """Renderer for display formats using static images."""
 
-    def render(self, format_obj: Any, manifest: Any, input_set: Any) -> str:
+    def render(self, format_obj: Any, manifest: Any, input_set: Any, fragment: bool = True) -> str:
         """Generate HTML preview for image-based display formats.
 
         Args:
             format_obj: Format definition
             manifest: Creative manifest with assets
             input_set: Preview input configuration
+            fragment: If True (default), return HTML fragment. If False, return full document.
 
         Returns:
             HTML string with image display

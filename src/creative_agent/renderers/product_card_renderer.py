@@ -40,13 +40,14 @@ ALLOWED_PROTOCOLS = ["http", "https", "mailto"]
 class ProductCardRenderer(BaseRenderer):
     """Renderer for product_card_standard and product_card_detailed formats."""
 
-    def render(self, format_obj: Any, manifest: Any, input_set: Any) -> str:
+    def render(self, format_obj: Any, manifest: Any, input_set: Any, fragment: bool = True) -> str:
         """Generate HTML preview for product card formats.
 
         Args:
             format_obj: Format definition (product_card_standard or product_card_detailed)
             manifest: Creative manifest with individual product assets
             input_set: Preview input configuration
+            fragment: If True (default), return HTML fragment. If False, return full document.
 
         Returns:
             HTML string with product card display
@@ -62,8 +63,8 @@ class ProductCardRenderer(BaseRenderer):
 
         # Generate HTML
         if is_detailed:
-            return self._render_detailed_card(format_obj, input_set, product_data)
-        return self._render_standard_card(format_obj, input_set, product_data, width, height)
+            return self._render_detailed_card(format_obj, input_set, product_data, fragment)
+        return self._render_standard_card(format_obj, input_set, product_data, width, height, fragment)
 
     def _extract_product_data(self, manifest_assets: dict[str, Any]) -> dict[str, Any]:
         """Extract product data from individual assets.
@@ -143,6 +144,7 @@ class ProductCardRenderer(BaseRenderer):
         product_data: dict[str, Any],
         width: int,
         height: int,
+        fragment: bool = True,
     ) -> str:
         """Render standard 300x400 product card.
 
@@ -334,6 +336,7 @@ class ProductCardRenderer(BaseRenderer):
         format_obj: Any,
         input_set: Any,
         product_data: dict[str, Any],
+        fragment: bool = True,
     ) -> str:
         """Render detailed responsive product card.
 

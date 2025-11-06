@@ -39,7 +39,7 @@ ALLOWED_PROTOCOLS = ["http", "https", "mailto"]
 class FormatCardRenderer(BaseRenderer):
     """Renderer for format_card_standard and format_card_detailed formats."""
 
-    def render(self, format_obj: Any, manifest: Any, input_set: Any) -> str:
+    def render(self, format_obj: Any, manifest: Any, input_set: Any, fragment: bool = True) -> str:
         """Generate HTML preview for format card formats.
 
         Args:

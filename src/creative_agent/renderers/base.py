@@ -8,16 +8,18 @@ class BaseRenderer(ABC):
     """Base class for format-specific preview renderers."""
 
     @abstractmethod
-    def render(self, format_obj: Any, manifest: Any, input_set: Any) -> str:
+    def render(self, format_obj: Any, manifest: Any, input_set: Any, fragment: bool = True) -> str:
         """Generate HTML preview content for a creative manifest.
 
         Args:
             format_obj: Format definition containing renders, assets_required, etc.
             manifest: Creative manifest with assets
             input_set: Preview input configuration (device type, macros, etc.)
+            fragment: If True (default), return HTML fragment for embedding.
+                     If False, return complete HTML document with DOCTYPE.
 
         Returns:
-            HTML string ready to display in iframe
+            HTML string - fragment for direct embedding or full document for iframe
         """
 
     def get_dimensions(self, format_obj: Any) -> tuple[int, int]:
@@ -100,3 +102,27 @@ class BaseRenderer(ABC):
             if asset_type_map.get(asset_id) == target_type:
                 return asset_data
         return None
+
+    def wrap_with_document(self, title: str, body_html: str, body_style: str = "") -> str:
+        """Wrap HTML content in a full HTML document.
+
+        Args:
+            title: Page title
+            body_html: HTML content for body
+            body_style: Optional inline CSS for body tag
+
+        Returns:
+            Complete HTML document
+        """
+        style_attr = f' style="{body_style}"' if body_style else ""
+        return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{title}</title>
+</head>
+<body{style_attr}>
+{body_html}
+</body>
+</html>"""
