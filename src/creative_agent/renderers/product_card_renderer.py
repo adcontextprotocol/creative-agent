@@ -3,8 +3,8 @@
 import html as html_module
 from typing import Any
 
-import bleach  # type: ignore[import-untyped]
-import markdown  # type: ignore[import-untyped]
+import bleach
+import markdown
 
 from creative_agent.utils import sanitize_url
 

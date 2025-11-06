@@ -4,8 +4,8 @@ import html as html_module
 import json
 from typing import Any
 
-import bleach  # type: ignore[import-untyped]
-import markdown  # type: ignore[import-untyped]
+import bleach
+import markdown
 
 from .base import BaseRenderer
 
