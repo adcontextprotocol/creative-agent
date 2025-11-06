@@ -160,12 +160,14 @@ class FormatCardRenderer(BaseRenderer):
         html = markdown.markdown(markdown_text, extensions=["extra", "nl2br"])
 
         # Sanitize HTML to prevent XSS
-        return bleach.clean(  # type: ignore[no-any-return]
-            html,
-            tags=ALLOWED_TAGS,
-            attributes=ALLOWED_ATTRIBUTES,
-            protocols=ALLOWED_PROTOCOLS,
-            strip=True,
+        return str(
+            bleach.clean(
+                html,
+                tags=ALLOWED_TAGS,
+                attributes=ALLOWED_ATTRIBUTES,
+                protocols=ALLOWED_PROTOCOLS,
+                strip=True,
+            )
         )
 
     def _render_standard_card(
