@@ -79,7 +79,23 @@ function ProductGrid({ previews }) {
 
 ### Local Development
 
-See `web-component-grid.html` for a working example. Open it in a browser to see:
+To test the web component locally:
+
+```bash
+# 1. Generate test HTML files
+uv run python scripts/test_card_rendering.py
+
+# 2. Start a local web server (required for fetch to work)
+cd /path/to/creative-agent
+python -m http.server 8000
+
+# 3. Open the demo in your browser
+open http://localhost:8000/examples/web-component-grid.html
+```
+
+**Note**: Opening `web-component-grid.html` directly (file://) won't work because browsers block fetch requests from file:// URLs for security reasons. You must use a web server.
+
+The demo shows:
 - Product cards in a grid layout
 - Format cards alongside product cards
 - No iframe overhead
