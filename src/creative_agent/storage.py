@@ -6,7 +6,7 @@ from typing import Any
 import boto3
 from botocore.client import Config
 
-from .renderers import ImageRenderer, ProductCardRenderer
+from .renderers import FormatCardRenderer, ImageRenderer, ProductCardRenderer
 
 # Get Tigris credentials from environment (set by Fly.io)
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
@@ -114,7 +114,9 @@ def generate_preview_html(format_obj: Any, manifest: Any, input_set: Any) -> str
 
     # Route to specialized renderers
     if format_id in ("product_card_standard", "product_card_detailed"):
-        renderer: ImageRenderer | ProductCardRenderer = ProductCardRenderer()
+        renderer: ImageRenderer | ProductCardRenderer | FormatCardRenderer = ProductCardRenderer()
+    elif format_id in ("format_card_standard", "format_card_detailed"):
+        renderer = FormatCardRenderer()
     else:
         # Default to image renderer for all other formats
         renderer = ImageRenderer()
