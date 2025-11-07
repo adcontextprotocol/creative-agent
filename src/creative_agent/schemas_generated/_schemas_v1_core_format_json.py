@@ -106,6 +106,7 @@ class AssetType(Enum):
     vast = "vast"
     daast = "daast"
     text = "text"
+    markdown = "markdown"
     html = "html"
     css = "css"
     javascript = "javascript"
@@ -185,6 +186,36 @@ class AssetsRequired1(BaseModel):
     ]
 
 
+class FormatCard(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    format_id: Annotated[
+        Any, Field(description="Circular reference to /schemas/v1/core/format-id.json")
+    ]
+    manifest: Annotated[
+        dict[str, Any],
+        Field(
+            description="Asset manifest for rendering the card, structure defined by the format"
+        ),
+    ]
+
+
+class FormatCardDetailed(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    format_id: Annotated[
+        Any, Field(description="Circular reference to /schemas/v1/core/format-id.json")
+    ]
+    manifest: Annotated[
+        dict[str, Any],
+        Field(
+            description="Asset manifest for rendering the detailed card, structure defined by the format"
+        ),
+    ]
+
+
 class Format(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -206,7 +237,7 @@ class Format(BaseModel):
     preview_image: Annotated[
         Optional[AnyUrl],
         Field(
-            description="Optional preview image URL for format browsing/discovery UI. Should be 400x300px (4:3 aspect ratio) PNG or JPG. Used as thumbnail/card image in format browsers."
+            description="DEPRECATED: Use format_card instead. Optional preview image URL for format browsing/discovery UI. Should be 400x300px (4:3 aspect ratio) PNG or JPG. Used as thumbnail/card image in format browsers. This field is maintained for backward compatibility but format_card provides a more flexible, structured approach."
         ),
     ] = None
     example_url: Annotated[
@@ -250,5 +281,17 @@ class Format(BaseModel):
         Optional[list[Any]],
         Field(
             description="For generative formats: array of format IDs that this format can generate. When a format accepts inputs like brand_manifest and message, this specifies what concrete output formats can be produced (e.g., a generative banner format might output standard image banner formats)."
+        ),
+    ] = None
+    format_card: Annotated[
+        Optional[FormatCard],
+        Field(
+            description="Optional standard visual card (300x400px) for displaying this format in user interfaces. Can be rendered via preview_creative or pre-generated."
+        ),
+    ] = None
+    format_card_detailed: Annotated[
+        Optional[FormatCardDetailed],
+        Field(
+            description="Optional detailed card with carousel and full specifications. Provides rich format documentation similar to ad spec pages."
         ),
     ] = None

@@ -3,9 +3,203 @@
 
 from __future__ import annotations
 
-from typing import Annotated, Optional
+from enum import Enum
+from typing import Annotated, Any, Optional
 
-from pydantic import AnyUrl, AwareDatetime, BaseModel, ConfigDict, Field
+from pydantic import (
+    AnyUrl,
+    AwareDatetime,
+    BaseModel,
+    ConfigDict,
+    EmailStr,
+    Field,
+    RootModel,
+)
+
+
+class Contact(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    name: Annotated[
+        str,
+        Field(
+            description="Name of the entity managing this file (e.g., 'Meta Advertising Operations', 'Clear Channel Digital')",
+            max_length=255,
+            min_length=1,
+        ),
+    ]
+    email: Annotated[
+        Optional[EmailStr],
+        Field(
+            description="Contact email for questions or issues with this authorization file",
+            max_length=255,
+            min_length=1,
+        ),
+    ] = None
+    domain: Annotated[
+        Optional[str],
+        Field(
+            description="Primary domain of the entity managing this file",
+            pattern="^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$",
+        ),
+    ] = None
+    seller_id: Annotated[
+        Optional[str],
+        Field(
+            description="Seller ID from IAB Tech Lab sellers.json (if applicable)",
+            max_length=255,
+            min_length=1,
+        ),
+    ] = None
+    tag_id: Annotated[
+        Optional[str],
+        Field(
+            description="TAG Certified Against Fraud ID for verification (if applicable)",
+            max_length=100,
+            min_length=1,
+        ),
+    ] = None
+
+
+class PropertyType(Enum):
+    website = "website"
+    mobile_app = "mobile_app"
+    ctv_app = "ctv_app"
+    dooh = "dooh"
+    podcast = "podcast"
+    radio = "radio"
+    streaming_audio = "streaming_audio"
+
+
+class Type(Enum):
+    domain = "domain"
+    subdomain = "subdomain"
+    network_id = "network_id"
+    ios_bundle = "ios_bundle"
+    android_package = "android_package"
+    apple_app_store_id = "apple_app_store_id"
+    google_play_id = "google_play_id"
+    roku_store_id = "roku_store_id"
+    fire_tv_asin = "fire_tv_asin"
+    samsung_app_id = "samsung_app_id"
+    apple_tv_bundle = "apple_tv_bundle"
+    bundle_id = "bundle_id"
+    venue_id = "venue_id"
+    screen_id = "screen_id"
+    openooh_venue_type = "openooh_venue_type"
+    rss_url = "rss_url"
+    apple_podcast_id = "apple_podcast_id"
+    spotify_show_id = "spotify_show_id"
+    podcast_guid = "podcast_guid"
+
+
+class Identifier(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    type: Annotated[
+        Type,
+        Field(
+            description="Valid identifier types for property identification across different media types",
+            examples=["domain", "ios_bundle", "venue_id", "apple_podcast_id"],
+            title="Property Identifier Types",
+        ),
+    ]
+    value: Annotated[
+        str,
+        Field(
+            description="The identifier value. For domain type: 'example.com' matches base domain plus www and m subdomains; 'edition.example.com' matches that specific subdomain; '*.example.com' matches ALL subdomains but NOT base domain"
+        ),
+    ]
+
+
+class Tag(RootModel[str]):
+    root: Annotated[
+        str,
+        Field(
+            description="Lowercase tag with underscores (e.g., 'conde_nast_network', 'premium_content')",
+            pattern="^[a-z0-9_]+$",
+        ),
+    ]
+
+
+class Property(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    property_id: Annotated[
+        Optional[str],
+        Field(
+            description="Unique identifier for this property (optional). Enables referencing properties by ID instead of repeating full objects. Recommended format: lowercase with underscores (e.g., 'cnn_ctv_app', 'instagram_mobile')",
+            pattern="^[a-z0-9_]+$",
+        ),
+    ] = None
+    property_type: Annotated[
+        PropertyType, Field(description="Type of advertising property")
+    ]
+    name: Annotated[str, Field(description="Human-readable property name")]
+    identifiers: Annotated[
+        list[Identifier],
+        Field(description="Array of identifiers for this property", min_length=1),
+    ]
+    tags: Annotated[
+        Optional[list[Tag]],
+        Field(
+            description="Tags for categorization and grouping (e.g., network membership, content categories)"
+        ),
+    ] = None
+    publisher_domain: Annotated[
+        Optional[str],
+        Field(
+            description="Domain where adagents.json should be checked for authorization validation. Required for list_authorized_properties response. Optional in adagents.json (file location implies domain)."
+        ),
+    ] = None
+
+
+class Tags(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    name: Annotated[str, Field(description="Human-readable name for this tag")]
+    description: Annotated[
+        str, Field(description="Description of what this tag represents")
+    ]
+
+
+class PropertyId(RootModel[str]):
+    root: Annotated[str, Field(pattern="^[a-z0-9_]+$")]
+
+
+class PropertyTag(PropertyId):
+    pass
+
+
+class PublisherProperty(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    publisher_domain: Annotated[
+        str,
+        Field(
+            description="Domain where the publisher's adagents.json is hosted (e.g., 'cnn.com')",
+            pattern="^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$",
+        ),
+    ]
+    property_ids: Annotated[
+        Optional[list[PropertyId]],
+        Field(
+            description="Specific property IDs from the publisher's adagents.json properties array. Mutually exclusive with property_tags.",
+            min_length=1,
+        ),
+    ] = None
+    property_tags: Annotated[
+        Optional[list[PropertyTag]],
+        Field(
+            description="Property tags from the publisher's adagents.json tags. Agent is authorized for all properties with these tags. Mutually exclusive with property_ids.",
+            min_length=1,
+        ),
+    ] = None
 
 
 class AuthorizedAgent(BaseModel):
@@ -16,11 +210,39 @@ class AuthorizedAgent(BaseModel):
     authorized_for: Annotated[
         str,
         Field(
-            description="Human-readable description of what this agent is authorized to sell (e.g., 'Official sales agent for our US and CA display inventory')",
+            description="Human-readable description of what this agent is authorized to sell",
             max_length=500,
             min_length=1,
         ),
     ]
+    property_ids: Annotated[
+        Optional[list[PropertyId]],
+        Field(
+            description="Property IDs this agent is authorized for. Resolved against the top-level properties array in this file. Mutually exclusive with property_tags and properties fields.",
+            min_length=1,
+        ),
+    ] = None
+    property_tags: Annotated[
+        Optional[list[PropertyTag]],
+        Field(
+            description="Tags identifying which properties this agent is authorized for. Resolved against the top-level properties array in this file using tag matching. Mutually exclusive with property_ids and properties fields.",
+            min_length=1,
+        ),
+    ] = None
+    properties: Annotated[
+        Optional[list[Any]],
+        Field(
+            description="Specific properties this agent is authorized for (alternative to property_ids/property_tags). Mutually exclusive with property_ids and property_tags fields.",
+            min_length=1,
+        ),
+    ] = None
+    publisher_properties: Annotated[
+        Optional[list[PublisherProperty]],
+        Field(
+            description="Properties from other publisher domains this agent is authorized for. Each entry specifies a publisher domain and which of their properties this agent can sell (by property_id or property_tags). Mutually exclusive with property_ids, property_tags, and properties fields.",
+            min_length=1,
+        ),
+    ] = None
 
 
 class AuthorizedSalesAgents(BaseModel):
@@ -34,16 +256,35 @@ class AuthorizedSalesAgents(BaseModel):
             description="JSON Schema identifier for this adagents.json file",
         ),
     ] = "https://adcontextprotocol.org/schemas/v1/adagents.json"
+    contact: Annotated[
+        Optional[Contact],
+        Field(
+            description="Contact information for the entity managing this adagents.json file (may be publisher or third-party operator)"
+        ),
+    ] = None
+    properties: Annotated[
+        Optional[list[Property]],
+        Field(
+            description="Array of all properties covered by this adagents.json file. Same structure as list_authorized_properties response.",
+            min_length=1,
+        ),
+    ] = None
+    tags: Annotated[
+        Optional[dict[str, Tags]],
+        Field(
+            description="Metadata for each tag referenced by properties. Same structure as list_authorized_properties response."
+        ),
+    ] = None
     authorized_agents: Annotated[
         list[AuthorizedAgent],
         Field(
-            description="Array of sales agents authorized to sell this publisher's inventory",
+            description="Array of sales agents authorized to sell inventory for properties in this file",
             min_length=1,
         ),
     ]
     last_updated: Annotated[
         Optional[AwareDatetime],
         Field(
-            description="ISO 8601 timestamp indicating when this file was last updated (optional but recommended)"
+            description="ISO 8601 timestamp indicating when this file was last updated"
         ),
     ] = None

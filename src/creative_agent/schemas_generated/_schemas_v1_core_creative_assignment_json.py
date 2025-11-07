@@ -17,3 +17,10 @@ class CreativeAssignment(BaseModel):
         Optional[float],
         Field(description="Delivery weight for this creative", ge=0.0, le=100.0),
     ] = None
+    placement_ids: Annotated[
+        Optional[list[str]],
+        Field(
+            description="Optional array of placement IDs where this creative should run. When omitted, the creative runs on all placements in the package. References placement_id values from the product's placements array.",
+            min_length=1,
+        ),
+    ] = None
