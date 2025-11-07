@@ -426,13 +426,14 @@ def _handle_batch_preview(
             )
 
             # Extract structured content from result
-            if "error" in result.structured_content:
+            structured = result.structured_content or {}
+            if "error" in structured:
                 results.append(
                     {
                         "success": False,
                         "error": {
                             "code": "preview_failed",
-                            "message": result.structured_content["error"],
+                            "message": structured["error"],
                         },
                     }
                 )
@@ -440,7 +441,7 @@ def _handle_batch_preview(
                 results.append(
                     {
                         "success": True,
-                        "response": result.structured_content,
+                        "response": structured,
                     }
                 )
 
