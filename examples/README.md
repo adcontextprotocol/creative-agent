@@ -49,24 +49,57 @@ The `<rendered-creative>` web component provides the easiest way to embed creati
 </div>
 ```
 
-### React Example
+### React Example (with Batch Preview)
 
 ```jsx
-function ProductGrid({ previews }) {
+import { useEffect, useState } from 'react';
+
+function FormatShowcaseGrid() {
+  const [previews, setPreviews] = useState([]);
+
+  useEffect(() => {
+    async function loadPreviews() {
+      // 1. List all formats
+      const formats = await creativeAgent.list_creative_formats();
+
+      // 2. Batch preview all formats with HTML output (no S3 uploads!)
+      const response = await creativeAgent.preview_creative({
+        output_format: "html",  // Get HTML directly
+        requests: formats.formats.map(format => ({
+          format_id: format.format_id,
+          creative_manifest: format.format_card.manifest,
+          inputs: [{ name: "Desktop", macros: { DEVICE_TYPE: "desktop" } }]
+        }))
+      });
+
+      // 3. Extract successful previews
+      const successful = response.results
+        .filter(r => r.success)
+        .map(r => r.response.previews[0]);
+
+      setPreviews(successful);
+    }
+
+    loadPreviews();
+  }, []);
+
   return (
     <div className="grid">
       {previews.map(preview => (
-        <rendered-creative
+        <div
           key={preview.preview_id}
-          src={preview.renders[0].preview_url}
-          width={preview.renders[0].dimensions?.width}
-          height={preview.renders[0].dimensions?.height}
+          dangerouslySetInnerHTML={{ __html: preview.renders[0].preview_html }}
         />
       ))}
     </div>
   );
 }
 ```
+
+**Why batch mode?**
+- **5-10x faster**: One API call instead of N calls
+- **No storage**: HTML output bypasses S3 entirely
+- **Simpler**: No need to track/cleanup uploaded files
 
 ### Attributes
 
@@ -119,9 +152,80 @@ If you need maximum isolation or can't use web components, you can still use ifr
 
 **Note**: iframes are heavier and harder to style as a cohesive grid, but provide the strongest isolation.
 
+## Batch Mode & HTML Output (New!)
+
+### When to Use Batch Mode
+
+Use batch mode when you need to preview multiple creatives at once:
+- **Format showcases** (previewing all available formats)
+- **Campaign reviews** (previewing all creatives in a campaign)
+- **A/B testing grids** (comparing multiple creative variants)
+
+### When to Use HTML Output
+
+Use HTML output (`output_format="html"`) when:
+- Embedding previews directly in your page (no iframe needed)
+- Building preview grids with 50+ items
+- You don't need shareable URLs
+- You want to avoid S3 storage costs
+
+### Batch + HTML Example
+
+```javascript
+// Preview 10 different creatives in one API call with HTML output
+const response = await creativeAgent.preview_creative({
+  output_format: "html",  // Default for all requests
+  requests: [
+    {
+      format_id: "display_300x250_image",
+      creative_manifest: manifest1
+    },
+    {
+      format_id: "display_728x90_image",
+      creative_manifest: manifest2
+    },
+    // ... up to 50 requests
+  ]
+});
+
+// Handle results (some may fail)
+response.results.forEach((result, idx) => {
+  if (result.success) {
+    const html = result.response.previews[0].renders[0].preview_html;
+    document.getElementById(`preview-${idx}`).innerHTML = html;
+  } else {
+    console.error(`Preview ${idx} failed:`, result.error.message);
+  }
+});
+```
+
+### Per-Request Output Override
+
+You can mix output formats in a batch:
+
+```javascript
+const response = await creativeAgent.preview_creative({
+  output_format: "html",  // Default
+  requests: [
+    {
+      format_id: "format1",
+      creative_manifest: manifest1,
+      output_format: "url"  // Override: this one returns a URL
+    },
+    {
+      format_id: "format2",
+      creative_manifest: manifest2
+      // Uses default "html"
+    }
+  ]
+});
+```
+
 ## API Response Structure
 
-When you call `preview_creative`, you get:
+### Single Mode Response
+
+When you call `preview_creative` in single mode, you get:
 
 ```json
 {
@@ -150,3 +254,49 @@ When you call `preview_creative`, you get:
 ```
 
 Just pass `preview_url` to the web component's `src` attribute!
+
+### Batch Mode Response
+
+When you call `preview_creative` in batch mode, you get:
+
+```json
+{
+  "results": [
+    {
+      "success": true,
+      "response": {
+        "previews": [...],
+        "interactive_url": "...",
+        "expires_at": "..."
+      }
+    },
+    {
+      "success": false,
+      "error": {
+        "code": "preview_failed",
+        "message": "Format not found"
+      }
+    }
+  ]
+}
+```
+
+Each result has a `success` field. Check this before accessing `response` or `error`.
+
+### HTML Output Response
+
+When using `output_format="html"`, the response includes `preview_html` instead of (or in addition to) `preview_url`:
+
+```json
+{
+  "previews": [{
+    "renders": [{
+      "preview_html": "<div class='creative'>...</div>",
+      "role": "primary",
+      "dimensions": { "width": 300, "height": 250 }
+    }]
+  }]
+}
+```
+
+Use `dangerouslySetInnerHTML` in React or `innerHTML` in vanilla JS to render it.

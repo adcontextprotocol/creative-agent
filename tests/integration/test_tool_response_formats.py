@@ -218,9 +218,10 @@ class TestPreviewCreativeResponseFormat:
         # This validates ALL fields per ADCP spec
         response = PreviewCreativeResponse.model_validate(result.structured_content)
 
-        # Verify required fields per spec
-        assert response.previews is not None, "'previews' is required per spec"
-        assert response.expires_at is not None, "'expires_at' is required per spec"
+        # Verify required fields per spec (access via .root for union type)
+        assert hasattr(response.root, "previews"), "'previews' is required per spec"
+        assert response.root.previews is not None, "'previews' is required per spec"
+        assert response.root.expires_at is not None, "'expires_at' is required per spec"
 
     def test_previews_array_structure(self, valid_manifest, mock_s3):
         """Per spec, previews must be array of Preview objects with renders."""
@@ -230,10 +231,11 @@ class TestPreviewCreativeResponseFormat:
         )
         response = PreviewCreativeResponse.model_validate(result.structured_content)
 
-        assert isinstance(response.previews, list), "previews must be array"
-        assert len(response.previews) > 0, "must return at least one preview"
+        # Access via .root for union type
+        assert isinstance(response.root.previews, list), "previews must be array"
+        assert len(response.root.previews) > 0, "must return at least one preview"
 
-        for preview in response.previews:
+        for preview in response.root.previews:
             # Per spec, each Preview must have:
             assert preview.preview_id is not None, "preview_id is required per spec"
             assert preview.renders is not None, "renders is required per spec"

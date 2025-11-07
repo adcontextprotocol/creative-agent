@@ -3,9 +3,9 @@
 
 from __future__ import annotations
 
-from typing import Annotated, Optional
+from typing import Annotated, Any, Literal, Optional, Union
 
-from pydantic import AnyUrl, AwareDatetime, BaseModel, ConfigDict, Field
+from pydantic import AnyUrl, AwareDatetime, BaseModel, ConfigDict, Field, RootModel
 
 
 class Dimensions(BaseModel):
@@ -34,7 +34,7 @@ class Embedding(BaseModel):
     ] = None
 
 
-class Render(BaseModel):
+class Renders(BaseModel):
     render_id: Annotated[
         str,
         Field(
@@ -44,7 +44,91 @@ class Render(BaseModel):
     preview_url: Annotated[
         AnyUrl,
         Field(
-            description="URL to an HTML page that renders this piece. Can be embedded in an iframe. Handles all rendering complexity internally (images, video players, audio players, interactive content, etc.)."
+            description="URL to an HTML page that renders this piece. Can be embedded in an iframe. Typically returned when output_format='url' (default). Creative agents MAY provide both preview_url and preview_html for client flexibility."
+        ),
+    ]
+    preview_html: Annotated[
+        Optional[str],
+        Field(
+            description="Raw HTML for this rendered piece. Can be embedded directly in the page without iframe. Typically returned when output_format='html'. Security warning: Only use with trusted creative agents as this bypasses iframe sandboxing. Creative agents MAY provide both formats."
+        ),
+    ] = None
+    role: Annotated[
+        str,
+        Field(
+            description="Semantic role of this rendered piece. Use 'primary' for main content, 'companion' for associated banners, descriptive strings for device variants or custom roles."
+        ),
+    ]
+    dimensions: Annotated[
+        Optional[Dimensions],
+        Field(
+            description="Dimensions for this rendered piece. For companion ads with multiple sizes, this specifies which size this piece is."
+        ),
+    ] = None
+    embedding: Annotated[
+        Optional[Embedding],
+        Field(
+            description="Optional security and embedding metadata for safe iframe integration"
+        ),
+    ] = None
+
+
+class Renders1(BaseModel):
+    render_id: Annotated[
+        str,
+        Field(
+            description="Unique identifier for this rendered piece within the variant"
+        ),
+    ]
+    preview_url: Annotated[
+        Optional[AnyUrl],
+        Field(
+            description="URL to an HTML page that renders this piece. Can be embedded in an iframe. Typically returned when output_format='url' (default). Creative agents MAY provide both preview_url and preview_html for client flexibility."
+        ),
+    ] = None
+    preview_html: Annotated[
+        str,
+        Field(
+            description="Raw HTML for this rendered piece. Can be embedded directly in the page without iframe. Typically returned when output_format='html'. Security warning: Only use with trusted creative agents as this bypasses iframe sandboxing. Creative agents MAY provide both formats."
+        ),
+    ]
+    role: Annotated[
+        str,
+        Field(
+            description="Semantic role of this rendered piece. Use 'primary' for main content, 'companion' for associated banners, descriptive strings for device variants or custom roles."
+        ),
+    ]
+    dimensions: Annotated[
+        Optional[Dimensions],
+        Field(
+            description="Dimensions for this rendered piece. For companion ads with multiple sizes, this specifies which size this piece is."
+        ),
+    ] = None
+    embedding: Annotated[
+        Optional[Embedding],
+        Field(
+            description="Optional security and embedding metadata for safe iframe integration"
+        ),
+    ] = None
+
+
+class Renders2(BaseModel):
+    render_id: Annotated[
+        str,
+        Field(
+            description="Unique identifier for this rendered piece within the variant"
+        ),
+    ]
+    preview_url: Annotated[
+        AnyUrl,
+        Field(
+            description="URL to an HTML page that renders this piece. Can be embedded in an iframe. Typically returned when output_format='url' (default). Creative agents MAY provide both preview_url and preview_html for client flexibility."
+        ),
+    ]
+    preview_html: Annotated[
+        str,
+        Field(
+            description="Raw HTML for this rendered piece. Can be embedded directly in the page without iframe. Typically returned when output_format='html'. Security warning: Only use with trusted creative agents as this bypasses iframe sandboxing. Creative agents MAY provide both formats."
         ),
     ]
     role: Annotated[
@@ -83,7 +167,7 @@ class Preview(BaseModel):
         str, Field(description="Unique identifier for this preview variant")
     ]
     renders: Annotated[
-        list[Render],
+        list[Union[Renders, Renders1, Renders2]],
         Field(
             description="Array of rendered pieces for this preview variant. Most formats render as a single piece. Companion ad formats (video + banner), multi-placement formats, and adaptive formats render as multiple pieces.",
             min_length=1,
@@ -97,7 +181,7 @@ class Preview(BaseModel):
     ]
 
 
-class PreviewCreativeResponse(BaseModel):
+class PreviewCreativeResponse1(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
@@ -116,4 +200,174 @@ class PreviewCreativeResponse(BaseModel):
     ] = None
     expires_at: Annotated[
         AwareDatetime, Field(description="ISO 8601 timestamp when preview links expire")
+    ]
+
+
+class Embedding3(BaseModel):
+    recommended_sandbox: Optional[str] = None
+    requires_https: Optional[bool] = None
+    supports_fullscreen: Optional[bool] = None
+    csp_policy: Optional[str] = None
+
+
+class Renders3(BaseModel):
+    render_id: str
+    preview_url: Annotated[
+        AnyUrl,
+        Field(
+            description="URL to iframe-embeddable HTML page. Typically present when output_format='url'."
+        ),
+    ]
+    preview_html: Annotated[
+        Optional[str],
+        Field(
+            description="Raw HTML for direct embedding. Typically present when output_format='html'. Security: Only use with trusted agents."
+        ),
+    ] = None
+    role: str
+    dimensions: Optional[Dimensions] = None
+    embedding: Optional[Embedding3] = None
+
+
+class Renders4(BaseModel):
+    render_id: str
+    preview_url: Annotated[
+        Optional[AnyUrl],
+        Field(
+            description="URL to iframe-embeddable HTML page. Typically present when output_format='url'."
+        ),
+    ] = None
+    preview_html: Annotated[
+        str,
+        Field(
+            description="Raw HTML for direct embedding. Typically present when output_format='html'. Security: Only use with trusted agents."
+        ),
+    ]
+    role: str
+    dimensions: Optional[Dimensions] = None
+    embedding: Optional[Embedding3] = None
+
+
+class Renders5(BaseModel):
+    render_id: str
+    preview_url: Annotated[
+        AnyUrl,
+        Field(
+            description="URL to iframe-embeddable HTML page. Typically present when output_format='url'."
+        ),
+    ]
+    preview_html: Annotated[
+        str,
+        Field(
+            description="Raw HTML for direct embedding. Typically present when output_format='html'. Security: Only use with trusted agents."
+        ),
+    ]
+    role: str
+    dimensions: Optional[Dimensions] = None
+    embedding: Optional[Embedding3] = None
+
+
+class Input4(BaseModel):
+    name: str
+    macros: Optional[dict[str, str]] = None
+    context_description: Optional[str] = None
+
+
+class Preview1(BaseModel):
+    preview_id: str
+    renders: Annotated[list[Union[Renders3, Renders4, Renders5]], Field(min_length=1)]
+    input: Input4
+
+
+class Response(BaseModel):
+    previews: Annotated[
+        list[Preview1],
+        Field(description="Array of preview variants for this creative", min_length=1),
+    ]
+    interactive_url: Optional[AnyUrl] = None
+    expires_at: AwareDatetime
+
+
+class Error(BaseModel):
+    code: Annotated[
+        str,
+        Field(
+            description="Error code (e.g., 'invalid_manifest', 'unsupported_format', 'missing_assets')"
+        ),
+    ]
+    message: Annotated[str, Field(description="Human-readable error message")]
+    details: Annotated[
+        Optional[dict[str, Any]], Field(description="Additional error context")
+    ] = None
+
+
+class Results(BaseModel):
+    success: Annotated[
+        Literal[True], Field(description="Whether this preview request succeeded")
+    ]
+    response: Annotated[
+        Response, Field(description="Preview response for successful requests")
+    ]
+    error: Annotated[
+        Optional[Error], Field(description="Error information for failed requests")
+    ] = None
+
+
+Renders6 = Renders3
+
+
+Renders7 = Renders4
+
+
+Renders8 = Renders5
+
+
+class Preview2(BaseModel):
+    preview_id: str
+    renders: Annotated[list[Union[Renders6, Renders7, Renders8]], Field(min_length=1)]
+    input: Input4
+
+
+class Response1(BaseModel):
+    previews: Annotated[
+        list[Preview2],
+        Field(description="Array of preview variants for this creative", min_length=1),
+    ]
+    interactive_url: Optional[AnyUrl] = None
+    expires_at: AwareDatetime
+
+
+class Results1(BaseModel):
+    success: Annotated[
+        Literal[False], Field(description="Whether this preview request succeeded")
+    ]
+    response: Annotated[
+        Optional[Response1],
+        Field(description="Preview response for successful requests"),
+    ] = None
+    error: Annotated[Error, Field(description="Error information for failed requests")]
+
+
+class PreviewCreativeResponse2(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    results: Annotated[
+        list[Union[Results, Results1]],
+        Field(
+            description="Array of preview results corresponding to each request in the same order. results[0] is the result for requests[0], results[1] for requests[1], etc. Order is guaranteed even when some requests fail. Each result contains either a successful preview response or an error.",
+            min_length=1,
+        ),
+    ]
+
+
+class PreviewCreativeResponse(
+    RootModel[Union[PreviewCreativeResponse1, PreviewCreativeResponse2]]
+):
+    root: Annotated[
+        Union[PreviewCreativeResponse1, PreviewCreativeResponse2],
+        Field(
+            description="Response containing preview links for one or more creatives. Format matches the request: single preview response for single requests, batch results for batch requests.",
+            title="Preview Creative Response",
+        ),
     ]
