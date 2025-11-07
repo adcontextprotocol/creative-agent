@@ -6,7 +6,15 @@ from __future__ import annotations
 from enum import Enum
 from typing import Annotated, Any, Optional, Union
 
-from pydantic import AnyUrl, AwareDatetime, BaseModel, ConfigDict, EmailStr, Field
+from pydantic import (
+    AnyUrl,
+    AwareDatetime,
+    BaseModel,
+    ConfigDict,
+    EmailStr,
+    Field,
+    RootModel,
+)
 
 
 class FormatId(BaseModel):
@@ -863,7 +871,12 @@ class Input(BaseModel):
     ] = None
 
 
-class PreviewCreativeRequest(BaseModel):
+class OutputFormat(Enum):
+    url = "url"
+    html = "html"
+
+
+class PreviewCreativeRequest1(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
@@ -891,3 +904,89 @@ class PreviewCreativeRequest(BaseModel):
         Optional[str],
         Field(description="Specific template ID for custom format rendering"),
     ] = None
+    output_format: Annotated[
+        Optional[OutputFormat],
+        Field(
+            description="Output format for previews. 'url' returns preview_url (iframe-embeddable URL), 'html' returns preview_html (raw HTML for direct embedding). Default: 'url' for backward compatibility."
+        ),
+    ] = "url"
+
+
+class Input2(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    name: Annotated[str, Field(description="Human-readable name for this input set")]
+    macros: Annotated[
+        Optional[dict[str, str]],
+        Field(description="Macro values to use for this preview"),
+    ] = None
+    context_description: Annotated[
+        Optional[str],
+        Field(
+            description="Natural language description of the context for AI-generated content"
+        ),
+    ] = None
+
+
+class Request(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    format_id: Annotated[
+        Any, Field(description="Circular reference to /schemas/v1/core/format-id.json")
+    ]
+    creative_manifest: Annotated[
+        Any,
+        Field(
+            description="Circular reference to /schemas/v1/core/creative-manifest.json"
+        ),
+    ]
+    inputs: Annotated[
+        Optional[list[Input2]],
+        Field(
+            description="Array of input sets for generating multiple preview variants"
+        ),
+    ] = None
+    template_id: Annotated[
+        Optional[str],
+        Field(description="Specific template ID for custom format rendering"),
+    ] = None
+    output_format: Annotated[
+        Optional[OutputFormat],
+        Field(
+            description="Output format for this preview. 'url' returns preview_url, 'html' returns preview_html."
+        ),
+    ] = "url"
+
+
+class PreviewCreativeRequest2(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    requests: Annotated[
+        list[Request],
+        Field(
+            description="Array of preview requests (1-50 items). Each follows the single request structure.",
+            max_length=50,
+            min_length=1,
+        ),
+    ]
+    output_format: Annotated[
+        Optional[OutputFormat],
+        Field(
+            description="Default output format for all requests in this batch. Individual requests can override this. 'url' returns preview_url (iframe-embeddable URL), 'html' returns preview_html (raw HTML for direct embedding)."
+        ),
+    ] = "url"
+
+
+class PreviewCreativeRequest(
+    RootModel[Union[PreviewCreativeRequest1, PreviewCreativeRequest2]]
+):
+    root: Annotated[
+        Union[PreviewCreativeRequest1, PreviewCreativeRequest2],
+        Field(
+            description="Request to generate previews of one or more creative manifests. Accepts either a single creative request or an array of requests for batch processing.",
+            title="Preview Creative Request",
+        ),
+    ]

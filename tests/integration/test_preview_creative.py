@@ -282,10 +282,11 @@ class TestPreviewCreativeIntegration:
         # Validate against actual ADCP spec
         response = PreviewCreativeResponse.model_validate(structured)
 
-        # Spec requires these fields
-        assert response.previews is not None
-        assert response.expires_at is not None
-        assert len(response.previews) == 3  # desktop, mobile, tablet
+        # For single mode response, access via .root
+        assert hasattr(response.root, "previews")
+        assert response.root.previews is not None
+        assert response.root.expires_at is not None
+        assert len(response.root.previews) == 3  # desktop, mobile, tablet
 
     def test_preview_expiration_is_valid_iso8601_timestamp(self, mock_s3_upload):
         """Test that expires_at is a valid ISO 8601 timestamp in the future."""

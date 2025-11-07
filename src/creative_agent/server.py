@@ -22,9 +22,6 @@ from .schemas import (
     PreviewCreativeRequest,
 )
 from .schemas_generated._schemas_v1_core_format_json import FormatId
-from .schemas_generated._schemas_v1_creative_preview_creative_response_json import (
-    PreviewCreativeResponse,
-)
 
 mcp = FastMCP("adcp-creative-agent")
 
@@ -168,161 +165,50 @@ def list_creative_formats(
 
 @mcp.tool()
 def preview_creative(
-    format_id: str | dict[str, Any],
-    creative_manifest: dict[str, Any],
+    format_id: str | dict[str, Any] | None = None,
+    creative_manifest: dict[str, Any] | None = None,
     inputs: list[dict[str, Any]] | None = None,
     template_id: str | None = None,
+    output_format: str = "url",
+    requests: list[dict[str, Any]] | None = None,
 ) -> ToolResult:
-    """Generate preview renderings of a creative manifest.
+    """Generate preview renderings of one or more creative manifests.
+
+    Supports two modes:
+    1. Single mode: Preview one creative with format_id and creative_manifest
+    2. Batch mode: Preview multiple creatives with requests array (5-10x faster)
 
     Args:
-        format_id: Format identifier for rendering (string or FormatId object with agent_url and id)
-        creative_manifest: Complete creative manifest with all required assets (including promoted_offerings if required by the format)
-        inputs: Array of input sets for generating multiple preview variants
-        template_id: Specific template for custom format rendering
+        format_id: Format identifier for rendering (single mode only)
+        creative_manifest: Complete creative manifest (single mode only)
+        inputs: Array of input sets for generating multiple preview variants (single mode)
+        template_id: Specific template for custom format rendering (single mode)
+        output_format: Output format - "url" (default) returns preview_url, "html" returns preview_html
+        requests: Array of 1-50 preview requests for batch mode (each with format_id, creative_manifest, etc.)
 
     Returns:
         ToolResult with human-readable message and structured preview data
     """
     try:
-        # Import schema types
-        from .schemas.manifest import PreviewInput
+        # Determine mode: batch or single
+        is_batch_mode = requests is not None
 
-        # Parse inputs if provided
-        inputs_obj: list[PreviewInput] | None = None
-        if inputs:
-            inputs_obj = [PreviewInput(**inp) for inp in inputs]
-
-        # Parse request (creative_manifest stays as dict)
-        # Handle format_id as string or FormatId object (dict)
-        if isinstance(format_id, str):
-            fmt_id = FormatId(agent_url=AGENT_URL, id=format_id)
-        else:  # dict
-            fmt_id = FormatId(**format_id)
-        request = PreviewCreativeRequest(
-            format_id=fmt_id,
+        if is_batch_mode:
+            # Batch mode: process multiple preview requests
+            return _handle_batch_preview(requests or [], output_format)
+        # Single mode: process single preview request
+        if format_id is None or creative_manifest is None:
+            error_msg = "Either provide (format_id + creative_manifest) for single mode, or (requests) for batch mode"
+            return ToolResult(
+                content=[TextContent(type="text", text=f"Error: {error_msg}")],
+                structured_content={"error": error_msg},
+            )
+        return _handle_single_preview(
+            format_id=format_id,
             creative_manifest=creative_manifest,
-            inputs=inputs_obj,
+            inputs=inputs,
             template_id=template_id,
-        )
-
-        # Validate format exists
-        fmt = get_format_by_id(request.format_id)
-        if not fmt:
-            error_msg = f"Format {request.format_id} not found"
-            return ToolResult(
-                content=[TextContent(type="text", text=f"Error: {error_msg}")],
-                structured_content={"error": error_msg},
-            )
-
-        # Validate manifest format_id matches
-        manifest_format_id = request.creative_manifest.get("format_id")
-        if manifest_format_id:
-            # Normalize both for comparison
-            manifest_norm = normalize_format_id_for_comparison(manifest_format_id)
-            request_norm = normalize_format_id_for_comparison(request.format_id)
-            if manifest_norm != request_norm:
-                error_msg = (
-                    f"Manifest format_id (id='{manifest_norm[0]}', agent_url='{manifest_norm[1]}') "
-                    f"does not match request format_id (id='{request_norm[0]}', agent_url='{request_norm[1]}')"
-                )
-                return ToolResult(
-                    content=[TextContent(type="text", text=f"Error: {error_msg}")],
-                    structured_content={"error": error_msg},
-                )
-
-        # Validate manifest assets
-        from .validation import validate_manifest_assets
-
-        validation_errors = validate_manifest_assets(
-            request.creative_manifest,
-            check_remote_mime=False,
-            format_obj=fmt,
-        )
-        if validation_errors:
-            error_msg = "Asset validation failed"
-            return ToolResult(
-                content=[TextContent(type="text", text=f"Error: {error_msg}")],
-                structured_content={"error": error_msg, "validation_errors": validation_errors},
-            )
-
-        # Generate preview variants
-        previews = []
-        preview_id = str(uuid.uuid4())
-
-        # If no inputs provided, generate default variants (desktop, mobile, tablet)
-        if not request.inputs:
-            request.inputs = [
-                PreviewInput(name="Desktop", macros={"DEVICE_TYPE": "desktop"}),
-                PreviewInput(name="Mobile", macros={"DEVICE_TYPE": "mobile"}),
-                PreviewInput(name="Tablet", macros={"DEVICE_TYPE": "tablet"}),
-            ]
-
-        # Generate a preview for each input set
-        from .storage import generate_preview_html, upload_preview_html
-
-        for input_set in request.inputs:
-            # Generate HTML content
-            html_content = generate_preview_html(fmt, request.creative_manifest, input_set)
-
-            # Upload to Tigris and get public URL
-            variant_name = input_set.name.lower().replace(" ", "-")
-            preview_url = upload_preview_html(preview_id, variant_name, html_content)
-
-            # Create preview variant with actual URL
-            preview = _generate_preview_variant(
-                format_obj=fmt,
-                manifest=request.creative_manifest,
-                input_set=input_set,
-                preview_id=preview_id,
-                preview_url=preview_url,
-            )
-            previews.append(preview)
-
-        # Calculate expiration (24 hours from now)
-        expires_at = datetime.now(UTC) + timedelta(hours=24)
-
-        from pydantic import AnyUrl, ValidationError
-
-        from .schemas_generated._schemas_v1_creative_preview_creative_response_json import (
-            Preview,
-        )
-
-        # Validate previews with detailed error reporting
-        try:
-            validated_previews = []
-            for idx, preview_dict in enumerate(previews):
-                try:
-                    validated_previews.append(Preview.model_validate(preview_dict))
-                except ValidationError as e:
-                    error_msg = f"Preview validation failed for variant {idx + 1}"
-                    return ToolResult(
-                        content=[TextContent(type="text", text=f"Error: {error_msg}")],
-                        structured_content={"error": error_msg, "validation_errors": e.errors()},
-                    )
-
-            interactive_url = AnyUrl(f"{AGENT_URL}/preview/{preview_id}/interactive")
-        except ValidationError as e:
-            error_msg = f"Invalid URL construction: {e}"
-            return ToolResult(
-                content=[TextContent(type="text", text=f"Error: {error_msg}")],
-                structured_content={"error": error_msg},
-            )
-
-        response = PreviewCreativeResponse(
-            previews=validated_previews,
-            interactive_url=interactive_url,
-            expires_at=expires_at,
-        )
-
-        # Return ToolResult with human message and structured data
-        preview_count = len(validated_previews)
-        format_id_str = fmt_id.id if hasattr(fmt_id, "id") else str(fmt_id)
-        message = f"Generated {preview_count} preview{'s' if preview_count != 1 else ''} for {format_id_str}"
-
-        return ToolResult(
-            content=[TextContent(type="text", text=message)],
-            structured_content=response.model_dump(mode="json", exclude_none=True),
+            output_format=output_format,
         )
     except ValueError as e:
         error_msg = f"Invalid input: {e}"
@@ -340,12 +226,256 @@ def preview_creative(
         )
 
 
+def _handle_single_preview(
+    format_id: str | dict[str, Any],
+    creative_manifest: dict[str, Any],
+    inputs: list[dict[str, Any]] | None,
+    template_id: str | None,
+    output_format: str,
+) -> ToolResult:
+    """Handle a single preview request."""
+    from .schemas.manifest import PreviewInput
+
+    # Parse inputs if provided
+    inputs_obj: list[PreviewInput] | None = None
+    if inputs:
+        inputs_obj = [PreviewInput(**inp) for inp in inputs]
+
+    # Handle format_id as string or FormatId object (dict)
+    if isinstance(format_id, str):
+        fmt_id = FormatId(agent_url=AGENT_URL, id=format_id)
+    else:  # dict
+        fmt_id = FormatId(**format_id)
+
+    request = PreviewCreativeRequest(
+        format_id=fmt_id,
+        creative_manifest=creative_manifest,
+        inputs=inputs_obj,
+        template_id=template_id,
+    )
+
+    # Validate format exists
+    fmt = get_format_by_id(request.format_id)
+    if not fmt:
+        error_msg = f"Format {request.format_id} not found"
+        return ToolResult(
+            content=[TextContent(type="text", text=f"Error: {error_msg}")],
+            structured_content={"error": error_msg},
+        )
+
+    # Validate manifest format_id matches
+    manifest_format_id = request.creative_manifest.get("format_id")
+    if manifest_format_id:
+        manifest_norm = normalize_format_id_for_comparison(manifest_format_id)
+        request_norm = normalize_format_id_for_comparison(request.format_id)
+        if manifest_norm != request_norm:
+            error_msg = (
+                f"Manifest format_id (id='{manifest_norm[0]}', agent_url='{manifest_norm[1]}') "
+                f"does not match request format_id (id='{request_norm[0]}', agent_url='{request_norm[1]}')"
+            )
+            return ToolResult(
+                content=[TextContent(type="text", text=f"Error: {error_msg}")],
+                structured_content={"error": error_msg},
+            )
+
+    # Validate manifest assets
+    from .validation import validate_manifest_assets
+
+    validation_errors = validate_manifest_assets(
+        request.creative_manifest,
+        check_remote_mime=False,
+        format_obj=fmt,
+    )
+    if validation_errors:
+        error_msg = "Asset validation failed"
+        return ToolResult(
+            content=[TextContent(type="text", text=f"Error: {error_msg}")],
+            structured_content={"error": error_msg, "validation_errors": validation_errors},
+        )
+
+    # Generate preview variants
+    preview_id = str(uuid.uuid4())
+
+    # If no inputs provided, generate default variants
+    if not request.inputs:
+        request.inputs = [
+            PreviewInput(name="Desktop", macros={"DEVICE_TYPE": "desktop"}),
+            PreviewInput(name="Mobile", macros={"DEVICE_TYPE": "mobile"}),
+            PreviewInput(name="Tablet", macros={"DEVICE_TYPE": "tablet"}),
+        ]
+
+    # Generate previews for each input set
+    from .storage import generate_preview_html, upload_preview_html
+
+    previews = []
+    for input_set in request.inputs:
+        html_content = generate_preview_html(fmt, request.creative_manifest, input_set)
+        variant_name = input_set.name.lower().replace(" ", "-")
+
+        if output_format == "html":
+            # Return HTML directly without uploading
+            preview = _generate_preview_variant(
+                format_obj=fmt,
+                manifest=request.creative_manifest,
+                input_set=input_set,
+                preview_id=preview_id,
+                preview_url=None,
+                preview_html=html_content,
+            )
+        else:
+            # Upload to Tigris and return URL
+            preview_url = upload_preview_html(preview_id, variant_name, html_content)
+            preview = _generate_preview_variant(
+                format_obj=fmt,
+                manifest=request.creative_manifest,
+                input_set=input_set,
+                preview_id=preview_id,
+                preview_url=preview_url,
+                preview_html=None,
+            )
+        previews.append(preview)
+
+    # Calculate expiration
+    expires_at = datetime.now(UTC) + timedelta(hours=24)
+
+    from pydantic import AnyUrl, ValidationError
+
+    from .schemas_generated._schemas_v1_creative_preview_creative_response_json import (
+        Preview,
+    )
+
+    # Validate previews
+    try:
+        validated_previews = []
+        for idx, preview_dict in enumerate(previews):
+            try:
+                validated_previews.append(Preview.model_validate(preview_dict))
+            except ValidationError as e:
+                error_msg = f"Preview validation failed for variant {idx + 1}"
+                return ToolResult(
+                    content=[TextContent(type="text", text=f"Error: {error_msg}")],
+                    structured_content={"error": error_msg, "validation_errors": e.errors()},
+                )
+
+        interactive_url = AnyUrl(f"{AGENT_URL}/preview/{preview_id}/interactive")
+    except ValidationError as e:
+        error_msg = f"Invalid URL construction: {e}"
+        return ToolResult(
+            content=[TextContent(type="text", text=f"Error: {error_msg}")],
+            structured_content={"error": error_msg},
+        )
+
+    # Build response dict for single mode
+    response_dict = {
+        "previews": validated_previews,
+        "interactive_url": str(interactive_url),
+        "expires_at": expires_at.isoformat(),
+    }
+
+    # Return result
+    preview_count = len(validated_previews)
+    format_id_str = fmt_id.id if hasattr(fmt_id, "id") else str(fmt_id)
+    message = f"Generated {preview_count} preview{'s' if preview_count != 1 else ''} for {format_id_str}"
+
+    return ToolResult(
+        content=[TextContent(type="text", text=message)],
+        structured_content=response_dict,
+    )
+
+
+def _handle_batch_preview(
+    requests: list[dict[str, Any]],
+    default_output_format: str,
+) -> ToolResult:
+    """Handle batch preview requests."""
+
+    if not requests or len(requests) == 0:
+        error_msg = "Batch mode requires at least one request"
+        return ToolResult(
+            content=[TextContent(type="text", text=f"Error: {error_msg}")],
+            structured_content={"error": error_msg},
+        )
+
+    if len(requests) > 50:
+        error_msg = "Batch mode supports maximum 50 requests"
+        return ToolResult(
+            content=[TextContent(type="text", text=f"Error: {error_msg}")],
+            structured_content={"error": error_msg},
+        )
+
+    results = []
+    for req in requests:
+        try:
+            # Extract request params
+            req_format_id = req.get("format_id")
+            req_manifest = req.get("creative_manifest")
+            req_inputs = req.get("inputs")
+            req_template = req.get("template_id")
+            req_output_format = req.get("output_format", default_output_format)
+
+            if not req_format_id or not req_manifest:
+                raise ValueError("Each request must have format_id and creative_manifest")
+
+            # Process single preview
+            result = _handle_single_preview(
+                format_id=req_format_id,
+                creative_manifest=req_manifest,
+                inputs=req_inputs,
+                template_id=req_template,
+                output_format=req_output_format,
+            )
+
+            # Extract structured content from result
+            if "error" in result.structured_content:
+                results.append(
+                    {
+                        "success": False,
+                        "error": {
+                            "code": "preview_failed",
+                            "message": result.structured_content["error"],
+                        },
+                    }
+                )
+            else:
+                results.append(
+                    {
+                        "success": True,
+                        "response": result.structured_content,
+                    }
+                )
+
+        except Exception as e:
+            results.append(
+                {
+                    "success": False,
+                    "error": {
+                        "code": "request_error",
+                        "message": str(e),
+                    },
+                }
+            )
+
+    # Build batch response
+    batch_response = {"results": results}
+    success_count = sum(1 for r in results if r.get("success"))
+    total_count = len(results)
+    message = (
+        f"Processed {total_count} preview requests ({success_count} succeeded, {total_count - success_count} failed)"
+    )
+
+    return ToolResult(
+        content=[TextContent(type="text", text=message)],
+        structured_content=batch_response,
+    )
+
+
 def _generate_preview_variant(
     format_obj: Any,
     manifest: Any,
     input_set: Any,
     preview_id: str,
-    preview_url: str,
+    preview_url: str | None,
+    preview_html: str | None = None,
 ) -> dict[str, Any]:
     """Generate a single preview variant per ADCP spec.
 
@@ -358,9 +488,6 @@ def _generate_preview_variant(
     from .schemas_generated._schemas_v1_creative_preview_creative_response_json import (
         Dimensions,
         Embedding,
-        Input,
-        Preview,
-        Render,
     )
 
     # Extract dimensions from format
@@ -381,35 +508,43 @@ def _generate_preview_variant(
     )
 
     # Create the single render (all formats render as HTML pages)
-    from pydantic import AnyUrl as PydanticUrl
-    from pydantic import ValidationError
+    # Build as dict and let Pydantic validate with correct union variant
+    render_dict: dict[str, Any] = {
+        "render_id": f"{preview_id}-primary",
+        "role": "primary",
+    }
 
-    try:
-        render = Render(
-            render_id=f"{preview_id}-primary",
-            preview_url=PydanticUrl(preview_url),
-            role="primary",
-            dimensions=dimensions,
-            embedding=embedding,
-        )
-    except ValidationError as e:
-        raise ValueError(f"Invalid preview URL '{preview_url}': {e}") from e
+    if dimensions:
+        render_dict["dimensions"] = {
+            "width": dimensions.width,
+            "height": dimensions.height,
+        }
+
+    render_dict["embedding"] = {
+        "recommended_sandbox": embedding.recommended_sandbox,
+        "requires_https": embedding.requires_https,
+        "supports_fullscreen": embedding.supports_fullscreen,
+    }
+
+    if preview_url:
+        render_dict["preview_url"] = preview_url
+    if preview_html:
+        render_dict["preview_html"] = preview_html
 
     # Create input echo
-    input_echo = Input(
-        name=input_set.name,
-        macros=input_set.macros,
-        context_description=input_set.context_description if hasattr(input_set, "context_description") else None,
-    )
+    input_dict = {
+        "name": input_set.name,
+        "macros": input_set.macros if input_set.macros else {},
+    }
+    if hasattr(input_set, "context_description") and input_set.context_description:
+        input_dict["context_description"] = input_set.context_description
 
-    # Build Preview per spec
-    preview = Preview(
-        preview_id=preview_id,
-        renders=[render],
-        input=input_echo,
-    )
-
-    return preview.model_dump(mode="json", exclude_none=True)
+    # Build Preview per spec as dict
+    return {
+        "preview_id": preview_id,
+        "renders": [render_dict],
+        "input": input_dict,
+    }
 
 
 @mcp.tool()
