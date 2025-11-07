@@ -527,10 +527,20 @@ def _generate_preview_variant(
         "supports_fullscreen": embedding.supports_fullscreen,
     }
 
-    if preview_url:
+    # Determine output_format based on which fields are provided
+    if preview_url and preview_html:
+        render_dict["output_format"] = "both"
         render_dict["preview_url"] = preview_url
-    if preview_html:
         render_dict["preview_html"] = preview_html
+    elif preview_html:
+        render_dict["output_format"] = "html"
+        render_dict["preview_html"] = preview_html
+    elif preview_url:
+        render_dict["output_format"] = "url"
+        render_dict["preview_url"] = preview_url
+    else:
+        # This shouldn't happen, but default to url if neither is provided
+        render_dict["output_format"] = "url"
 
     # Create input echo
     input_dict = {

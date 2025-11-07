@@ -10,6 +10,15 @@
       "format": "uri",
       "description": "URL reference"
     },
+    "url_type": {
+      "type": "string",
+      "enum": [
+        "clickthrough",
+        "tracker_pixel",
+        "tracker_script"
+      ],
+      "description": "Type of URL asset: 'clickthrough' for user click destination (landing page), 'tracker_pixel' for impression/event tracking via HTTP request (fires GET, expects pixel/204 response), 'tracker_script' for measurement SDKs that must load as <script> tag (OMID verification, native event trackers using method:2)"
+    },
     "description": {
       "type": "string",
       "description": "Description of what this URL points to"

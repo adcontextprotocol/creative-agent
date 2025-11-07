@@ -3,9 +3,16 @@
 
 from __future__ import annotations
 
+from enum import Enum
 from typing import Annotated, Optional
 
 from pydantic import AnyUrl, BaseModel, ConfigDict, Field
+
+
+class UrlType(Enum):
+    clickthrough = "clickthrough"
+    tracker_pixel = "tracker_pixel"
+    tracker_script = "tracker_script"
 
 
 class UrlAsset(BaseModel):
@@ -13,6 +20,12 @@ class UrlAsset(BaseModel):
         extra="forbid",
     )
     url: Annotated[AnyUrl, Field(description="URL reference")]
+    url_type: Annotated[
+        Optional[UrlType],
+        Field(
+            description="Type of URL asset: 'clickthrough' for user click destination (landing page), 'tracker_pixel' for impression/event tracking via HTTP request (fires GET, expects pixel/204 response), 'tracker_script' for measurement SDKs that must load as <script> tag (OMID verification, native event trackers using method:2)"
+        ),
+    ] = None
     description: Annotated[
         Optional[str], Field(description="Description of what this URL points to")
     ] = None

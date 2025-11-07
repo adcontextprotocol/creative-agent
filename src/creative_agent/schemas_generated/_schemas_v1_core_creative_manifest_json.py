@@ -177,11 +177,23 @@ class Assets18(BaseModel):
     ] = None
 
 
+class UrlType(Enum):
+    clickthrough = "clickthrough"
+    tracker_pixel = "tracker_pixel"
+    tracker_script = "tracker_script"
+
+
 class Assets19(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
     url: Annotated[AnyUrl, Field(description="URL reference")]
+    url_type: Annotated[
+        Optional[UrlType],
+        Field(
+            description="Type of URL asset: 'clickthrough' for user click destination (landing page), 'tracker_pixel' for impression/event tracking via HTTP request (fires GET, expects pixel/204 response), 'tracker_script' for measurement SDKs that must load as <script> tag (OMID verification, native event trackers using method:2)"
+        ),
+    ] = None
     description: Annotated[
         Optional[str], Field(description="Description of what this URL points to")
     ] = None
