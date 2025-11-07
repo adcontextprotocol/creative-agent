@@ -482,8 +482,23 @@ def _generate_preview_variant(
 
     Returns a Preview dict with:
     - preview_id (required)
-    - renders array (required)
-    - input (required)
+    - renders array (required), each containing:
+      - output_format: discriminator ("url", "html", or "both")
+      - preview_url: present when output_format is "url" or "both"
+      - preview_html: present when output_format is "html" or "both"
+      - render_id, role, dimensions, embedding metadata
+    - input (required): echoes back the input parameters
+
+    Args:
+        format_obj: Format object being previewed
+        manifest: Creative manifest data
+        input_set: Preview input with name and macros
+        preview_id: Unique preview identifier
+        preview_url: Optional URL for iframe embedding
+        preview_html: Optional raw HTML for direct embedding
+
+    Raises:
+        ValueError: If neither preview_url nor preview_html provided
     """
     from .schemas_generated._schemas_v1_core_format_json import Type
     from .schemas_generated._schemas_v1_creative_preview_creative_response_json import (
@@ -532,15 +547,15 @@ def _generate_preview_variant(
         render_dict["output_format"] = "both"
         render_dict["preview_url"] = preview_url
         render_dict["preview_html"] = preview_html
-    elif preview_html:
-        render_dict["output_format"] = "html"
-        render_dict["preview_html"] = preview_html
     elif preview_url:
         render_dict["output_format"] = "url"
         render_dict["preview_url"] = preview_url
+    elif preview_html:
+        render_dict["output_format"] = "html"
+        render_dict["preview_html"] = preview_html
     else:
-        # This shouldn't happen, but default to url if neither is provided
-        render_dict["output_format"] = "url"
+        # This is a programming error - one of preview_url or preview_html must be provided
+        raise ValueError("Internal error: Neither preview_url nor preview_html provided")
 
     # Create input echo
     input_dict = {

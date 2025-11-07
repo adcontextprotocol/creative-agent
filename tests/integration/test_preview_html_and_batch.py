@@ -70,6 +70,10 @@ class TestHTMLOutputMode:
         assert isinstance(first_render.preview_html, str)
         assert len(first_render.preview_html) > 0
 
+        # Verify output_format discriminator
+        assert first_render.output_format.value == "html"
+        assert first_render.preview_url is None
+
         # HTML should contain expected elements
         assert "<div" in first_render.preview_html or "<html" in first_render.preview_html
 
@@ -126,6 +130,10 @@ class TestHTMLOutputMode:
         # URL mode should have preview_url
         assert first_render.preview_url is not None
         assert str(first_render.preview_url).startswith("https://")
+
+        # Verify output_format discriminator
+        assert first_render.output_format.value == "url"
+        assert first_render.preview_html is None
 
         # S3 upload should be called 3 times (desktop, mobile, tablet)
         assert mock_s3_upload.call_count == 3
@@ -234,6 +242,10 @@ class TestBatchPreviewMode:
         assert isinstance(first_render["preview_html"], str)
         assert len(first_render["preview_html"]) > 0
 
+        # Verify output_format discriminator
+        assert first_render["output_format"] == "html"
+        assert "preview_url" not in first_render or first_render.get("preview_url") is None
+
     def test_batch_mode_handles_errors_gracefully(self):
         """Test that batch mode handles individual request errors."""
         valid_manifest = CreativeManifest(
@@ -310,7 +322,9 @@ class TestBatchPreviewMode:
         # First request should have URL (overridden)
         first_render = structured["results"][0]["response"]["previews"][0]["renders"][0]
         assert "preview_url" in first_render
+        assert first_render["output_format"] == "url"
 
         # Second request should have HTML (default)
         second_render = structured["results"][1]["response"]["previews"][0]["renders"][0]
         assert "preview_html" in second_render
+        assert second_render["output_format"] == "html"
