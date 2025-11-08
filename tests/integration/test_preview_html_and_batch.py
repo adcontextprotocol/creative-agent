@@ -71,8 +71,9 @@ class TestHTMLOutputMode:
         assert len(first_render.preview_html) > 0
 
         # Verify output_format discriminator
-        assert first_render.output_format.value == "html"
-        assert first_render.preview_url is None
+        assert first_render.output_format == "html"
+        # With discriminated unions, preview_url field doesn't exist for "html" variant
+        assert not hasattr(first_render, "preview_url")
 
         # HTML should contain expected elements
         assert "<div" in first_render.preview_html or "<html" in first_render.preview_html
@@ -132,8 +133,9 @@ class TestHTMLOutputMode:
         assert str(first_render.preview_url).startswith("https://")
 
         # Verify output_format discriminator
-        assert first_render.output_format.value == "url"
-        assert first_render.preview_html is None
+        assert first_render.output_format == "url"
+        # With discriminated unions, preview_html field doesn't exist for "url" variant
+        assert not hasattr(first_render, "preview_html")
 
         # S3 upload should be called 3 times (desktop, mobile, tablet)
         assert mock_s3_upload.call_count == 3

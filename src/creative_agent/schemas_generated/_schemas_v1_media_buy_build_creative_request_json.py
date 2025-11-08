@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import Annotated, Any, Optional, Union
+from typing import Annotated, Any, Literal, Optional, Union
 
 from pydantic import AnyUrl, AwareDatetime, BaseModel, ConfigDict, EmailStr, Field
 
@@ -117,10 +117,13 @@ class Assets44(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
+    delivery_type: Annotated[
+        Literal["url"],
+        Field(
+            description="Discriminator indicating VAST is delivered via URL endpoint"
+        ),
+    ]
     url: Annotated[AnyUrl, Field(description="URL endpoint that returns VAST XML")]
-    content: Annotated[Optional[str], Field(description="Inline VAST XML content")] = (
-        None
-    )
     vast_version: Annotated[
         Optional[VastVersion], Field(description="VAST specification version")
     ] = None
@@ -144,9 +147,12 @@ class Assets45(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    url: Annotated[
-        Optional[AnyUrl], Field(description="URL endpoint that returns VAST XML")
-    ] = None
+    delivery_type: Annotated[
+        Literal["inline"],
+        Field(
+            description="Discriminator indicating VAST is delivered as inline XML content"
+        ),
+    ]
     content: Annotated[str, Field(description="Inline VAST XML content")]
     vast_version: Annotated[
         Optional[VastVersion], Field(description="VAST specification version")
@@ -322,10 +328,13 @@ class Assets52(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
+    delivery_type: Annotated[
+        Literal["url"],
+        Field(
+            description="Discriminator indicating DAAST is delivered via URL endpoint"
+        ),
+    ]
     url: Annotated[AnyUrl, Field(description="URL endpoint that returns DAAST XML")]
-    content: Annotated[Optional[str], Field(description="Inline DAAST XML content")] = (
-        None
-    )
     daast_version: Annotated[
         Optional[DaastVersion], Field(description="DAAST specification version")
     ] = None
@@ -346,9 +355,12 @@ class Assets53(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    url: Annotated[
-        Optional[AnyUrl], Field(description="URL endpoint that returns DAAST XML")
-    ] = None
+    delivery_type: Annotated[
+        Literal["inline"],
+        Field(
+            description="Discriminator indicating DAAST is delivered as inline XML content"
+        ),
+    ]
     content: Annotated[str, Field(description="Inline DAAST XML content")]
     daast_version: Annotated[
         Optional[DaastVersion], Field(description="DAAST specification version")

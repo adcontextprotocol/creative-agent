@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import Annotated, Optional, Union
+from typing import Annotated, Literal, Optional, Union
 
 from pydantic import AnyUrl, BaseModel, ConfigDict, Field, RootModel
 
@@ -40,10 +40,13 @@ class VastAsset1(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
+    delivery_type: Annotated[
+        Literal["url"],
+        Field(
+            description="Discriminator indicating VAST is delivered via URL endpoint"
+        ),
+    ]
     url: Annotated[AnyUrl, Field(description="URL endpoint that returns VAST XML")]
-    content: Annotated[Optional[str], Field(description="Inline VAST XML content")] = (
-        None
-    )
     vast_version: Annotated[
         Optional[VastVersion], Field(description="VAST specification version")
     ] = None
@@ -67,9 +70,12 @@ class VastAsset2(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    url: Annotated[
-        Optional[AnyUrl], Field(description="URL endpoint that returns VAST XML")
-    ] = None
+    delivery_type: Annotated[
+        Literal["inline"],
+        Field(
+            description="Discriminator indicating VAST is delivered as inline XML content"
+        ),
+    ]
     content: Annotated[str, Field(description="Inline VAST XML content")]
     vast_version: Annotated[
         Optional[VastVersion], Field(description="VAST specification version")

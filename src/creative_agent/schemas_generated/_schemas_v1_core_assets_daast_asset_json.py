@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import Annotated, Optional, Union
+from typing import Annotated, Literal, Optional, Union
 
 from pydantic import AnyUrl, BaseModel, ConfigDict, Field, RootModel
 
@@ -32,10 +32,13 @@ class DaastAsset1(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
+    delivery_type: Annotated[
+        Literal["url"],
+        Field(
+            description="Discriminator indicating DAAST is delivered via URL endpoint"
+        ),
+    ]
     url: Annotated[AnyUrl, Field(description="URL endpoint that returns DAAST XML")]
-    content: Annotated[Optional[str], Field(description="Inline DAAST XML content")] = (
-        None
-    )
     daast_version: Annotated[
         Optional[DaastVersion], Field(description="DAAST specification version")
     ] = None
@@ -56,9 +59,12 @@ class DaastAsset2(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    url: Annotated[
-        Optional[AnyUrl], Field(description="URL endpoint that returns DAAST XML")
-    ] = None
+    delivery_type: Annotated[
+        Literal["inline"],
+        Field(
+            description="Discriminator indicating DAAST is delivered as inline XML content"
+        ),
+    ]
     content: Annotated[str, Field(description="Inline DAAST XML content")]
     daast_version: Annotated[
         Optional[DaastVersion], Field(description="DAAST specification version")
