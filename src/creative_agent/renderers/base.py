@@ -87,8 +87,14 @@ class BaseRenderer(ABC):
         asset_type_map = {}
         if hasattr(format_obj, "assets_required") and format_obj.assets_required:
             for required_asset in format_obj.assets_required:
-                asset_id = getattr(required_asset, "asset_id", None)
-                asset_type = getattr(required_asset, "asset_type", None)
+                # Handle both dict and object access
+                if isinstance(required_asset, dict):
+                    asset_id = required_asset.get("asset_id")
+                    asset_type = required_asset.get("asset_type")
+                else:
+                    asset_id = getattr(required_asset, "asset_id", None)
+                    asset_type = getattr(required_asset, "asset_type", None)
+
                 if asset_id and asset_type:
                     # Handle enum or string asset_type
                     if hasattr(asset_type, "value"):
