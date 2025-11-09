@@ -1,8 +1,9 @@
 """Tests for product card renderer."""
 
+from adcp.types.generated import FormatId
+
 from creative_agent.data.standard_formats import AGENT_URL, filter_formats
 from creative_agent.renderers.product_card_renderer import ProductCardRenderer
-from creative_agent.schemas_generated._schemas_v1_core_format_json import FormatId
 
 
 class TestProductCardStandardRendering:

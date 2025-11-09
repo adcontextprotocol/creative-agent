@@ -1,22 +1,11 @@
 """Integration tests for HTML output and batch preview modes."""
 
 import pytest
+from adcp.types.generated import FormatId, PreviewCreativeResponse
 
 from creative_agent import server
 from creative_agent.data.standard_formats import AGENT_URL
-from creative_agent.schemas_generated._schemas_v1_creative_preview_creative_request_json import (
-    Assets as ImageAsset,
-)
-from creative_agent.schemas_generated._schemas_v1_creative_preview_creative_request_json import (
-    Assets33 as UrlAsset,
-)
-from creative_agent.schemas_generated._schemas_v1_creative_preview_creative_request_json import (
-    CreativeManifest,
-    FormatId,
-)
-from creative_agent.schemas_generated._schemas_v1_creative_preview_creative_response_json import (
-    PreviewCreativeResponse,
-)
+from creative_agent.schemas import CreativeManifest
 
 # Get the actual function from the FastMCP wrapper
 preview_creative = server.preview_creative.fn
@@ -36,14 +25,16 @@ class TestHTMLOutputMode:
     def test_html_output_returns_preview_html(self):
         """Test that output_format='html' returns preview_html field."""
         manifest = CreativeManifest(
+            creative_id="test-creative",
+            name="Test Creative",
             format_id=FormatId(agent_url=AGENT_URL, id="display_300x250_image"),
             assets={
-                "banner_image": ImageAsset(
-                    url="https://example.com/banner.png",
-                    width=300,
-                    height=250,
-                ),
-                "click_url": UrlAsset(url="https://example.com/landing"),
+                "banner_image": {
+                    "url": "https://example.com/banner.png",
+                    "width": 300,
+                    "height": 250,
+                },
+                "click_url": {"url": "https://example.com/landing"},
             },
         )
 
@@ -61,34 +52,36 @@ class TestHTMLOutputMode:
 
         # Validate response structure
         response = PreviewCreativeResponse.model_validate(structured)
-        assert hasattr(response.root, "previews")
+        assert hasattr(response, "previews")
 
         # Check that preview_html is present
-        first_preview = response.root.previews[0]
-        first_render = first_preview.renders[0]
-        assert first_render.preview_html is not None
-        assert isinstance(first_render.preview_html, str)
-        assert len(first_render.preview_html) > 0
+        first_preview = response.previews[0]
+        first_render = first_preview["renders"][0]
+        assert first_render["preview_html"] is not None
+        assert isinstance(first_render["preview_html"], str)
+        assert len(first_render["preview_html"]) > 0
 
         # Verify output_format discriminator
-        assert first_render.output_format == "html"
+        assert first_render["output_format"] == "html"
         # With discriminated unions, preview_url field doesn't exist for "html" variant
-        assert not hasattr(first_render, "preview_url")
+        assert "preview_url" not in first_render
 
         # HTML should contain expected elements
-        assert "<div" in first_render.preview_html or "<html" in first_render.preview_html
+        assert "<div" in first_render["preview_html"] or "<html" in first_render["preview_html"]
 
     def test_html_output_does_not_upload_to_s3(self, mock_s3_upload):
         """Test that HTML output mode doesn't upload to S3."""
         manifest = CreativeManifest(
+            creative_id="test-creative",
+            name="Test Creative",
             format_id=FormatId(agent_url=AGENT_URL, id="display_300x250_image"),
             assets={
-                "banner_image": ImageAsset(
-                    url="https://example.com/banner.png",
-                    width=300,
-                    height=250,
-                ),
-                "click_url": UrlAsset(url="https://example.com/landing"),
+                "banner_image": {
+                    "url": "https://example.com/banner.png",
+                    "width": 300,
+                    "height": 250,
+                },
+                "click_url": {"url": "https://example.com/landing"},
             },
         )
 
@@ -104,14 +97,16 @@ class TestHTMLOutputMode:
     def test_url_output_still_works(self, mock_s3_upload):
         """Test that default URL output mode still works."""
         manifest = CreativeManifest(
+            creative_id="test-creative",
+            name="Test Creative",
             format_id=FormatId(agent_url=AGENT_URL, id="display_300x250_image"),
             assets={
-                "banner_image": ImageAsset(
-                    url="https://example.com/banner.png",
-                    width=300,
-                    height=250,
-                ),
-                "click_url": UrlAsset(url="https://example.com/landing"),
+                "banner_image": {
+                    "url": "https://example.com/banner.png",
+                    "width": 300,
+                    "height": 250,
+                },
+                "click_url": {"url": "https://example.com/landing"},
             },
         )
 
@@ -125,17 +120,17 @@ class TestHTMLOutputMode:
 
         # Validate response structure
         response = PreviewCreativeResponse.model_validate(structured)
-        first_preview = response.root.previews[0]
-        first_render = first_preview.renders[0]
+        first_preview = response.previews[0]
+        first_render = first_preview["renders"][0]
 
         # URL mode should have preview_url
-        assert first_render.preview_url is not None
-        assert str(first_render.preview_url).startswith("https://")
+        assert first_render["preview_url"] is not None
+        assert str(first_render["preview_url"]).startswith("https://")
 
         # Verify output_format discriminator
-        assert first_render.output_format == "url"
+        assert first_render["output_format"] == "url"
         # With discriminated unions, preview_html field doesn't exist for "url" variant
-        assert not hasattr(first_render, "preview_html")
+        assert "preview_html" not in first_render
 
         # S3 upload should be called 3 times (desktop, mobile, tablet)
         assert mock_s3_upload.call_count == 3
@@ -155,26 +150,30 @@ class TestBatchPreviewMode:
     def test_batch_mode_with_multiple_requests(self):
         """Test batch mode with multiple preview requests."""
         manifest1 = CreativeManifest(
+            creative_id="test-creative",
+            name="Test Creative",
             format_id=FormatId(agent_url=AGENT_URL, id="display_300x250_image"),
             assets={
-                "banner_image": ImageAsset(
-                    url="https://example.com/banner1.png",
-                    width=300,
-                    height=250,
-                ),
-                "click_url": UrlAsset(url="https://example.com/landing1"),
+                "banner_image": {
+                    "url": "https://example.com/banner1.png",
+                    "width": 300,
+                    "height": 250,
+                },
+                "click_url": {"url": "https://example.com/landing1"},
             },
         )
 
         manifest2 = CreativeManifest(
+            creative_id="test-creative",
+            name="Test Creative",
             format_id=FormatId(agent_url=AGENT_URL, id="display_728x90_image"),
             assets={
-                "banner_image": ImageAsset(
-                    url="https://example.com/banner2.png",
-                    width=728,
-                    height=90,
-                ),
-                "click_url": UrlAsset(url="https://example.com/landing2"),
+                "banner_image": {
+                    "url": "https://example.com/banner2.png",
+                    "width": 728,
+                    "height": 90,
+                },
+                "click_url": {"url": "https://example.com/landing2"},
             },
         )
 
@@ -212,14 +211,16 @@ class TestBatchPreviewMode:
     def test_batch_mode_with_html_output(self):
         """Test batch mode with HTML output format."""
         manifest = CreativeManifest(
+            creative_id="test-creative",
+            name="Test Creative",
             format_id=FormatId(agent_url=AGENT_URL, id="display_300x250_image"),
             assets={
-                "banner_image": ImageAsset(
-                    url="https://example.com/banner.png",
-                    width=300,
-                    height=250,
-                ),
-                "click_url": UrlAsset(url="https://example.com/landing"),
+                "banner_image": {
+                    "url": "https://example.com/banner.png",
+                    "width": 300,
+                    "height": 250,
+                },
+                "click_url": {"url": "https://example.com/landing"},
             },
         )
 
@@ -251,14 +252,16 @@ class TestBatchPreviewMode:
     def test_batch_mode_handles_errors_gracefully(self):
         """Test that batch mode handles individual request errors."""
         valid_manifest = CreativeManifest(
+            creative_id="test-creative",
+            name="Test Creative",
             format_id=FormatId(agent_url=AGENT_URL, id="display_300x250_image"),
             assets={
-                "banner_image": ImageAsset(
-                    url="https://example.com/banner.png",
-                    width=300,
-                    height=250,
-                ),
-                "click_url": UrlAsset(url="https://example.com/landing"),
+                "banner_image": {
+                    "url": "https://example.com/banner.png",
+                    "width": 300,
+                    "height": 250,
+                },
+                "click_url": {"url": "https://example.com/landing"},
             },
         )
 
@@ -292,14 +295,16 @@ class TestBatchPreviewMode:
     def test_batch_mode_per_request_output_format_override(self):
         """Test that individual requests can override batch output_format."""
         manifest = CreativeManifest(
+            creative_id="test-creative",
+            name="Test Creative",
             format_id=FormatId(agent_url=AGENT_URL, id="display_300x250_image"),
             assets={
-                "banner_image": ImageAsset(
-                    url="https://example.com/banner.png",
-                    width=300,
-                    height=250,
-                ),
-                "click_url": UrlAsset(url="https://example.com/landing"),
+                "banner_image": {
+                    "url": "https://example.com/banner.png",
+                    "width": 300,
+                    "height": 250,
+                },
+                "click_url": {"url": "https://example.com/landing"},
             },
         )
 

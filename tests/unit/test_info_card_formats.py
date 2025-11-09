@@ -1,7 +1,9 @@
 """Tests for info card format definitions."""
 
+from adcp.types.generated import FormatId
+
+from creative_agent.data.format_types import AssetType, Type
 from creative_agent.data.standard_formats import AGENT_URL, INFO_CARD_FORMATS, filter_formats
-from creative_agent.schemas_generated._schemas_v1_core_format_json import AssetType, FormatId, Type
 
 
 class TestInfoCardFormatsExist:

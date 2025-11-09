@@ -1,7 +1,9 @@
 """Tests for format filtering logic."""
 
+from adcp.types.generated import FormatId
+
+from creative_agent.data.format_types import Type
 from creative_agent.data.standard_formats import filter_formats
-from creative_agent.schemas_generated._schemas_v1_core_format_json import FormatId, Type
 
 
 class TestDimensionFiltering:

@@ -40,9 +40,6 @@ dev = [
     "pytest-cov>=6.2.1",
     "pytest-mock>=3.14.1",
     "ruff>=0.8.0",
-    # Schema generation
-    "datamodel-code-generator>=0.26.0",
-    "jsonref>=1.1.0",
     # Type stubs
     "boto3-stubs[s3]>=1.35.0",
     "types-pillow>=10.0.0",
@@ -60,7 +57,6 @@ exclude = [
     ".venv",
     "build",
     "dist",
-    "src/creative_agent/schemas_generated",
 ]
 
 [tool.ruff.lint]
@@ -138,7 +134,6 @@ omit = [
     "tests/*",
     "*/__pycache__/*",
     "*/.venv/*",
-    "src/creative_agent/schemas_generated/*",
 ]
 
 [tool.coverage.report]

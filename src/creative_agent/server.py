@@ -6,6 +6,7 @@ import uuid
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
+from adcp.types.generated import FormatId
 from fastmcp import FastMCP
 from fastmcp.tools.tool import ToolResult
 from mcp.types import TextContent
@@ -21,7 +22,6 @@ from .schemas import (
     ListCreativeFormatsResponse,
     PreviewCreativeRequest,
 )
-from .schemas_generated._schemas_v1_core_format_json import FormatId
 
 mcp = FastMCP("adcp-creative-agent")
 
@@ -105,34 +105,20 @@ def list_creative_formats(
             name_search=name_search,
         )
 
-        # Import required types
-        from .schemas_generated._schemas_v1_creative_list_creative_formats_response_json import (
-            Capability,
-            CreativeAgent,
-        )
-        from .schemas_generated._schemas_v1_creative_list_creative_formats_response_json import (
-            Format as ResponseFormat,
-        )
-
-        # Convert capability strings to Capability enum
-        capabilities_enum = [Capability(cap) for cap in AGENT_CAPABILITIES]
-
-        # Convert core Format objects to response Format objects
-        response_formats = [ResponseFormat(**fmt.model_dump(mode="json", exclude_none=True)) for fmt in formats]
-
+        # Prepare response - library uses flexible types
         response = ListCreativeFormatsResponse(
-            formats=response_formats,
+            formats=formats,  # Already Format objects from library
             creative_agents=[
-                CreativeAgent(
-                    agent_url=AGENT_URL,
-                    agent_name=AGENT_NAME,
-                    capabilities=capabilities_enum,
-                )
+                {
+                    "agent_url": AGENT_URL,
+                    "agent_name": AGENT_NAME,
+                    "capabilities": AGENT_CAPABILITIES,  # Already strings
+                }
             ],
         )
 
         # Return ToolResult with both human message and structured data
-        format_count = len(response_formats)
+        format_count = len(formats)
         filter_desc = []
         if type:
             filter_desc.append(f"type={type}")
@@ -338,26 +324,11 @@ def _handle_single_preview(
     # Calculate expiration
     expires_at = datetime.now(UTC) + timedelta(hours=24)
 
-    from pydantic import AnyUrl, ValidationError
+    from pydantic import ValidationError
 
-    from .schemas_generated._schemas_v1_creative_preview_creative_response_json import (
-        Preview,
-    )
-
-    # Validate previews
+    # Prepare response - validation happens when creating PreviewCreativeResponse
     try:
-        validated_previews = []
-        for idx, preview_dict in enumerate(previews):
-            try:
-                validated_previews.append(Preview.model_validate(preview_dict))
-            except ValidationError as e:
-                error_msg = f"Preview validation failed for variant {idx + 1}"
-                return ToolResult(
-                    content=[TextContent(type="text", text=f"Error: {error_msg}")],
-                    structured_content={"error": error_msg, "validation_errors": e.errors()},
-                )
-
-        interactive_url = AnyUrl(f"{AGENT_URL}/preview/{preview_id}/interactive")
+        interactive_url = f"{AGENT_URL}/preview/{preview_id}/interactive"
     except ValidationError as e:
         error_msg = f"Invalid URL construction: {e}"
         return ToolResult(
@@ -367,13 +338,13 @@ def _handle_single_preview(
 
     # Build response dict for single mode
     response_dict = {
-        "previews": validated_previews,
+        "previews": previews,
         "interactive_url": str(interactive_url),
         "expires_at": expires_at.isoformat(),
     }
 
     # Return result
-    preview_count = len(validated_previews)
+    preview_count = len(previews)
     format_id_str = fmt_id.id if hasattr(fmt_id, "id") else str(fmt_id)
     message = f"Generated {preview_count} preview{'s' if preview_count != 1 else ''} for {format_id_str}"
 
@@ -500,28 +471,26 @@ def _generate_preview_variant(
     Raises:
         ValueError: If neither preview_url nor preview_html provided
     """
-    from .schemas_generated._schemas_v1_core_format_json import Type
-    from .schemas_generated._schemas_v1_creative_preview_creative_response_json import (
-        Dimensions,
-        Embedding,
-    )
-
     # Extract dimensions from format
     dimensions = None
     if format_obj.renders and len(format_obj.renders) > 0:
         primary_render = format_obj.renders[0]
-        if primary_render.dimensions and primary_render.dimensions.width and primary_render.dimensions.height:
-            dimensions = Dimensions(
-                width=float(primary_render.dimensions.width),
-                height=float(primary_render.dimensions.height),
-            )
+        if (
+            primary_render.get("dimensions")
+            and primary_render.get("dimensions", {}).get("width")
+            and primary_render.get("dimensions", {}).get("height")
+        ):
+            dimensions = {
+                "width": float(primary_render["dimensions"]["width"]),
+                "height": float(primary_render["dimensions"]["height"]),
+            }
 
     # Build embedding metadata
-    embedding = Embedding(
-        recommended_sandbox="allow-scripts allow-same-origin",
-        requires_https=False,
-        supports_fullscreen=format_obj.type in [Type.video, Type.rich_media],
-    )
+    embedding = {
+        "recommended_sandbox": "allow-scripts allow-same-origin",
+        "requires_https": False,
+        "supports_fullscreen": format_obj.type in ["video", "rich_media"],
+    }
 
     # Create the single render (all formats render as HTML pages)
     # Build as dict and let Pydantic validate with correct union variant
@@ -531,16 +500,9 @@ def _generate_preview_variant(
     }
 
     if dimensions:
-        render_dict["dimensions"] = {
-            "width": dimensions.width,
-            "height": dimensions.height,
-        }
+        render_dict["dimensions"] = dimensions  # Already a dict
 
-    render_dict["embedding"] = {
-        "recommended_sandbox": embedding.recommended_sandbox,
-        "requires_https": embedding.requires_https,
-        "supports_fullscreen": embedding.supports_fullscreen,
-    }
+    render_dict["embedding"] = embedding  # Already a dict
 
     # Determine output_format based on which fields are provided
     if preview_url and preview_html:
@@ -681,15 +643,15 @@ Description: {output_fmt.description}
 
             format_spec += "\nRequired Assets:\n"
             if output_fmt.assets_required:
-                from .schemas_generated._schemas_v1_core_format_json import AssetsRequired1
-
                 for asset_req in output_fmt.assets_required:
-                    if isinstance(asset_req, AssetsRequired1):
-                        # Repeatable group
-                        format_spec += f"- {asset_req.asset_group_id} (repeatable group)\n"
-                    else:
-                        # Regular asset
-                        format_spec += f"- {asset_req.asset_id} ({asset_req.asset_type.value})\n"
+                    if isinstance(asset_req, dict):
+                        if "asset_group_id" in asset_req:
+                            # Repeatable group
+                            format_spec += f"- {asset_req['asset_group_id']} (repeatable group)\n"
+                        elif "asset_id" in asset_req:
+                            # Regular asset
+                            asset_type = asset_req.get("asset_type", "unknown")
+                            format_spec += f"- {asset_req['asset_id']} ({asset_type})\n"
 
             # Add brand context if provided
             brand_context = ""
