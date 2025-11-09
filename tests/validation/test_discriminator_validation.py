@@ -7,27 +7,29 @@ These tests verify that discriminator fields properly enforce type safety:
 """
 
 import pytest
+from adcp.types.generated import (
+    BothPreviewRender,
+    HtmlPreviewRender,
+    InlineDaastAsset,
+    InlineVastAsset,
+    MediaSubAsset,
+    TextSubAsset,
+    UrlDaastAsset,
+    UrlPreviewRender,
+    UrlVastAsset,
+)
 from pydantic import ValidationError
 
-from creative_agent.schemas_generated._schemas_v1_core_assets_daast_asset_json import (
-    DaastAsset1,
-    DaastAsset2,
-)
-from creative_agent.schemas_generated._schemas_v1_core_assets_vast_asset_json import (
-    VastAsset,
-    VastAsset1,
-    VastAsset2,
-)
-from creative_agent.schemas_generated._schemas_v1_core_sub_asset_json import (
-    SubAsset,
-    SubAsset1,
-    SubAsset2,
-)
-from creative_agent.schemas_generated._schemas_v1_creative_preview_creative_response_json import (
-    Renders,
-    Renders1,
-    Renders2,
-)
+# Compatibility aliases for test code
+DaastAsset1 = UrlDaastAsset
+DaastAsset2 = InlineDaastAsset
+VastAsset1 = UrlVastAsset
+VastAsset2 = InlineVastAsset
+SubAsset1 = MediaSubAsset
+SubAsset2 = TextSubAsset
+Renders = UrlPreviewRender
+Renders1 = HtmlPreviewRender
+Renders2 = BothPreviewRender
 
 
 class TestSubAssetDiscriminator:
@@ -42,7 +44,7 @@ class TestSubAssetDiscriminator:
             content_uri="https://example.com/thumb.jpg",
         )
         assert asset.asset_kind == "media"
-        assert asset.content_uri.unicode_string() == "https://example.com/thumb.jpg"
+        assert asset.content_uri == "https://example.com/thumb.jpg"
 
     def test_text_asset_valid(self):
         """Text asset with asset_kind='text' should validate."""
@@ -127,9 +129,9 @@ class TestSubAssetDiscriminator:
             "asset_id": "logo_1",
             "content_uri": "https://example.com/logo.png",
         }
-        asset = SubAsset.model_validate(media_dict)
-        assert isinstance(asset.root, SubAsset1)
-        assert asset.root.asset_kind == "media"
+        asset = MediaSubAsset.model_validate(media_dict)
+        assert isinstance(asset, MediaSubAsset)
+        assert asset.asset_kind == "media"
 
         # Text variant
         text_dict = {
@@ -138,9 +140,9 @@ class TestSubAssetDiscriminator:
             "asset_id": "cta_1",
             "content": "Shop Now",
         }
-        asset = SubAsset.model_validate(text_dict)
-        assert isinstance(asset.root, SubAsset2)
-        assert asset.root.asset_kind == "text"
+        asset = TextSubAsset.model_validate(text_dict)
+        assert isinstance(asset, TextSubAsset)
+        assert asset.asset_kind == "text"
 
 
 class TestVastAssetDiscriminator:
@@ -198,18 +200,18 @@ class TestVastAssetDiscriminator:
             "url": "https://adserver.com/vast.xml",
             "vast_version": "4.2",
         }
-        asset = VastAsset.model_validate(url_dict)
-        assert isinstance(asset.root, VastAsset1)
-        assert asset.root.delivery_type == "url"
+        asset = UrlVastAsset.model_validate(url_dict)
+        assert isinstance(asset, UrlVastAsset)
+        assert asset.delivery_type == "url"
 
         # Inline variant
         inline_dict = {
             "delivery_type": "inline",
             "content": "<VAST version='3.0'>...</VAST>",
         }
-        asset = VastAsset.model_validate(inline_dict)
-        assert isinstance(asset.root, VastAsset2)
-        assert asset.root.delivery_type == "inline"
+        asset = InlineVastAsset.model_validate(inline_dict)
+        assert isinstance(asset, InlineVastAsset)
+        assert asset.delivery_type == "inline"
 
 
 class TestDaastAssetDiscriminator:
@@ -329,46 +331,42 @@ class TestDiscriminatorSerializationRoundtrip:
     def test_sub_asset_json_roundtrip(self):
         """SubAsset should serialize and deserialize preserving variant type."""
         # Create media asset
-        media_asset = SubAsset(
-            root=SubAsset1(
-                asset_kind="media",
-                asset_type="logo",
-                asset_id="logo_1",
-                content_uri="https://example.com/logo.png",
-            )
+        media_asset = MediaSubAsset(
+            asset_kind="media",
+            asset_type="logo",
+            asset_id="logo_1",
+            content_uri="https://example.com/logo.png",
         )
 
         # Serialize to JSON
         json_str = media_asset.model_dump_json()
 
         # Deserialize back
-        parsed = SubAsset.model_validate_json(json_str)
+        parsed = MediaSubAsset.model_validate_json(json_str)
 
         # Verify it's still the correct variant
-        assert isinstance(parsed.root, SubAsset1)
-        assert parsed.root.asset_kind == "media"
-        assert str(parsed.root.content_uri) == "https://example.com/logo.png"
+        assert isinstance(parsed, MediaSubAsset)
+        assert parsed.asset_kind == "media"
+        assert parsed.content_uri == "https://example.com/logo.png"
 
     def test_vast_asset_json_roundtrip(self):
         """VastAsset should serialize and deserialize preserving variant type."""
         # Create inline VAST asset
-        inline_asset = VastAsset(
-            root=VastAsset2(
-                delivery_type="inline",
-                content="<VAST version='4.0'>...</VAST>",
-            )
+        inline_asset = InlineVastAsset(
+            delivery_type="inline",
+            content="<VAST version='4.0'>...</VAST>",
         )
 
         # Serialize to JSON
         json_str = inline_asset.model_dump_json()
 
         # Deserialize back
-        parsed = VastAsset.model_validate_json(json_str)
+        parsed = InlineVastAsset.model_validate_json(json_str)
 
         # Verify it's still the correct variant
-        assert isinstance(parsed.root, VastAsset2)
-        assert parsed.root.delivery_type == "inline"
-        assert parsed.root.content == "<VAST version='4.0'>...</VAST>"
+        assert isinstance(parsed, InlineVastAsset)
+        assert parsed.delivery_type == "inline"
+        assert parsed.content == "<VAST version='4.0'>...</VAST>"
 
     def test_preview_render_json_roundtrip(self):
         """Preview render should serialize and deserialize preserving variant type."""
