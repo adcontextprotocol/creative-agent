@@ -377,8 +377,15 @@ def validate_manifest_assets(
     asset_type_map = {}
     if format_obj and hasattr(format_obj, "assets_required") and format_obj.assets_required:
         for required_asset in format_obj.assets_required:
-            asset_id = getattr(required_asset, "asset_id", None)
-            asset_type = getattr(required_asset, "asset_type", None)
+            # Handle both dict and object formats for required_asset
+            if isinstance(required_asset, dict):
+                asset_id = required_asset.get("asset_id")
+                asset_type = required_asset.get("asset_type")
+                is_required = required_asset.get("required", True)
+            else:
+                asset_id = getattr(required_asset, "asset_id", None)
+                asset_type = getattr(required_asset, "asset_type", None)
+                is_required = getattr(required_asset, "required", True)
 
             if asset_id and asset_type:
                 # Handle enum or string asset_type
@@ -388,7 +395,6 @@ def validate_manifest_assets(
                     asset_type_map[asset_id] = str(asset_type)
 
             # Check if this is a required (non-optional) asset
-            is_required = getattr(required_asset, "required", True)
             if is_required and asset_id and asset_id not in assets:
                 errors.append(f"Required asset missing: {asset_id}")
 

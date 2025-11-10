@@ -3,14 +3,15 @@
 # mypy: disable-error-code="call-arg"
 # Pydantic models with extra='forbid' trigger false positives when optional fields aren't passed
 
-from pydantic import AnyUrl
+from typing import Any
+
+from adcp.types.generated import FormatId
 
 from ..schemas import CreativeFormat
-from ..schemas_generated._schemas_v1_core_format_json import (
+from .format_types import (
     AssetsRequired,
     AssetType,
     Dimensions,
-    FormatId,
     Render,
     Responsive,
     Type,
@@ -18,7 +19,7 @@ from ..schemas_generated._schemas_v1_core_format_json import (
 )
 
 # Agent configuration
-AGENT_URL = AnyUrl("https://creative.adcontextprotocol.org")
+AGENT_URL = "https://creative.adcontextprotocol.org"
 AGENT_NAME = "AdCP Standard Creative Agent"
 AGENT_CAPABILITIES = ["validation", "assembly", "generation", "preview"]
 
@@ -42,9 +43,27 @@ def create_format_id(format_name: str) -> FormatId:
     return FormatId(agent_url=AGENT_URL, id=format_name)
 
 
-def create_fixed_render(width: int, height: int, role: str = "primary") -> Render:
+def create_asset_required(
+    asset_id: str,
+    asset_type: AssetType,
+    required: bool = True,
+    requirements: dict[str, str | int | float | bool | list[str]] | None = None,
+) -> dict[str, str | bool | dict[str, str | int | float | bool | list[str]] | AssetType]:
+    """Create an assets_required entry as a dict for the Format model."""
+    asset = AssetsRequired(
+        asset_id=asset_id,
+        asset_type=asset_type,
+        required=required,
+        requirements=requirements,
+    )
+    return asset.model_dump(mode="json")
+
+
+def create_fixed_render(
+    width: int, height: int, role: str = "primary"
+) -> dict[str, str | dict[str, float | bool | Responsive | Unit]]:
     """Create a render with fixed dimensions (non-responsive)."""
-    return Render(
+    render = Render(
         role=role,
         dimensions=Dimensions(
             width=width,
@@ -53,11 +72,14 @@ def create_fixed_render(width: int, height: int, role: str = "primary") -> Rende
             unit=Unit.px,
         ),
     )
+    return render.model_dump(mode="json")
 
 
-def create_responsive_render(role: str = "primary") -> Render:
+def create_responsive_render(
+    role: str = "primary",
+) -> dict[str, str | dict[str, float | None | bool | Responsive | Unit]]:
     """Create a render with responsive dimensions."""
-    return Render(
+    render = Render(
         role=role,
         dimensions=Dimensions(
             width=None,
@@ -66,6 +88,7 @@ def create_responsive_render(role: str = "primary") -> Render:
             unit=Unit.px,
         ),
     )
+    return render.model_dump(mode="json")
 
 
 # Generative Formats - AI-powered creative generation
@@ -74,19 +97,19 @@ GENERATIVE_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("display_300x250_generative"),
         name="Medium Rectangle - AI Generated",
-        type=Type.display,
+        type="display",
         description="AI-generated 300x250 banner from brand context and prompt",
         renders=[create_fixed_render(300, 250)],
         output_format_ids=[create_format_id("display_300x250_image")],
         supported_macros=COMMON_MACROS,
         assets_required=[
-            AssetsRequired(
+            create_asset_required(
                 asset_id="promoted_offerings",
                 asset_type=AssetType.promoted_offerings,
                 required=True,
                 requirements={"description": "Brand manifest and product offerings for AI generation"},
             ),
-            AssetsRequired(
+            create_asset_required(
                 asset_id="generation_prompt",
                 asset_type=AssetType.text,
                 required=True,
@@ -97,19 +120,19 @@ GENERATIVE_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("display_728x90_generative"),
         name="Leaderboard - AI Generated",
-        type=Type.display,
+        type="display",
         description="AI-generated 728x90 banner from brand context and prompt",
         renders=[create_fixed_render(728, 90)],
         output_format_ids=[create_format_id("display_728x90_image")],
         supported_macros=COMMON_MACROS,
         assets_required=[
-            AssetsRequired(
+            create_asset_required(
                 asset_id="promoted_offerings",
                 asset_type=AssetType.promoted_offerings,
                 required=True,
                 requirements={"description": "Brand manifest and product offerings for AI generation"},
             ),
-            AssetsRequired(
+            create_asset_required(
                 asset_id="generation_prompt",
                 asset_type=AssetType.text,
                 required=True,
@@ -120,19 +143,19 @@ GENERATIVE_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("display_320x50_generative"),
         name="Mobile Banner - AI Generated",
-        type=Type.display,
+        type="display",
         description="AI-generated 320x50 mobile banner from brand context and prompt",
         renders=[create_fixed_render(320, 50)],
         output_format_ids=[create_format_id("display_320x50_image")],
         supported_macros=COMMON_MACROS,
         assets_required=[
-            AssetsRequired(
+            create_asset_required(
                 asset_id="promoted_offerings",
                 asset_type=AssetType.promoted_offerings,
                 required=True,
                 requirements={"description": "Brand manifest and product offerings for AI generation"},
             ),
-            AssetsRequired(
+            create_asset_required(
                 asset_id="generation_prompt",
                 asset_type=AssetType.text,
                 required=True,
@@ -143,19 +166,19 @@ GENERATIVE_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("display_160x600_generative"),
         name="Wide Skyscraper - AI Generated",
-        type=Type.display,
+        type="display",
         description="AI-generated 160x600 wide skyscraper from brand context and prompt",
         renders=[create_fixed_render(160, 600)],
         output_format_ids=[create_format_id("display_160x600_image")],
         supported_macros=COMMON_MACROS,
         assets_required=[
-            AssetsRequired(
+            create_asset_required(
                 asset_id="promoted_offerings",
                 asset_type=AssetType.promoted_offerings,
                 required=True,
                 requirements={"description": "Brand manifest and product offerings for AI generation"},
             ),
-            AssetsRequired(
+            create_asset_required(
                 asset_id="generation_prompt",
                 asset_type=AssetType.text,
                 required=True,
@@ -166,19 +189,19 @@ GENERATIVE_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("display_336x280_generative"),
         name="Large Rectangle - AI Generated",
-        type=Type.display,
+        type="display",
         description="AI-generated 336x280 large rectangle from brand context and prompt",
         renders=[create_fixed_render(336, 280)],
         output_format_ids=[create_format_id("display_336x280_image")],
         supported_macros=COMMON_MACROS,
         assets_required=[
-            AssetsRequired(
+            create_asset_required(
                 asset_id="promoted_offerings",
                 asset_type=AssetType.promoted_offerings,
                 required=True,
                 requirements={"description": "Brand manifest and product offerings for AI generation"},
             ),
-            AssetsRequired(
+            create_asset_required(
                 asset_id="generation_prompt",
                 asset_type=AssetType.text,
                 required=True,
@@ -189,19 +212,19 @@ GENERATIVE_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("display_300x600_generative"),
         name="Half Page - AI Generated",
-        type=Type.display,
+        type="display",
         description="AI-generated 300x600 half page from brand context and prompt",
         renders=[create_fixed_render(300, 600)],
         output_format_ids=[create_format_id("display_300x600_image")],
         supported_macros=COMMON_MACROS,
         assets_required=[
-            AssetsRequired(
+            create_asset_required(
                 asset_id="promoted_offerings",
                 asset_type=AssetType.promoted_offerings,
                 required=True,
                 requirements={"description": "Brand manifest and product offerings for AI generation"},
             ),
-            AssetsRequired(
+            create_asset_required(
                 asset_id="generation_prompt",
                 asset_type=AssetType.text,
                 required=True,
@@ -212,19 +235,19 @@ GENERATIVE_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("display_970x250_generative"),
         name="Billboard - AI Generated",
-        type=Type.display,
+        type="display",
         description="AI-generated 970x250 billboard from brand context and prompt",
         renders=[create_fixed_render(970, 250)],
         output_format_ids=[create_format_id("display_970x250_image")],
         supported_macros=COMMON_MACROS,
         assets_required=[
-            AssetsRequired(
+            create_asset_required(
                 asset_id="promoted_offerings",
                 asset_type=AssetType.promoted_offerings,
                 required=True,
                 requirements={"description": "Brand manifest and product offerings for AI generation"},
             ),
-            AssetsRequired(
+            create_asset_required(
                 asset_id="generation_prompt",
                 asset_type=AssetType.text,
                 required=True,
@@ -239,11 +262,11 @@ VIDEO_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("video_standard_30s"),
         name="Standard Video - 30 seconds",
-        type=Type.video,
+        type="video",
         description="30-second video ad in standard aspect ratios",
         supported_macros=[*COMMON_MACROS, "VIDEO_ID", "POD_POSITION", "CONTENT_GENRE"],
         assets_required=[
-            AssetsRequired(
+            create_asset_required(
                 asset_id="video_file",
                 asset_type=AssetType.video,
                 required=True,
@@ -258,11 +281,11 @@ VIDEO_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("video_standard_15s"),
         name="Standard Video - 15 seconds",
-        type=Type.video,
+        type="video",
         description="15-second video ad in standard aspect ratios",
         supported_macros=[*COMMON_MACROS, "VIDEO_ID", "POD_POSITION", "CONTENT_GENRE"],
         assets_required=[
-            AssetsRequired(
+            create_asset_required(
                 asset_id="video_file",
                 asset_type=AssetType.video,
                 required=True,
@@ -277,11 +300,11 @@ VIDEO_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("video_vast_30s"),
         name="VAST Video - 30 seconds",
-        type=Type.video,
+        type="video",
         description="30-second video ad via VAST tag",
         supported_macros=[*COMMON_MACROS, "VIDEO_ID", "POD_POSITION", "CONTENT_GENRE"],
         assets_required=[
-            AssetsRequired(
+            create_asset_required(
                 asset_id="vast_tag",
                 asset_type=AssetType.text,
                 required=True,
@@ -294,12 +317,12 @@ VIDEO_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("video_1920x1080"),
         name="Full HD Video - 1920x1080",
-        type=Type.video,
+        type="video",
         description="1920x1080 Full HD video (16:9)",
         supported_macros=[*COMMON_MACROS, "VIDEO_ID", "POD_POSITION", "CONTENT_GENRE"],
         renders=[create_fixed_render(1920, 1080)],
         assets_required=[
-            AssetsRequired(
+            create_asset_required(
                 asset_id="video_file",
                 asset_type=AssetType.video,
                 required=True,
@@ -315,12 +338,12 @@ VIDEO_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("video_1280x720"),
         name="HD Video - 1280x720",
-        type=Type.video,
+        type="video",
         description="1280x720 HD video (16:9)",
         supported_macros=[*COMMON_MACROS, "VIDEO_ID", "POD_POSITION", "CONTENT_GENRE"],
         renders=[create_fixed_render(1280, 720)],
         assets_required=[
-            AssetsRequired(
+            create_asset_required(
                 asset_id="video_file",
                 asset_type=AssetType.video,
                 required=True,
@@ -336,12 +359,12 @@ VIDEO_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("video_1080x1920"),
         name="Vertical Video - 1080x1920",
-        type=Type.video,
+        type="video",
         description="1080x1920 vertical video (9:16) for mobile stories",
         supported_macros=[*COMMON_MACROS, "VIDEO_ID", "POD_POSITION", "CONTENT_GENRE"],
         renders=[create_fixed_render(1080, 1920)],
         assets_required=[
-            AssetsRequired(
+            create_asset_required(
                 asset_id="video_file",
                 asset_type=AssetType.video,
                 required=True,
@@ -357,12 +380,12 @@ VIDEO_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("video_1080x1080"),
         name="Square Video - 1080x1080",
-        type=Type.video,
+        type="video",
         description="1080x1080 square video (1:1) for social feeds",
         supported_macros=[*COMMON_MACROS, "VIDEO_ID", "POD_POSITION", "CONTENT_GENRE"],
         renders=[create_fixed_render(1080, 1080)],
         assets_required=[
-            AssetsRequired(
+            create_asset_required(
                 asset_id="video_file",
                 asset_type=AssetType.video,
                 required=True,
@@ -378,11 +401,11 @@ VIDEO_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("video_ctv_preroll_30s"),
         name="CTV Pre-Roll - 30 seconds",
-        type=Type.video,
+        type="video",
         description="30-second pre-roll ad for Connected TV and streaming platforms",
         supported_macros=[*COMMON_MACROS, "VIDEO_ID", "POD_POSITION", "CONTENT_GENRE", "PLAYER_SIZE"],
         assets_required=[
-            AssetsRequired(
+            create_asset_required(
                 asset_id="video_file",
                 asset_type=AssetType.video,
                 required=True,
@@ -397,11 +420,11 @@ VIDEO_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("video_ctv_midroll_30s"),
         name="CTV Mid-Roll - 30 seconds",
-        type=Type.video,
+        type="video",
         description="30-second mid-roll ad for Connected TV and streaming platforms",
         supported_macros=[*COMMON_MACROS, "VIDEO_ID", "POD_POSITION", "CONTENT_GENRE", "PLAYER_SIZE"],
         assets_required=[
-            AssetsRequired(
+            create_asset_required(
                 asset_id="video_file",
                 asset_type=AssetType.video,
                 required=True,
@@ -420,12 +443,12 @@ DISPLAY_IMAGE_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("display_300x250_image"),
         name="Medium Rectangle - Image",
-        type=Type.display,
+        type="display",
         description="300x250 static image banner",
         supported_macros=COMMON_MACROS,
         renders=[create_fixed_render(300, 250)],
         assets_required=[
-            AssetsRequired(
+            create_asset_required(
                 asset_id="banner_image",
                 asset_type=AssetType.image,
                 required=True,
@@ -436,7 +459,7 @@ DISPLAY_IMAGE_FORMATS = [
                     "acceptable_formats": ["jpg", "png", "gif", "webp"],
                 },
             ),
-            AssetsRequired(
+            create_asset_required(
                 asset_id="click_url",
                 asset_type=AssetType.url,
                 required=True,
@@ -449,12 +472,12 @@ DISPLAY_IMAGE_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("display_728x90_image"),
         name="Leaderboard - Image",
-        type=Type.display,
+        type="display",
         description="728x90 static image banner",
         supported_macros=COMMON_MACROS,
         renders=[create_fixed_render(728, 90)],
         assets_required=[
-            AssetsRequired(
+            create_asset_required(
                 asset_id="banner_image",
                 asset_type=AssetType.image,
                 required=True,
@@ -465,7 +488,7 @@ DISPLAY_IMAGE_FORMATS = [
                     "acceptable_formats": ["jpg", "png", "gif", "webp"],
                 },
             ),
-            AssetsRequired(
+            create_asset_required(
                 asset_id="click_url",
                 asset_type=AssetType.url,
                 required=True,
@@ -475,12 +498,12 @@ DISPLAY_IMAGE_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("display_320x50_image"),
         name="Mobile Banner - Image",
-        type=Type.display,
+        type="display",
         description="320x50 mobile banner",
         supported_macros=COMMON_MACROS,
         renders=[create_fixed_render(320, 50)],
         assets_required=[
-            AssetsRequired(
+            create_asset_required(
                 asset_id="banner_image",
                 asset_type=AssetType.image,
                 required=True,
@@ -491,7 +514,7 @@ DISPLAY_IMAGE_FORMATS = [
                     "acceptable_formats": ["jpg", "png", "gif", "webp"],
                 },
             ),
-            AssetsRequired(
+            create_asset_required(
                 asset_id="click_url",
                 asset_type=AssetType.url,
                 required=True,
@@ -501,12 +524,12 @@ DISPLAY_IMAGE_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("display_160x600_image"),
         name="Wide Skyscraper - Image",
-        type=Type.display,
+        type="display",
         description="160x600 wide skyscraper banner",
         supported_macros=COMMON_MACROS,
         renders=[create_fixed_render(160, 600)],
         assets_required=[
-            AssetsRequired(
+            create_asset_required(
                 asset_id="banner_image",
                 asset_type=AssetType.image,
                 required=True,
@@ -517,7 +540,7 @@ DISPLAY_IMAGE_FORMATS = [
                     "acceptable_formats": ["jpg", "png", "gif", "webp"],
                 },
             ),
-            AssetsRequired(
+            create_asset_required(
                 asset_id="click_url",
                 asset_type=AssetType.url,
                 required=True,
@@ -527,12 +550,12 @@ DISPLAY_IMAGE_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("display_336x280_image"),
         name="Large Rectangle - Image",
-        type=Type.display,
+        type="display",
         description="336x280 large rectangle banner",
         supported_macros=COMMON_MACROS,
         renders=[create_fixed_render(336, 280)],
         assets_required=[
-            AssetsRequired(
+            create_asset_required(
                 asset_id="banner_image",
                 asset_type=AssetType.image,
                 required=True,
@@ -543,7 +566,7 @@ DISPLAY_IMAGE_FORMATS = [
                     "acceptable_formats": ["jpg", "png", "gif", "webp"],
                 },
             ),
-            AssetsRequired(
+            create_asset_required(
                 asset_id="click_url",
                 asset_type=AssetType.url,
                 required=True,
@@ -553,12 +576,12 @@ DISPLAY_IMAGE_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("display_300x600_image"),
         name="Half Page - Image",
-        type=Type.display,
+        type="display",
         description="300x600 half page banner",
         supported_macros=COMMON_MACROS,
         renders=[create_fixed_render(300, 600)],
         assets_required=[
-            AssetsRequired(
+            create_asset_required(
                 asset_id="banner_image",
                 asset_type=AssetType.image,
                 required=True,
@@ -569,7 +592,7 @@ DISPLAY_IMAGE_FORMATS = [
                     "acceptable_formats": ["jpg", "png", "gif", "webp"],
                 },
             ),
-            AssetsRequired(
+            create_asset_required(
                 asset_id="click_url",
                 asset_type=AssetType.url,
                 required=True,
@@ -579,12 +602,12 @@ DISPLAY_IMAGE_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("display_970x250_image"),
         name="Billboard - Image",
-        type=Type.display,
+        type="display",
         description="970x250 billboard banner",
         supported_macros=COMMON_MACROS,
         renders=[create_fixed_render(970, 250)],
         assets_required=[
-            AssetsRequired(
+            create_asset_required(
                 asset_id="banner_image",
                 asset_type=AssetType.image,
                 required=True,
@@ -595,7 +618,7 @@ DISPLAY_IMAGE_FORMATS = [
                     "acceptable_formats": ["jpg", "png", "gif", "webp"],
                 },
             ),
-            AssetsRequired(
+            create_asset_required(
                 asset_id="click_url",
                 asset_type=AssetType.url,
                 required=True,
@@ -609,12 +632,12 @@ DISPLAY_HTML_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("display_300x250_html"),
         name="Medium Rectangle - HTML5",
-        type=Type.display,
+        type="display",
         description="300x250 HTML5 creative",
         supported_macros=COMMON_MACROS,
         renders=[create_fixed_render(300, 250)],
         assets_required=[
-            AssetsRequired(
+            create_asset_required(
                 asset_id="html_creative",
                 asset_type=AssetType.html,
                 required=True,
@@ -630,12 +653,12 @@ DISPLAY_HTML_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("display_728x90_html"),
         name="Leaderboard - HTML5",
-        type=Type.display,
+        type="display",
         description="728x90 HTML5 creative",
         supported_macros=COMMON_MACROS,
         renders=[create_fixed_render(728, 90)],
         assets_required=[
-            AssetsRequired(
+            create_asset_required(
                 asset_id="html_creative",
                 asset_type=AssetType.html,
                 required=True,
@@ -650,12 +673,12 @@ DISPLAY_HTML_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("display_160x600_html"),
         name="Wide Skyscraper - HTML5",
-        type=Type.display,
+        type="display",
         description="160x600 HTML5 creative",
         supported_macros=COMMON_MACROS,
         renders=[create_fixed_render(160, 600)],
         assets_required=[
-            AssetsRequired(
+            create_asset_required(
                 asset_id="html_creative",
                 asset_type=AssetType.html,
                 required=True,
@@ -670,12 +693,12 @@ DISPLAY_HTML_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("display_336x280_html"),
         name="Large Rectangle - HTML5",
-        type=Type.display,
+        type="display",
         description="336x280 HTML5 creative",
         supported_macros=COMMON_MACROS,
         renders=[create_fixed_render(336, 280)],
         assets_required=[
-            AssetsRequired(
+            create_asset_required(
                 asset_id="html_creative",
                 asset_type=AssetType.html,
                 required=True,
@@ -690,12 +713,12 @@ DISPLAY_HTML_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("display_300x600_html"),
         name="Half Page - HTML5",
-        type=Type.display,
+        type="display",
         description="300x600 HTML5 creative",
         supported_macros=COMMON_MACROS,
         renders=[create_fixed_render(300, 600)],
         assets_required=[
-            AssetsRequired(
+            create_asset_required(
                 asset_id="html_creative",
                 asset_type=AssetType.html,
                 required=True,
@@ -710,12 +733,12 @@ DISPLAY_HTML_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("display_970x250_html"),
         name="Billboard - HTML5",
-        type=Type.display,
+        type="display",
         description="970x250 HTML5 creative",
         supported_macros=COMMON_MACROS,
         renders=[create_fixed_render(970, 250)],
         assets_required=[
-            AssetsRequired(
+            create_asset_required(
                 asset_id="html_creative",
                 asset_type=AssetType.html,
                 required=True,
@@ -734,11 +757,11 @@ NATIVE_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("native_standard"),
         name="IAB Native Standard",
-        type=Type.native,
+        type="native",
         description="Standard native ad with title, description, image, and CTA",
         supported_macros=COMMON_MACROS,
         assets_required=[
-            AssetsRequired(
+            create_asset_required(
                 asset_id="title",
                 asset_type=AssetType.text,
                 required=True,
@@ -746,7 +769,7 @@ NATIVE_FORMATS = [
                     "description": "Headline text (25 chars recommended)",
                 },
             ),
-            AssetsRequired(
+            create_asset_required(
                 asset_id="description",
                 asset_type=AssetType.text,
                 required=True,
@@ -754,7 +777,7 @@ NATIVE_FORMATS = [
                     "description": "Body copy (90 chars recommended)",
                 },
             ),
-            AssetsRequired(
+            create_asset_required(
                 asset_id="main_image",
                 asset_type=AssetType.image,
                 required=True,
@@ -762,7 +785,7 @@ NATIVE_FORMATS = [
                     "description": "Primary image (1200x627 recommended)",
                 },
             ),
-            AssetsRequired(
+            create_asset_required(
                 asset_id="icon",
                 asset_type=AssetType.image,
                 required=False,
@@ -770,7 +793,7 @@ NATIVE_FORMATS = [
                     "description": "Brand icon (square, 200x200 recommended)",
                 },
             ),
-            AssetsRequired(
+            create_asset_required(
                 asset_id="cta_text",
                 asset_type=AssetType.text,
                 required=True,
@@ -778,7 +801,7 @@ NATIVE_FORMATS = [
                     "description": "Call-to-action text",
                 },
             ),
-            AssetsRequired(
+            create_asset_required(
                 asset_id="sponsored_by",
                 asset_type=AssetType.text,
                 required=True,
@@ -791,11 +814,11 @@ NATIVE_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("native_content"),
         name="Native Content Placement",
-        type=Type.native,
+        type="native",
         description="In-article native ad with editorial styling",
         supported_macros=COMMON_MACROS,
         assets_required=[
-            AssetsRequired(
+            create_asset_required(
                 asset_id="headline",
                 asset_type=AssetType.text,
                 required=True,
@@ -803,7 +826,7 @@ NATIVE_FORMATS = [
                     "description": "Editorial-style headline (60 chars recommended)",
                 },
             ),
-            AssetsRequired(
+            create_asset_required(
                 asset_id="body",
                 asset_type=AssetType.text,
                 required=True,
@@ -811,7 +834,7 @@ NATIVE_FORMATS = [
                     "description": "Article-style body copy (200 chars recommended)",
                 },
             ),
-            AssetsRequired(
+            create_asset_required(
                 asset_id="thumbnail",
                 asset_type=AssetType.image,
                 required=True,
@@ -819,7 +842,7 @@ NATIVE_FORMATS = [
                     "description": "Thumbnail image (square, 300x300 recommended)",
                 },
             ),
-            AssetsRequired(
+            create_asset_required(
                 asset_id="author",
                 asset_type=AssetType.text,
                 required=False,
@@ -827,7 +850,7 @@ NATIVE_FORMATS = [
                     "description": "Author name for editorial context",
                 },
             ),
-            AssetsRequired(
+            create_asset_required(
                 asset_id="click_url",
                 asset_type=AssetType.url,
                 required=True,
@@ -835,7 +858,7 @@ NATIVE_FORMATS = [
                     "description": "Landing page URL",
                 },
             ),
-            AssetsRequired(
+            create_asset_required(
                 asset_id="disclosure",
                 asset_type=AssetType.text,
                 required=True,
@@ -852,11 +875,11 @@ AUDIO_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("audio_standard_15s"),
         name="Standard Audio - 15 seconds",
-        type=Type.audio,
+        type="audio",
         description="15-second audio ad",
         supported_macros=[*COMMON_MACROS, "CONTENT_GENRE"],
         assets_required=[
-            AssetsRequired(
+            create_asset_required(
                 asset_id="audio_file",
                 asset_type=AssetType.audio,
                 required=True,
@@ -870,11 +893,11 @@ AUDIO_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("audio_standard_30s"),
         name="Standard Audio - 30 seconds",
-        type=Type.audio,
+        type="audio",
         description="30-second audio ad",
         supported_macros=[*COMMON_MACROS, "CONTENT_GENRE"],
         assets_required=[
-            AssetsRequired(
+            create_asset_required(
                 asset_id="audio_file",
                 asset_type=AssetType.audio,
                 required=True,
@@ -888,11 +911,11 @@ AUDIO_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("audio_standard_60s"),
         name="Standard Audio - 60 seconds",
-        type=Type.audio,
+        type="audio",
         description="60-second audio ad",
         supported_macros=[*COMMON_MACROS, "CONTENT_GENRE"],
         assets_required=[
-            AssetsRequired(
+            create_asset_required(
                 asset_id="audio_file",
                 asset_type=AssetType.audio,
                 required=True,
@@ -910,12 +933,12 @@ DOOH_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("dooh_billboard_1920x1080"),
         name="Digital Billboard - 1920x1080",
-        type=Type.dooh,
+        type="dooh",
         description="Full HD digital billboard",
         supported_macros=[*COMMON_MACROS, "SCREEN_ID", "VENUE_TYPE", "VENUE_LAT", "VENUE_LONG"],
         renders=[create_fixed_render(1920, 1080)],
         assets_required=[
-            AssetsRequired(
+            create_asset_required(
                 asset_id="billboard_image",
                 asset_type=AssetType.image,
                 required=True,
@@ -930,11 +953,11 @@ DOOH_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("dooh_billboard_landscape"),
         name="Digital Billboard - Landscape",
-        type=Type.dooh,
+        type="dooh",
         description="Landscape-oriented digital billboard (various sizes)",
         supported_macros=[*COMMON_MACROS, "SCREEN_ID", "VENUE_TYPE", "VENUE_LAT", "VENUE_LONG"],
         assets_required=[
-            AssetsRequired(
+            create_asset_required(
                 asset_id="billboard_image",
                 asset_type=AssetType.image,
                 required=True,
@@ -948,11 +971,11 @@ DOOH_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("dooh_billboard_portrait"),
         name="Digital Billboard - Portrait",
-        type=Type.dooh,
+        type="dooh",
         description="Portrait-oriented digital billboard (various sizes)",
         supported_macros=[*COMMON_MACROS, "SCREEN_ID", "VENUE_TYPE", "VENUE_LAT", "VENUE_LONG"],
         assets_required=[
-            AssetsRequired(
+            create_asset_required(
                 asset_id="billboard_image",
                 asset_type=AssetType.image,
                 required=True,
@@ -966,12 +989,12 @@ DOOH_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("dooh_transit_screen"),
         name="Transit Screen",
-        type=Type.dooh,
+        type="dooh",
         description="Transit and subway screen displays",
         supported_macros=[*COMMON_MACROS, "SCREEN_ID", "VENUE_TYPE", "VENUE_LAT", "VENUE_LONG", "TRANSIT_LINE"],
         renders=[create_fixed_render(1920, 1080)],
         assets_required=[
-            AssetsRequired(
+            create_asset_required(
                 asset_id="screen_image",
                 asset_type=AssetType.image,
                 required=True,
@@ -991,12 +1014,12 @@ INFO_CARD_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("product_card_standard"),
         name="Product Card - Standard",
-        type=Type.display,
+        type="display",
         description="Standard visual card (300x400px) for displaying ad inventory products",
         supported_macros=COMMON_MACROS,
         renders=[create_fixed_render(300, 400)],
         assets_required=[
-            AssetsRequired(
+            create_asset_required(
                 asset_id="product_image",
                 asset_type=AssetType.image,
                 required=True,
@@ -1004,7 +1027,7 @@ INFO_CARD_FORMATS = [
                     "description": "Primary product image or placement preview",
                 },
             ),
-            AssetsRequired(
+            create_asset_required(
                 asset_id="product_name",
                 asset_type=AssetType.text,
                 required=True,
@@ -1012,7 +1035,7 @@ INFO_CARD_FORMATS = [
                     "description": "Display name of the product (e.g., 'Homepage Leaderboard')",
                 },
             ),
-            AssetsRequired(
+            create_asset_required(
                 asset_id="product_description",
                 asset_type=AssetType.text,
                 required=True,
@@ -1020,7 +1043,7 @@ INFO_CARD_FORMATS = [
                     "description": "Short description of the product (supports markdown)",
                 },
             ),
-            AssetsRequired(
+            create_asset_required(
                 asset_id="pricing_model",
                 asset_type=AssetType.text,
                 required=False,
@@ -1028,7 +1051,7 @@ INFO_CARD_FORMATS = [
                     "description": "Pricing model (e.g., 'CPM', 'flat_rate', 'CPC')",
                 },
             ),
-            AssetsRequired(
+            create_asset_required(
                 asset_id="pricing_amount",
                 asset_type=AssetType.text,
                 required=False,
@@ -1036,7 +1059,7 @@ INFO_CARD_FORMATS = [
                     "description": "Price amount (e.g., '15.00')",
                 },
             ),
-            AssetsRequired(
+            create_asset_required(
                 asset_id="pricing_currency",
                 asset_type=AssetType.text,
                 required=False,
@@ -1044,7 +1067,7 @@ INFO_CARD_FORMATS = [
                     "description": "Currency code (e.g., 'USD')",
                 },
             ),
-            AssetsRequired(
+            create_asset_required(
                 asset_id="delivery_type",
                 asset_type=AssetType.text,
                 required=False,
@@ -1052,7 +1075,7 @@ INFO_CARD_FORMATS = [
                     "description": "Delivery type: 'guaranteed' or 'bidded'",
                 },
             ),
-            AssetsRequired(
+            create_asset_required(
                 asset_id="primary_asset_type",
                 asset_type=AssetType.text,
                 required=False,
@@ -1065,12 +1088,12 @@ INFO_CARD_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("product_card_detailed"),
         name="Product Card - Detailed",
-        type=Type.display,
+        type="display",
         description="Detailed card with carousel and full specifications for rich product presentation",
         supported_macros=COMMON_MACROS,
         renders=[create_responsive_render()],
         assets_required=[
-            AssetsRequired(
+            create_asset_required(
                 asset_id="product_image",
                 asset_type=AssetType.image,
                 required=True,
@@ -1078,7 +1101,7 @@ INFO_CARD_FORMATS = [
                     "description": "Primary product image or placement preview",
                 },
             ),
-            AssetsRequired(
+            create_asset_required(
                 asset_id="product_name",
                 asset_type=AssetType.text,
                 required=True,
@@ -1086,7 +1109,7 @@ INFO_CARD_FORMATS = [
                     "description": "Display name of the product (e.g., 'Homepage Leaderboard')",
                 },
             ),
-            AssetsRequired(
+            create_asset_required(
                 asset_id="product_description",
                 asset_type=AssetType.text,
                 required=True,
@@ -1094,7 +1117,7 @@ INFO_CARD_FORMATS = [
                     "description": "Detailed description of the product (supports markdown)",
                 },
             ),
-            AssetsRequired(
+            create_asset_required(
                 asset_id="pricing_model",
                 asset_type=AssetType.text,
                 required=False,
@@ -1102,7 +1125,7 @@ INFO_CARD_FORMATS = [
                     "description": "Pricing model (e.g., 'CPM', 'flat_rate', 'CPC')",
                 },
             ),
-            AssetsRequired(
+            create_asset_required(
                 asset_id="pricing_amount",
                 asset_type=AssetType.text,
                 required=False,
@@ -1110,7 +1133,7 @@ INFO_CARD_FORMATS = [
                     "description": "Price amount (e.g., '15.00')",
                 },
             ),
-            AssetsRequired(
+            create_asset_required(
                 asset_id="pricing_currency",
                 asset_type=AssetType.text,
                 required=False,
@@ -1118,7 +1141,7 @@ INFO_CARD_FORMATS = [
                     "description": "Currency code (e.g., 'USD')",
                 },
             ),
-            AssetsRequired(
+            create_asset_required(
                 asset_id="delivery_type",
                 asset_type=AssetType.text,
                 required=False,
@@ -1126,7 +1149,7 @@ INFO_CARD_FORMATS = [
                     "description": "Delivery type: 'guaranteed' or 'bidded'",
                 },
             ),
-            AssetsRequired(
+            create_asset_required(
                 asset_id="primary_asset_type",
                 asset_type=AssetType.text,
                 required=False,
@@ -1139,12 +1162,12 @@ INFO_CARD_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("format_card_standard"),
         name="Format Card - Standard",
-        type=Type.display,
+        type="display",
         description="Standard visual card (300x400px) for displaying creative formats in user interfaces",
         supported_macros=COMMON_MACROS,
         renders=[create_fixed_render(300, 400)],
         assets_required=[
-            AssetsRequired(
+            create_asset_required(
                 asset_id="format",
                 asset_type=AssetType.text,
                 required=True,
@@ -1157,12 +1180,12 @@ INFO_CARD_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("format_card_detailed"),
         name="Format Card - Detailed",
-        type=Type.display,
+        type="display",
         description="Detailed card with carousel and full specifications for rich format documentation",
         supported_macros=COMMON_MACROS,
         renders=[create_responsive_render()],
         assets_required=[
-            AssetsRequired(
+            create_asset_required(
                 asset_id="format",
                 asset_type=AssetType.text,
                 required=True,
@@ -1219,7 +1242,7 @@ def filter_formats(
     if type:
         # Handle both Type enum and string values
         if isinstance(type, str):
-            results = [fmt for fmt in results if fmt.type.value == type]
+            results = [fmt for fmt in results if fmt.type == type]
         else:
             results = [fmt for fmt in results if fmt.type == type]
 
@@ -1234,8 +1257,8 @@ def filter_formats(
                     for fmt in results
                     if fmt.renders
                     and len(fmt.renders) > 0
-                    and fmt.renders[0].dimensions.width == target_width
-                    and fmt.renders[0].dimensions.height == target_height
+                    and fmt.renders[0].get("dimensions", {}).get("width") == target_width
+                    and fmt.renders[0].get("dimensions", {}).get("height") == target_height
                 ]
             except ValueError:
                 pass  # Invalid dimension format, skip filter
@@ -1247,7 +1270,8 @@ def filter_formats(
             """Extract width and height from format renders."""
             if fmt.renders and len(fmt.renders) > 0:
                 render = fmt.renders[0]
-                return render.dimensions.width, render.dimensions.height
+                dimensions = render.get("dimensions", {})
+                return dimensions.get("width"), dimensions.get("height")
             return None, None
 
         filtered = []
@@ -1277,8 +1301,11 @@ def filter_formats(
                 for fmt in results
                 if fmt.renders
                 and len(fmt.renders) > 0
-                and fmt.renders[0].dimensions.responsive
-                and (fmt.renders[0].dimensions.responsive.width or fmt.renders[0].dimensions.responsive.height)
+                and fmt.renders[0].get("dimensions", {}).get("responsive", {})
+                and (
+                    fmt.renders[0].get("dimensions", {}).get("responsive", {}).get("width")
+                    or fmt.renders[0].get("dimensions", {}).get("responsive", {}).get("height")
+                )
             ]
         else:
             # Filter for non-responsive (fixed dimension) formats
@@ -1287,9 +1314,9 @@ def filter_formats(
                 for fmt in results
                 if fmt.renders
                 and len(fmt.renders) > 0
-                and fmt.renders[0].dimensions.responsive
-                and not fmt.renders[0].dimensions.responsive.width
-                and not fmt.renders[0].dimensions.responsive.height
+                and fmt.renders[0].get("dimensions", {}).get("responsive", {})
+                and not fmt.renders[0].get("dimensions", {}).get("responsive", {}).get("width")
+                and not fmt.renders[0].get("dimensions", {}).get("responsive", {}).get("height")
             ]
 
     if name_search:
@@ -1298,20 +1325,21 @@ def filter_formats(
 
     if asset_types:
         # Filter to formats that include ALL specified asset types
-        def has_asset_type(req: AssetsRequired | object, target_type: AssetType | str) -> bool:
+        def has_asset_type(req: dict[str, Any], target_type: AssetType | str) -> bool:
             """Check if a requirement has the target asset type."""
-            if isinstance(req, AssetsRequired):
-                if isinstance(target_type, AssetType):
-                    return req.asset_type == target_type
-                return req.asset_type.value == target_type
-            # AssetsRequired1 - check assets within the group
-            if hasattr(req, "assets"):
-                for asset in req.assets:
-                    if isinstance(target_type, AssetType):
-                        if asset.asset_type == target_type:
+            # Handle dict format (from model_dump)
+            if isinstance(req, dict):
+                req_asset_type = req.get("asset_type")
+                # Compare string values
+                target_str = target_type.value if isinstance(target_type, AssetType) else target_type
+                if req_asset_type == target_str:
+                    return True
+                # Check if it's a grouped asset requirement with assets array
+                if "assets" in req:
+                    for asset in req["assets"]:
+                        asset_type = asset.get("asset_type")
+                        if asset_type == target_str:
                             return True
-                    elif asset.asset_type.value == target_type:
-                        return True
             return False
 
         results = [

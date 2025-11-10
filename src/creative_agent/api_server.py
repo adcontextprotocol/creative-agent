@@ -60,8 +60,9 @@ async def list_formats() -> list[dict[str, Any]]:
 async def get_format(format_id: str) -> dict[str, Any]:
     """Get a specific format by ID (assumes this agent's formats)."""
 
+    from adcp.types.generated import FormatId
+
     from .data.standard_formats import AGENT_URL
-    from .schemas_generated._schemas_v1_core_format_json import FormatId
 
     # Convert string ID to FormatId object (assume our agent)
     fmt_id = FormatId(agent_url=AGENT_URL, id=format_id)
@@ -76,8 +77,9 @@ async def get_format(format_id: str) -> dict[str, Any]:
 async def preview_creative(request: PreviewRequest) -> dict[str, Any]:
     """Generate preview from creative manifest."""
 
+    from adcp.types.generated import FormatId
+
     from .data.standard_formats import AGENT_URL
-    from .schemas_generated._schemas_v1_core_format_json import FormatId
 
     # Convert string ID to FormatId object (assume our agent)
     fmt_id = FormatId(agent_url=AGENT_URL, id=request.format_id)

@@ -2,9 +2,10 @@
 
 import json
 
+from adcp.types.generated import FormatId
+
 from creative_agent.data.standard_formats import AGENT_URL, filter_formats
 from creative_agent.renderers.format_card_renderer import FormatCardRenderer
-from creative_agent.schemas_generated._schemas_v1_core_format_json import FormatId
 
 
 class TestFormatCardStandardRendering:

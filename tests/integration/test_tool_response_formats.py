@@ -11,25 +11,15 @@ Tests verify that tools return ToolResult with:
 import json
 
 import pytest
+from adcp.types.generated import (
+    FormatId,
+    ListCreativeFormatsResponse,
+    PreviewCreativeResponse,
+)
 
 from creative_agent import server
 from creative_agent.data.standard_formats import AGENT_URL
-from creative_agent.schemas_generated._schemas_v1_creative_list_creative_formats_response_json import (
-    ListCreativeFormatsResponseCreativeAgent as ListCreativeFormatsResponse,
-)
-from creative_agent.schemas_generated._schemas_v1_creative_preview_creative_request_json import (
-    Assets as ImageAsset,
-)
-from creative_agent.schemas_generated._schemas_v1_creative_preview_creative_request_json import (
-    Assets33 as UrlAsset,
-)
-from creative_agent.schemas_generated._schemas_v1_creative_preview_creative_request_json import (
-    CreativeManifest,
-    FormatId,
-)
-from creative_agent.schemas_generated._schemas_v1_creative_preview_creative_response_json import (
-    PreviewCreativeResponse,
-)
+from creative_agent.schemas import CreativeManifest
 
 # Get actual functions from FastMCP wrappers
 list_creative_formats = server.list_creative_formats.fn
@@ -96,10 +86,17 @@ class TestListCreativeFormatsResponseFormat:
         assert len(response.creative_agents) > 0, "must include at least one creative agent"
 
         for agent in response.creative_agents:
-            assert agent.agent_url is not None, "agent_url is required"
-            assert agent.agent_name is not None, "agent_name is required"
-            assert agent.capabilities is not None, "capabilities is required"
-            assert isinstance(agent.capabilities, list), "capabilities must be array"
+            # Library uses flexible types - agent could be dict or object
+            agent_url = agent.get("agent_url") if isinstance(agent, dict) else getattr(agent, "agent_url", None)
+            agent_name = agent.get("agent_name") if isinstance(agent, dict) else getattr(agent, "agent_name", None)
+            capabilities = (
+                agent.get("capabilities") if isinstance(agent, dict) else getattr(agent, "capabilities", None)
+            )
+
+            assert agent_url is not None, "agent_url is required"
+            assert agent_name is not None, "agent_name is required"
+            assert capabilities is not None, "capabilities is required"
+            assert isinstance(capabilities, list), "capabilities must be array"
 
     def test_no_extra_wrapper_fields(self):
         """Structured content must match ADCP schema exactly with no wrappers."""
@@ -177,16 +174,18 @@ class TestPreviewCreativeResponseFormat:
     def valid_manifest(self):
         """Create a valid manifest per ADCP spec."""
         return CreativeManifest(
+            creative_id="test-creative-1",
+            name="Test Creative",
             format_id=FormatId(agent_url=AGENT_URL, id="display_300x250_image"),
             assets={
-                "banner_image": ImageAsset(
-                    url="https://example.com/test.png",
-                    width=300,
-                    height=250,
-                ),
-                "click_url": UrlAsset(
-                    url="https://example.com/landing",
-                ),
+                "banner_image": {
+                    "url": "https://example.com/test.png",
+                    "width": 300,
+                    "height": 250,
+                },
+                "click_url": {
+                    "url": "https://example.com/landing",
+                },
             },
         )
 
@@ -218,10 +217,10 @@ class TestPreviewCreativeResponseFormat:
         # This validates ALL fields per ADCP spec
         response = PreviewCreativeResponse.model_validate(result.structured_content)
 
-        # Verify required fields per spec (access via .root for union type)
-        assert hasattr(response.root, "previews"), "'previews' is required per spec"
-        assert response.root.previews is not None, "'previews' is required per spec"
-        assert response.root.expires_at is not None, "'expires_at' is required per spec"
+        # Verify required fields per spec
+        assert hasattr(response, "previews"), "'previews' is required per spec"
+        assert response.previews is not None, "'previews' is required per spec"
+        assert response.expires_at is not None, "'expires_at' is required per spec"
 
     def test_previews_array_structure(self, valid_manifest, mock_s3):
         """Per spec, previews must be array of Preview objects with renders."""
@@ -231,20 +230,29 @@ class TestPreviewCreativeResponseFormat:
         )
         response = PreviewCreativeResponse.model_validate(result.structured_content)
 
-        # Access via .root for union type
-        assert isinstance(response.root.previews, list), "previews must be array"
-        assert len(response.root.previews) > 0, "must return at least one preview"
+        # Access previews directly
+        assert isinstance(response.previews, list), "previews must be array"
+        assert len(response.previews) > 0, "must return at least one preview"
 
-        for preview in response.root.previews:
+        for preview in response.previews:
             # Per spec, each Preview must have:
-            assert preview.preview_id is not None, "preview_id is required per spec"
-            assert preview.renders is not None, "renders is required per spec"
-            assert len(preview.renders) > 0, "renders must have at least one render"
+            # Handle both dict and object access
+            preview_id = (
+                preview.get("preview_id") if isinstance(preview, dict) else getattr(preview, "preview_id", None)
+            )
+            renders = preview.get("renders") if isinstance(preview, dict) else getattr(preview, "renders", None)
+
+            assert preview_id is not None, "preview_id is required per spec"
+            assert renders is not None, "renders is required per spec"
+            assert len(renders) > 0, "renders must have at least one render"
 
             # Check first render
-            render = preview.renders[0]
-            assert render.preview_url is not None, "render.preview_url is required"
-            assert str(render.preview_url).startswith("http"), "preview_url must be valid HTTP(S) URL"
+            render = renders[0]
+            preview_url = (
+                render.get("preview_url") if isinstance(render, dict) else getattr(render, "preview_url", None)
+            )
+            assert preview_url is not None, "render.preview_url is required"
+            assert str(preview_url).startswith("http"), "preview_url must be valid HTTP(S) URL"
 
     def test_error_responses_have_structured_content(self, mock_s3):
         """Even error responses must have structured content."""
@@ -298,14 +306,16 @@ class TestToolResponseConsistency:
 
         # Test preview_creative
         manifest = CreativeManifest(
+            creative_id="test-creative-2",
+            name="Test Creative 2",
             format_id=FormatId(agent_url=AGENT_URL, id="display_300x250_image"),
             assets={
-                "banner_image": ImageAsset(
-                    url="https://example.com/test.png",
-                    width=300,
-                    height=250,
-                ),
-                "click_url": UrlAsset(url="https://example.com/landing"),
+                "banner_image": {
+                    "url": "https://example.com/test.png",
+                    "width": 300,
+                    "height": 250,
+                },
+                "click_url": {"url": "https://example.com/landing"},
             },
         )
         result = preview_creative(

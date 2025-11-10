@@ -1,34 +1,22 @@
 """
 AdCP schemas for creative agent.
 
-This module re-exports official AdCP schemas from the auto-generated schemas_generated/
-directory, providing a clean interface for the rest of the codebase.
+This module re-exports official AdCP schemas from the adcp library,
+providing a clean interface for the rest of the codebase.
 
-All schemas are generated from https://adcontextprotocol.org/schemas/v1/
+All schemas come from the official adcp-client-python library:
+https://pypi.org/project/adcp/
 """
 
-# Asset schemas
-from ..schemas_generated._schemas_v1_core_assets_audio_asset_json import AudioAsset
-from ..schemas_generated._schemas_v1_core_assets_css_asset_json import CssAsset
-from ..schemas_generated._schemas_v1_core_assets_html_asset_json import HtmlAsset
-from ..schemas_generated._schemas_v1_core_assets_image_asset_json import ImageAsset
-from ..schemas_generated._schemas_v1_core_assets_javascript_asset_json import (
-    JavascriptAsset as JavaScriptAsset,
+# Core schemas from adcp library
+from adcp.types.generated import (
+    CreativeAsset as CreativeManifest,
 )
-from ..schemas_generated._schemas_v1_core_assets_promoted_offerings_asset_json import (
-    PromotedOfferingsAsset,
+from adcp.types.generated import (
+    Format as CreativeFormat,
 )
-from ..schemas_generated._schemas_v1_core_assets_text_asset_json import TextAsset
-from ..schemas_generated._schemas_v1_core_assets_url_asset_json import UrlAsset
-from ..schemas_generated._schemas_v1_core_assets_video_asset_json import VideoAsset
-
-# Preview schemas (using AdCP creative asset as manifest base)
-from ..schemas_generated._schemas_v1_core_creative_asset_json import CreativeAsset as CreativeManifest
-
-# Format schemas
-from ..schemas_generated._schemas_v1_core_format_json import Format as CreativeFormat
-from ..schemas_generated._schemas_v1_creative_list_creative_formats_response_json import (
-    ListCreativeFormatsResponseCreativeAgent as ListCreativeFormatsResponse,
+from adcp.types.generated import (
+    ListCreativeFormatsResponse,
 )
 
 # Build schemas (agent-specific, not part of AdCP)
@@ -57,17 +45,12 @@ from .manifest import (
 __all__ = [
     "AssetReference",
     "AssetRequirement",
-    "AudioAsset",
     "BuildCreativeRequest",
     "BuildCreativeResponse",
     "CreativeFormat",
     "CreativeManifest",
     "CreativeOutput",
-    "CssAsset",
     "FormatRequirements",
-    "HtmlAsset",
-    "ImageAsset",
-    "JavaScriptAsset",
     "ListCreativeFormatsResponse",
     "PreviewContext",
     "PreviewCreativeRequest",
@@ -77,8 +60,4 @@ __all__ = [
     "PreviewInput",
     "PreviewOptions",
     "PreviewVariant",
-    "PromotedOfferingsAsset",
-    "TextAsset",
-    "UrlAsset",
-    "VideoAsset",
 ]

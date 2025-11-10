@@ -35,11 +35,23 @@ class BaseRenderer(ABC):
         height = 250
         if format_obj.renders and len(format_obj.renders) > 0:
             first_render = format_obj.renders[0]
-            if first_render.dimensions:
-                if first_render.dimensions.width is not None:
-                    width = int(first_render.dimensions.width)
-                if first_render.dimensions.height is not None:
-                    height = int(first_render.dimensions.height)
+            # Handle both dict and object access
+            dimensions = (
+                first_render.get("dimensions")
+                if isinstance(first_render, dict)
+                else getattr(first_render, "dimensions", None)
+            )
+            if dimensions:
+                dim_width = (
+                    dimensions.get("width") if isinstance(dimensions, dict) else getattr(dimensions, "width", None)
+                )
+                dim_height = (
+                    dimensions.get("height") if isinstance(dimensions, dict) else getattr(dimensions, "height", None)
+                )
+                if dim_width is not None:
+                    width = int(dim_width)
+                if dim_height is not None:
+                    height = int(dim_height)
         return width, height
 
     def get_manifest_assets(self, manifest: Any) -> dict[str, Any]:
@@ -75,8 +87,14 @@ class BaseRenderer(ABC):
         asset_type_map = {}
         if hasattr(format_obj, "assets_required") and format_obj.assets_required:
             for required_asset in format_obj.assets_required:
-                asset_id = getattr(required_asset, "asset_id", None)
-                asset_type = getattr(required_asset, "asset_type", None)
+                # Handle both dict and object access
+                if isinstance(required_asset, dict):
+                    asset_id = required_asset.get("asset_id")
+                    asset_type = required_asset.get("asset_type")
+                else:
+                    asset_id = getattr(required_asset, "asset_id", None)
+                    asset_type = getattr(required_asset, "asset_type", None)
+
                 if asset_id and asset_type:
                     # Handle enum or string asset_type
                     if hasattr(asset_type, "value"):

@@ -4,25 +4,11 @@ These tests use generated Pydantic schemas to ensure 100% spec compliance.
 """
 
 import pytest
+from adcp.types.generated import FormatId
 
 from creative_agent.data.standard_formats import AGENT_URL, get_format_by_id
+from creative_agent.schemas import CreativeManifest
 from creative_agent.schemas.manifest import PreviewInput
-from creative_agent.schemas_generated._schemas_v1_creative_preview_creative_request_json import (
-    Assets as ImageAsset,
-)
-from creative_agent.schemas_generated._schemas_v1_creative_preview_creative_request_json import (
-    Assets28 as VideoAsset,
-)
-from creative_agent.schemas_generated._schemas_v1_creative_preview_creative_request_json import (
-    Assets32 as TextAsset,
-)
-from creative_agent.schemas_generated._schemas_v1_creative_preview_creative_request_json import (
-    Assets33 as UrlAsset,
-)
-from creative_agent.schemas_generated._schemas_v1_creative_preview_creative_request_json import (
-    CreativeManifest,
-    FormatId,
-)
 from creative_agent.storage import generate_preview_html
 
 
@@ -42,15 +28,17 @@ class TestGeneratePreviewHtml:
         """
         # First create Pydantic objects to ensure schema compliance
         manifest_obj = CreativeManifest(
+            creative_id="test-creative",
+            name="Test Creative",
             format_id=FormatId(agent_url=AGENT_URL, id="display_300x250_image"),
             assets={
-                "banner_image": ImageAsset(
-                    url="https://example.com/test.png",
-                    width=300,
-                    height=250,
-                    format="png",
-                ),
-                "click_url": UrlAsset(url="https://example.com/landing"),
+                "banner_image": {
+                    "url": "https://example.com/test.png",
+                    "width": 300,
+                    "height": 250,
+                    "format": "png",
+                },
+                "click_url": {"url": "https://example.com/landing"},
             },
         )
 
@@ -95,14 +83,16 @@ class TestGeneratePreviewHtml:
         """Test that javascript: URLs are sanitized for security."""
         # Create manifest with malicious URL (still needs to be schema-valid structure)
         manifest = CreativeManifest(
+            creative_id="test-creative",
+            name="Test Creative",
             format_id=FormatId(agent_url=AGENT_URL, id="display_300x250_image"),
             assets={
-                "banner_image": ImageAsset(
-                    url="https://example.com/safe.png",  # Must pass Pydantic validation
-                    width=300,
-                    height=250,
-                ),
-                "click_url": UrlAsset(url="https://example.com/landing"),
+                "banner_image": {
+                    "url": "https://example.com/safe.png",  # Must pass Pydantic validation
+                    "width": 300,
+                    "height": 250,
+                },
+                "click_url": {"url": "https://example.com/landing"},
             },
         ).model_dump(mode="json")
 
@@ -135,15 +125,17 @@ class TestGeneratePreviewHtml:
         video_format = get_format_by_id(FormatId(agent_url=AGENT_URL, id="video_standard_15s"))
 
         manifest = CreativeManifest(
+            creative_id="test-creative",
+            name="Test Creative",
             format_id=FormatId(agent_url=AGENT_URL, id="video_standard_15s"),
             assets={
-                "video_file": VideoAsset(
-                    url="https://example.com/video.mp4",
-                    width=1920,
-                    height=1080,
-                    format="mp4",
-                ),
-                "click_url": UrlAsset(url="https://example.com/landing"),
+                "video_file": {
+                    "url": "https://example.com/video.mp4",
+                    "width": 1920,
+                    "height": 1080,
+                    "format": "mp4",
+                },
+                "click_url": {"url": "https://example.com/landing"},
             },
         ).model_dump(mode="json")
 
@@ -152,40 +144,21 @@ class TestGeneratePreviewHtml:
         assert isinstance(html, str)
         assert "<!DOCTYPE html>" in html
 
-    def test_pydantic_validation_catches_invalid_dimensions(self):
-        """Test that Pydantic validates image dimensions per schema."""
-        from pydantic import ValidationError
-
-        with pytest.raises(ValidationError):
-            # Width must be >= 1 per schema
-            ImageAsset(
-                url="https://example.com/test.png",
-                width=0,  # Invalid!
-                height=250,
-            )
-
-    def test_pydantic_validation_catches_invalid_urls(self):
-        """Test that Pydantic validates URLs per schema."""
-        from pydantic import ValidationError
-
-        with pytest.raises(ValidationError):
-            UrlAsset(
-                url="not-a-valid-url",  # Invalid URL format
-            )
-
     def test_manifest_can_have_optional_assets_not_required_by_format(self, display_format, input_set):
         """Test that manifests can include optional assets beyond format requirements."""
         # Include optional headline text asset (not required by format)
         manifest = CreativeManifest(
+            creative_id="test-creative",
+            name="Test Creative",
             format_id=FormatId(agent_url=AGENT_URL, id="display_300x250_image"),
             assets={
-                "banner_image": ImageAsset(
-                    url="https://example.com/test.png",
-                    width=300,
-                    height=250,
-                ),
-                "click_url": UrlAsset(url="https://example.com/landing"),
-                "optional_headline": TextAsset(content="Buy Now!"),
+                "banner_image": {
+                    "url": "https://example.com/test.png",
+                    "width": 300,
+                    "height": 250,
+                },
+                "click_url": {"url": "https://example.com/landing"},
+                "optional_headline": {"content": "Buy Now!"},
             },
         ).model_dump(mode="json")
 
