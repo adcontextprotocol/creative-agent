@@ -3,6 +3,8 @@
 # mypy: disable-error-code="call-arg"
 # Pydantic models with extra='forbid' trigger false positives when optional fields aren't passed
 
+from typing import Any
+
 from adcp.types.generated import FormatId
 
 from ..schemas import CreativeFormat
@@ -1240,7 +1242,7 @@ def filter_formats(
     if type:
         # Handle both Type enum and string values
         if isinstance(type, str):
-            results = [fmt for fmt in results if fmt.type.value == type]
+            results = [fmt for fmt in results if fmt.type == type]
         else:
             results = [fmt for fmt in results if fmt.type == type]
 
@@ -1255,8 +1257,8 @@ def filter_formats(
                     for fmt in results
                     if fmt.renders
                     and len(fmt.renders) > 0
-                    and fmt.renders[0].dimensions.width == target_width
-                    and fmt.renders[0].dimensions.height == target_height
+                    and fmt.renders[0].get("dimensions", {}).get("width") == target_width
+                    and fmt.renders[0].get("dimensions", {}).get("height") == target_height
                 ]
             except ValueError:
                 pass  # Invalid dimension format, skip filter
@@ -1268,7 +1270,8 @@ def filter_formats(
             """Extract width and height from format renders."""
             if fmt.renders and len(fmt.renders) > 0:
                 render = fmt.renders[0]
-                return render.dimensions.width, render.dimensions.height
+                dimensions = render.get("dimensions", {})
+                return dimensions.get("width"), dimensions.get("height")
             return None, None
 
         filtered = []
@@ -1298,8 +1301,11 @@ def filter_formats(
                 for fmt in results
                 if fmt.renders
                 and len(fmt.renders) > 0
-                and fmt.renders[0].dimensions.responsive
-                and (fmt.renders[0].dimensions.responsive.width or fmt.renders[0].dimensions.responsive.height)
+                and fmt.renders[0].get("dimensions", {}).get("responsive", {})
+                and (
+                    fmt.renders[0].get("dimensions", {}).get("responsive", {}).get("width")
+                    or fmt.renders[0].get("dimensions", {}).get("responsive", {}).get("height")
+                )
             ]
         else:
             # Filter for non-responsive (fixed dimension) formats
@@ -1308,9 +1314,9 @@ def filter_formats(
                 for fmt in results
                 if fmt.renders
                 and len(fmt.renders) > 0
-                and fmt.renders[0].dimensions.responsive
-                and not fmt.renders[0].dimensions.responsive.width
-                and not fmt.renders[0].dimensions.responsive.height
+                and fmt.renders[0].get("dimensions", {}).get("responsive", {})
+                and not fmt.renders[0].get("dimensions", {}).get("responsive", {}).get("width")
+                and not fmt.renders[0].get("dimensions", {}).get("responsive", {}).get("height")
             ]
 
     if name_search:
@@ -1319,20 +1325,21 @@ def filter_formats(
 
     if asset_types:
         # Filter to formats that include ALL specified asset types
-        def has_asset_type(req: AssetsRequired | object, target_type: AssetType | str) -> bool:
+        def has_asset_type(req: dict[str, Any], target_type: AssetType | str) -> bool:
             """Check if a requirement has the target asset type."""
-            if isinstance(req, AssetsRequired):
-                if isinstance(target_type, AssetType):
-                    return req.asset_type == target_type
-                return req.asset_type.value == target_type
-            # AssetsRequired1 - check assets within the group
-            if hasattr(req, "assets"):
-                for asset in req.assets:
-                    if isinstance(target_type, AssetType):
-                        if asset.asset_type == target_type:
+            # Handle dict format (from model_dump)
+            if isinstance(req, dict):
+                req_asset_type = req.get("asset_type")
+                # Compare string values
+                target_str = target_type.value if isinstance(target_type, AssetType) else target_type
+                if req_asset_type == target_str:
+                    return True
+                # Check if it's a grouped asset requirement with assets array
+                if "assets" in req:
+                    for asset in req["assets"]:
+                        asset_type = asset.get("asset_type")
+                        if asset_type == target_str:
                             return True
-                    elif asset.asset_type.value == target_type:
-                        return True
             return False
 
         results = [
