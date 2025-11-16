@@ -49,20 +49,33 @@ def create_asset_required(
     required: bool = True,
     requirements: dict[str, str | int | float | bool | list[str]] | None = None,
 ) -> dict[str, str | bool | dict[str, str | int | float | bool | list[str]] | AssetType]:
-    """Create an assets_required entry as a dict for the Format model."""
+    """Create an assets_required entry as a dict for the Format model.
+
+    Uses exclude_none=True to ensure optional fields with None values are omitted
+    from the serialized dict, as required by the AdCP spec.
+
+    Note: adcp>=2.1.0 requires item_type discriminator for discriminated unions.
+    """
     asset = AssetsRequired(
         asset_id=asset_id,
         asset_type=asset_type,
         required=required,
         requirements=requirements,
     )
-    return asset.model_dump(mode="json")
+    result = asset.model_dump(mode="json", exclude_none=True)
+    # Add discriminator for adcp>=2.1.0 union types
+    result["item_type"] = "individual"
+    return result
 
 
 def create_fixed_render(
     width: int, height: int, role: str = "primary"
 ) -> dict[str, str | dict[str, float | bool | Responsive | Unit]]:
-    """Create a render with fixed dimensions (non-responsive)."""
+    """Create a render with fixed dimensions (non-responsive).
+
+    Uses exclude_none=True to ensure optional fields with None values are omitted
+    from the serialized dict, as required by the AdCP spec.
+    """
     render = Render(
         role=role,
         dimensions=Dimensions(
@@ -72,13 +85,17 @@ def create_fixed_render(
             unit=Unit.px,
         ),
     )
-    return render.model_dump(mode="json")
+    return render.model_dump(mode="json", exclude_none=True)
 
 
 def create_responsive_render(
     role: str = "primary",
 ) -> dict[str, str | dict[str, float | None | bool | Responsive | Unit]]:
-    """Create a render with responsive dimensions."""
+    """Create a render with responsive dimensions.
+
+    Uses exclude_none=True to omit width/height fields when None, as required
+    by the AdCP spec for responsive formats.
+    """
     render = Render(
         role=role,
         dimensions=Dimensions(
@@ -88,7 +105,7 @@ def create_responsive_render(
             unit=Unit.px,
         ),
     )
-    return render.model_dump(mode="json")
+    return render.model_dump(mode="json", exclude_none=True)
 
 
 # Generative Formats - AI-powered creative generation
@@ -1241,9 +1258,12 @@ def filter_formats(
 
     if type:
         # Handle both Type enum and string values
+        # fmt.type is always a Type enum (adcp 2.1.0+)
         if isinstance(type, str):
-            results = [fmt for fmt in results if fmt.type == type]
+            # Compare enum value to string
+            results = [fmt for fmt in results if fmt.type.value == type]
         else:
+            # Compare enum to enum
             results = [fmt for fmt in results if fmt.type == type]
 
     if dimensions:
@@ -1252,14 +1272,24 @@ def filter_formats(
         if len(parts) == 2:
             try:
                 target_width, target_height = int(parts[0]), int(parts[1])
-                results = [
-                    fmt
-                    for fmt in results
-                    if fmt.renders
-                    and len(fmt.renders) > 0
-                    and fmt.renders[0].get("dimensions", {}).get("width") == target_width
-                    and fmt.renders[0].get("dimensions", {}).get("height") == target_height
-                ]
+
+                def matches_dimensions(fmt: CreativeFormat) -> bool:
+                    if not fmt.renders or len(fmt.renders) == 0:
+                        return False
+                    render = fmt.renders[0]
+                    # Handle both dict and Pydantic model (adcp 2.1.0+)
+                    if hasattr(render, "dimensions"):
+                        dims = render.dimensions
+                        return (
+                            getattr(dims, "width", None) == target_width
+                            and getattr(dims, "height", None) == target_height
+                        )
+                    dimensions = render.get("dimensions", {})
+                    width: Any = dimensions.get("width")
+                    height: Any = dimensions.get("height")
+                    return bool(width == target_width and height == target_height)
+
+                results = [fmt for fmt in results if matches_dimensions(fmt)]
             except ValueError:
                 pass  # Invalid dimension format, skip filter
 
@@ -1270,6 +1300,10 @@ def filter_formats(
             """Extract width and height from format renders."""
             if fmt.renders and len(fmt.renders) > 0:
                 render = fmt.renders[0]
+                # Handle both dict and Pydantic model (adcp 2.1.0+)
+                if hasattr(render, "dimensions"):
+                    dims = render.dimensions
+                    return getattr(dims, "width", None), getattr(dims, "height", None)
                 dimensions = render.get("dimensions", {})
                 return dimensions.get("width"), dimensions.get("height")
             return None, None
@@ -1295,29 +1329,26 @@ def filter_formats(
 
     if is_responsive is not None:
         # Filter based on responsive flag in renders
+        def is_format_responsive(fmt: CreativeFormat) -> bool:
+            if not fmt.renders or len(fmt.renders) == 0:
+                return False
+            render = fmt.renders[0]
+            # Handle both dict and Pydantic model (adcp 2.1.0+)
+            if hasattr(render, "dimensions"):
+                dims = render.dimensions
+                if hasattr(dims, "responsive"):
+                    resp = dims.responsive
+                    return getattr(resp, "width", False) or getattr(resp, "height", False)
+                return False
+            responsive: Any = render.get("dimensions", {}).get("responsive", {})
+            width_resp: Any = responsive.get("width", False)
+            height_resp: Any = responsive.get("height", False)
+            return bool(width_resp or height_resp)
+
         if is_responsive:
-            results = [
-                fmt
-                for fmt in results
-                if fmt.renders
-                and len(fmt.renders) > 0
-                and fmt.renders[0].get("dimensions", {}).get("responsive", {})
-                and (
-                    fmt.renders[0].get("dimensions", {}).get("responsive", {}).get("width")
-                    or fmt.renders[0].get("dimensions", {}).get("responsive", {}).get("height")
-                )
-            ]
+            results = [fmt for fmt in results if is_format_responsive(fmt)]
         else:
-            # Filter for non-responsive (fixed dimension) formats
-            results = [
-                fmt
-                for fmt in results
-                if fmt.renders
-                and len(fmt.renders) > 0
-                and fmt.renders[0].get("dimensions", {}).get("responsive", {})
-                and not fmt.renders[0].get("dimensions", {}).get("responsive", {}).get("width")
-                and not fmt.renders[0].get("dimensions", {}).get("responsive", {}).get("height")
-            ]
+            results = [fmt for fmt in results if not is_format_responsive(fmt)]
 
     if name_search:
         search_lower = name_search.lower()
@@ -1327,11 +1358,29 @@ def filter_formats(
         # Filter to formats that include ALL specified asset types
         def has_asset_type(req: dict[str, Any], target_type: AssetType | str) -> bool:
             """Check if a requirement has the target asset type."""
+            # Compare string values
+            target_str = target_type.value if isinstance(target_type, AssetType) else target_type
+
+            # Handle Pydantic model format (adcp 2.2.0+)
+            if hasattr(req, "asset_type"):
+                req_asset_type = req.asset_type
+                # Handle enum type
+                if hasattr(req_asset_type, "value"):
+                    req_asset_type = req_asset_type.value
+                if req_asset_type == target_str:
+                    return True
+                # Check if it's a grouped asset requirement with assets array
+                if hasattr(req, "assets"):
+                    for asset in req.assets:
+                        asset_type: Any = getattr(asset, "asset_type", None)
+                        # Handle enum type
+                        if asset_type is not None and hasattr(asset_type, "value"):
+                            asset_type = asset_type.value
+                        if asset_type == target_str:
+                            return True
             # Handle dict format (from model_dump)
-            if isinstance(req, dict):
+            elif isinstance(req, dict):
                 req_asset_type = req.get("asset_type")
-                # Compare string values
-                target_str = target_type.value if isinstance(target_type, AssetType) else target_type
                 if req_asset_type == target_str:
                     return True
                 # Check if it's a grouped asset requirement with assets array

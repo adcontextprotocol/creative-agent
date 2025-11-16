@@ -1,9 +1,23 @@
 """Tests for format filtering logic."""
 
 from adcp.types.generated import FormatId
+from adcp.types.generated_poc.format import Type
 
-from creative_agent.data.format_types import Type
 from creative_agent.data.standard_formats import filter_formats
+
+
+def get_render_dimensions(fmt):
+    """Get dimensions from first render (handles both Pydantic model and dict)."""
+    if not fmt.renders or len(fmt.renders) == 0:
+        return None, None
+    render = fmt.renders[0]
+    if hasattr(render, "dimensions"):
+        # Pydantic model (adcp 2.1.0+)
+        dims = render.dimensions
+        return dims.width, dims.height
+    # Legacy dict format
+    dims = render.get("dimensions", {})
+    return dims.get("width"), dims.get("height")
 
 
 class TestDimensionFiltering:
@@ -17,8 +31,8 @@ class TestDimensionFiltering:
         for fmt in results:
             assert fmt.renders
             assert len(fmt.renders) > 0
-            assert fmt.renders[0]["dimensions"]["width"] == 970
-            assert fmt.renders[0]["dimensions"]["height"] == 250
+            assert get_render_dimensions(fmt)[0] == 970
+            assert get_render_dimensions(fmt)[1] == 250
 
     def test_exact_dimensions_excludes_audio(self):
         """Filter by dimensions excludes audio formats without dimensions."""
@@ -33,8 +47,8 @@ class TestDimensionFiltering:
         assert len(results) > 0
         for fmt in results:
             assert fmt.renders
-            assert fmt.renders[0]["dimensions"]["width"] is not None
-            assert fmt.renders[0]["dimensions"]["width"] <= 728
+            assert get_render_dimensions(fmt)[0] is not None
+            assert get_render_dimensions(fmt)[0] <= 728
 
     def test_max_width_excludes_formats_without_dimensions(self):
         """Filter by max_width excludes formats without dimensions (audio)."""
@@ -44,7 +58,7 @@ class TestDimensionFiltering:
             assert fmt.type != Type.audio
             assert fmt.renders
             assert len(fmt.renders) > 0
-            assert fmt.renders[0]["dimensions"]["width"] is not None
+            assert get_render_dimensions(fmt)[0] is not None
 
     def test_max_height_excludes_larger(self):
         """Filter by max_height excludes formats taller than limit."""
@@ -52,8 +66,8 @@ class TestDimensionFiltering:
         assert len(results) > 0
         for fmt in results:
             assert fmt.renders
-            assert fmt.renders[0]["dimensions"]["height"] is not None
-            assert fmt.renders[0]["dimensions"]["height"] <= 250
+            assert get_render_dimensions(fmt)[1] is not None
+            assert get_render_dimensions(fmt)[1] <= 250
 
     def test_min_width_excludes_smaller(self):
         """Filter by min_width excludes formats narrower than limit."""
@@ -61,8 +75,8 @@ class TestDimensionFiltering:
         assert len(results) > 0
         for fmt in results:
             assert fmt.renders
-            assert fmt.renders[0]["dimensions"]["width"] is not None
-            assert fmt.renders[0]["dimensions"]["width"] >= 728
+            assert get_render_dimensions(fmt)[0] is not None
+            assert get_render_dimensions(fmt)[0] >= 728
 
     def test_min_height_excludes_smaller(self):
         """Filter by min_height excludes formats shorter than limit."""
@@ -70,8 +84,8 @@ class TestDimensionFiltering:
         assert len(results) > 0
         for fmt in results:
             assert fmt.renders
-            assert fmt.renders[0]["dimensions"]["height"] is not None
-            assert fmt.renders[0]["dimensions"]["height"] >= 600
+            assert get_render_dimensions(fmt)[1] is not None
+            assert get_render_dimensions(fmt)[1] >= 600
 
     def test_combined_min_max_filters(self):
         """Combine min and max dimension filters."""
@@ -79,8 +93,7 @@ class TestDimensionFiltering:
         assert len(results) > 0
         for fmt in results:
             assert fmt.renders
-            w = fmt.renders[0]["dimensions"]["width"]
-            h = fmt.renders[0]["dimensions"]["height"]
+            w, h = get_render_dimensions(fmt)
             assert 300 <= w <= 970
             assert 250 <= h <= 600
 
@@ -93,35 +106,35 @@ class TestTypeFiltering:
         results = filter_formats(type="display")
         assert len(results) > 0
         for fmt in results:
-            assert fmt.type == "display"
+            assert fmt.type == Type.display
 
     def test_filter_by_audio_type(self):
         """Filter by audio type returns only audio formats."""
         results = filter_formats(type="audio")
         assert len(results) > 0
         for fmt in results:
-            assert fmt.type == "audio"
+            assert fmt.type == Type.audio
 
     def test_filter_by_video_type(self):
         """Filter by video type returns only video formats."""
         results = filter_formats(type="video")
         assert len(results) > 0
         for fmt in results:
-            assert fmt.type == "video"
+            assert fmt.type == Type.video
 
     def test_filter_by_native_type(self):
         """Filter by native type returns only native formats."""
         results = filter_formats(type="native")
         assert len(results) > 0
         for fmt in results:
-            assert fmt.type == "native"
+            assert fmt.type == Type.native
 
     def test_filter_by_dooh_type(self):
         """Filter by DOOH type returns only DOOH formats."""
         results = filter_formats(type="dooh")
         assert len(results) > 0
         for fmt in results:
-            assert fmt.type == "dooh"
+            assert fmt.type == Type.dooh
 
 
 class TestCombinedFiltering:
@@ -132,17 +145,17 @@ class TestCombinedFiltering:
         results = filter_formats(type="display", dimensions="970x250")
         assert len(results) > 0
         for fmt in results:
-            assert fmt.type == "display"
-            assert fmt.renders[0]["dimensions"]["width"] == 970
-            assert fmt.renders[0]["dimensions"]["height"] == 250
+            assert fmt.type == Type.display
+            assert get_render_dimensions(fmt)[0] == 970
+            assert get_render_dimensions(fmt)[1] == 250
 
     def test_type_and_max_width(self):
         """Combine type and max_width filters."""
         results = filter_formats(type="display", max_width=728)
         assert len(results) > 0
         for fmt in results:
-            assert fmt.type == "display"
-            assert fmt.renders[0]["dimensions"]["width"] <= 728
+            assert fmt.type == Type.display
+            assert get_render_dimensions(fmt)[0] <= 728
 
     def test_dimensions_excludes_audio_even_with_no_type_filter(self):
         """Dimension filtering should exclude audio formats."""
@@ -153,10 +166,10 @@ class TestCombinedFiltering:
             # All results must have dimensions
             assert fmt.renders
             assert len(fmt.renders) > 0
-            assert fmt.renders[0]["dimensions"]["width"] is not None
-            assert fmt.renders[0]["dimensions"]["height"] is not None
+            assert get_render_dimensions(fmt)[0] is not None
+            assert get_render_dimensions(fmt)[1] is not None
             # No audio formats should appear
-            assert fmt.type != "audio"
+            assert fmt.type != Type.audio
 
 
 class TestNameSearch:
@@ -215,11 +228,11 @@ class TestNoFilters:
         )  # 7 generative + 9 video + 7 display_image + 6 display_html + 2 native + 3 audio + 4 dooh + 4 info card
         # Verify we have multiple types
         types = {fmt.type for fmt in results}
-        assert "audio" in types
-        assert "video" in types
-        assert "display" in types
-        assert "native" in types
-        assert "dooh" in types
+        assert Type.audio in types
+        assert Type.video in types
+        assert Type.display in types
+        assert Type.native in types
+        assert Type.dooh in types
 
 
 class TestBugReproduction:
@@ -228,7 +241,7 @@ class TestBugReproduction:
     def test_no_filter_returns_audio_formats(self):
         """When no filters are applied, audio formats should be returned."""
         results = filter_formats()
-        audio_formats = [fmt for fmt in results if fmt.type == "audio"]
+        audio_formats = [fmt for fmt in results if fmt.type == Type.audio]
         assert len(audio_formats) > 0
 
     def test_dimension_filter_excludes_audio_formats(self):
@@ -241,12 +254,12 @@ class TestBugReproduction:
         results = filter_formats(dimensions="970x250")
 
         # Audio formats should NOT appear in results
-        audio_formats = [fmt for fmt in results if fmt.type == "audio"]
+        audio_formats = [fmt for fmt in results if fmt.type == Type.audio]
         assert len(audio_formats) == 0, "Audio formats should not appear when filtering by dimensions"
 
         # Only display formats with 970x250 should appear
         for fmt in results:
             assert fmt.renders
             assert len(fmt.renders) > 0
-            assert fmt.renders[0]["dimensions"]["width"] == 970
-            assert fmt.renders[0]["dimensions"]["height"] == 250
+            assert get_render_dimensions(fmt)[0] == 970
+            assert get_render_dimensions(fmt)[1] == 250

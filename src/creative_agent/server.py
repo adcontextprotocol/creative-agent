@@ -338,6 +338,7 @@ def _handle_single_preview(
 
     # Build response dict for single mode
     response_dict = {
+        "response_type": "single",
         "previews": previews,
         "interactive_url": str(interactive_url),
         "expires_at": expires_at.isoformat(),
@@ -428,7 +429,7 @@ def _handle_batch_preview(
             )
 
     # Build batch response
-    batch_response = {"results": results}
+    batch_response = {"response_type": "batch", "results": results}
     success_count = sum(1 for r in results if r.get("success"))
     total_count = len(results)
     message = (
@@ -475,15 +476,23 @@ def _generate_preview_variant(
     dimensions = None
     if format_obj.renders and len(format_obj.renders) > 0:
         primary_render = format_obj.renders[0]
-        if (
-            primary_render.get("dimensions")
-            and primary_render.get("dimensions", {}).get("width")
-            and primary_render.get("dimensions", {}).get("height")
-        ):
-            dimensions = {
-                "width": float(primary_render["dimensions"]["width"]),
-                "height": float(primary_render["dimensions"]["height"]),
-            }
+        # Handle both dict and Pydantic model (adcp 2.1.0+)
+        if hasattr(primary_render, "dimensions"):
+            # Pydantic model
+            dims = primary_render.dimensions
+            if dims and getattr(dims, "width", None) and getattr(dims, "height", None):
+                dimensions = {
+                    "width": float(dims.width),
+                    "height": float(dims.height),
+                }
+        elif primary_render.get("dimensions"):
+            # Dict
+            dims = primary_render.get("dimensions", {})
+            if dims.get("width") and dims.get("height"):
+                dimensions = {
+                    "width": float(dims["width"]),
+                    "height": float(dims["height"]),
+                }
 
     # Build embedding metadata
     embedding = {

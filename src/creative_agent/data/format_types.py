@@ -2,6 +2,11 @@
 
 These types mirror the structure expected by Format.assets_required and Format.renders,
 but are defined locally since the adcp library uses flexible Any types for these fields.
+
+Note: While Format (from adcp library v1.6+) inherits from AdCPBaseModel which applies
+exclude_none=True by default, that only works for Pydantic model fields. Since
+assets_required and renders are typed as Any[], they hold raw dicts. We must apply
+exclude_none=True when converting these helper models to dicts before passing them to Format.
 """
 
 from enum import Enum
