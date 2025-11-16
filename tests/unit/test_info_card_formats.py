@@ -2,8 +2,26 @@
 
 from adcp.types.generated import FormatId
 
-from creative_agent.data.format_types import AssetType
+from creative_agent.data.format_types import AssetType, Type
 from creative_agent.data.standard_formats import AGENT_URL, INFO_CARD_FORMATS, filter_formats
+
+
+def get_asset_attr(asset, attr):
+    """Get attribute from asset (handles both Pydantic model and dict)."""
+    if hasattr(asset, attr):
+        val = getattr(asset, attr)
+        # Handle enum types - get string value
+        if hasattr(val, "value"):
+            return val.value
+        return val
+    return asset[attr]
+
+
+def get_render_attr(render, attr):
+    """Get attribute from render (handles both Pydantic model and dict)."""
+    if hasattr(render, attr):
+        return getattr(render, attr)
+    return render[attr]
 
 
 class TestInfoCardFormatsExist:
@@ -17,7 +35,7 @@ class TestInfoCardFormatsExist:
         fmt = results[0]
         assert fmt.format_id.id == "product_card_standard"
         assert fmt.name == "Product Card - Standard"
-        assert fmt.type == "display"
+        assert fmt.type.value == Type.display.value
 
     def test_product_card_detailed_exists(self):
         """Product card detailed format is defined."""
@@ -27,7 +45,7 @@ class TestInfoCardFormatsExist:
         fmt = results[0]
         assert fmt.format_id.id == "product_card_detailed"
         assert fmt.name == "Product Card - Detailed"
-        assert fmt.type == "display"
+        assert fmt.type.value == Type.display.value
 
     def test_format_card_standard_exists(self):
         """Format card standard format is defined."""
@@ -37,7 +55,7 @@ class TestInfoCardFormatsExist:
         fmt = results[0]
         assert fmt.format_id.id == "format_card_standard"
         assert fmt.name == "Format Card - Standard"
-        assert fmt.type == "display"
+        assert fmt.type.value == Type.display.value
 
     def test_format_card_detailed_exists(self):
         """Format card detailed format is defined."""
@@ -47,7 +65,7 @@ class TestInfoCardFormatsExist:
         fmt = results[0]
         assert fmt.format_id.id == "format_card_detailed"
         assert fmt.name == "Format Card - Detailed"
-        assert fmt.type == "display"
+        assert fmt.type.value == Type.display.value
 
 
 class TestProductCardStandard:
@@ -60,10 +78,12 @@ class TestProductCardStandard:
         fmt = results[0]
         assert fmt.renders
         assert len(fmt.renders) == 1
-        assert fmt.renders[0]["dimensions"]["width"] == 300
-        assert fmt.renders[0]["dimensions"]["height"] == 400
-        assert fmt.renders[0]["dimensions"]["responsive"]["width"] is False
-        assert fmt.renders[0]["dimensions"]["responsive"]["height"] is False
+        dimensions = get_render_attr(fmt.renders[0], "dimensions")
+        responsive = get_render_attr(dimensions, "responsive")
+        assert get_render_attr(dimensions, "width") == 300
+        assert get_render_attr(dimensions, "height") == 400
+        assert get_render_attr(responsive, "width") is False
+        assert get_render_attr(responsive, "height") is False
 
     def test_requires_product_assets(self):
         """Product card standard requires individual product assets."""
@@ -74,19 +94,23 @@ class TestProductCardStandard:
         assert len(fmt.assets_required) == 8
 
         # Check required assets
-        asset_ids = {asset["asset_id"] for asset in fmt.assets_required}
+        asset_ids = {get_asset_attr(asset, "asset_id") for asset in fmt.assets_required}
         assert "product_image" in asset_ids
         assert "product_name" in asset_ids
         assert "product_description" in asset_ids
 
         # Check asset types
-        asset_type_map = {asset["asset_id"]: asset["asset_type"] for asset in fmt.assets_required}
+        asset_type_map = {
+            get_asset_attr(asset, "asset_id"): get_asset_attr(asset, "asset_type") for asset in fmt.assets_required
+        }
         assert asset_type_map["product_image"] == "image"
         assert asset_type_map["product_name"] == "text"
         assert asset_type_map["product_description"] == "text"
 
         # Check required fields
-        required_asset_ids = {asset["asset_id"] for asset in fmt.assets_required if asset["required"]}
+        required_asset_ids = {
+            get_asset_attr(asset, "asset_id") for asset in fmt.assets_required if get_asset_attr(asset, "required")
+        }
         assert "product_image" in required_asset_ids
         assert "product_name" in required_asset_ids
         assert "product_description" in required_asset_ids
@@ -102,10 +126,12 @@ class TestProductCardDetailed:
         fmt = results[0]
         assert fmt.renders
         assert len(fmt.renders) == 1
-        assert fmt.renders[0]["dimensions"]["width"] is None
-        assert fmt.renders[0]["dimensions"]["height"] is None
-        assert fmt.renders[0]["dimensions"]["responsive"]["width"] is True
-        assert fmt.renders[0]["dimensions"]["responsive"]["height"] is True
+        dimensions = get_render_attr(fmt.renders[0], "dimensions")
+        responsive = get_render_attr(dimensions, "responsive")
+        assert get_render_attr(dimensions, "width") is None
+        assert get_render_attr(dimensions, "height") is None
+        assert get_render_attr(responsive, "width") is True
+        assert get_render_attr(responsive, "height") is True
 
     def test_requires_product_assets(self):
         """Product card detailed requires individual product assets."""
@@ -116,19 +142,23 @@ class TestProductCardDetailed:
         assert len(fmt.assets_required) == 8
 
         # Check required assets
-        asset_ids = {asset["asset_id"] for asset in fmt.assets_required}
+        asset_ids = {get_asset_attr(asset, "asset_id") for asset in fmt.assets_required}
         assert "product_image" in asset_ids
         assert "product_name" in asset_ids
         assert "product_description" in asset_ids
 
         # Check asset types
-        asset_type_map = {asset["asset_id"]: asset["asset_type"] for asset in fmt.assets_required}
+        asset_type_map = {
+            get_asset_attr(asset, "asset_id"): get_asset_attr(asset, "asset_type") for asset in fmt.assets_required
+        }
         assert asset_type_map["product_image"] == "image"
         assert asset_type_map["product_name"] == "text"
         assert asset_type_map["product_description"] == "text"
 
         # Check required fields
-        required_asset_ids = {asset["asset_id"] for asset in fmt.assets_required if asset["required"]}
+        required_asset_ids = {
+            get_asset_attr(asset, "asset_id") for asset in fmt.assets_required if get_asset_attr(asset, "required")
+        }
         assert "product_image" in required_asset_ids
         assert "product_name" in required_asset_ids
         assert "product_description" in required_asset_ids
@@ -144,10 +174,12 @@ class TestFormatCardStandard:
         fmt = results[0]
         assert fmt.renders
         assert len(fmt.renders) == 1
-        assert fmt.renders[0]["dimensions"]["width"] == 300
-        assert fmt.renders[0]["dimensions"]["height"] == 400
-        assert fmt.renders[0]["dimensions"]["responsive"]["width"] is False
-        assert fmt.renders[0]["dimensions"]["responsive"]["height"] is False
+        dimensions = get_render_attr(fmt.renders[0], "dimensions")
+        responsive = get_render_attr(dimensions, "responsive")
+        assert get_render_attr(dimensions, "width") == 300
+        assert get_render_attr(dimensions, "height") == 400
+        assert get_render_attr(responsive, "width") is False
+        assert get_render_attr(responsive, "height") is False
 
     def test_requires_format_asset(self):
         """Format card standard requires text asset for format specification."""
@@ -157,9 +189,9 @@ class TestFormatCardStandard:
         assert fmt.assets_required
         assert len(fmt.assets_required) == 1
         asset = fmt.assets_required[0]
-        assert asset["asset_id"] == "format"
-        assert asset["asset_type"] == "text"
-        assert asset["required"] is True
+        assert get_asset_attr(asset, "asset_id") == "format"
+        assert get_asset_attr(asset, "asset_type") == "text"
+        assert get_asset_attr(asset, "required") is True
 
 
 class TestFormatCardDetailed:
@@ -172,10 +204,12 @@ class TestFormatCardDetailed:
         fmt = results[0]
         assert fmt.renders
         assert len(fmt.renders) == 1
-        assert fmt.renders[0]["dimensions"]["width"] is None
-        assert fmt.renders[0]["dimensions"]["height"] is None
-        assert fmt.renders[0]["dimensions"]["responsive"]["width"] is True
-        assert fmt.renders[0]["dimensions"]["responsive"]["height"] is True
+        dimensions = get_render_attr(fmt.renders[0], "dimensions")
+        responsive = get_render_attr(dimensions, "responsive")
+        assert get_render_attr(dimensions, "width") is None
+        assert get_render_attr(dimensions, "height") is None
+        assert get_render_attr(responsive, "width") is True
+        assert get_render_attr(responsive, "height") is True
 
     def test_requires_format_asset(self):
         """Format card detailed requires text asset for format specification."""
@@ -185,9 +219,9 @@ class TestFormatCardDetailed:
         assert fmt.assets_required
         assert len(fmt.assets_required) == 1
         asset = fmt.assets_required[0]
-        assert asset["asset_id"] == "format"
-        assert asset["asset_type"] == "text"
-        assert asset["required"] is True
+        assert get_asset_attr(asset, "asset_id") == "format"
+        assert get_asset_attr(asset, "asset_type") == "text"
+        assert get_asset_attr(asset, "required") is True
 
 
 class TestInfoCardFormatsFiltering:

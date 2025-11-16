@@ -7,7 +7,9 @@ These tests verify that discriminator fields properly enforce type safety:
 """
 
 import pytest
-from adcp.types.generated import (
+
+# adcp 2.2.0+ provides semantic aliases directly
+from adcp.types import (
     BothPreviewRender,
     HtmlPreviewRender,
     InlineDaastAsset,
@@ -20,16 +22,16 @@ from adcp.types.generated import (
 )
 from pydantic import ValidationError
 
-# Compatibility aliases for test code
+# Legacy aliases used in test code
+Renders = UrlPreviewRender
+Renders1 = HtmlPreviewRender
+Renders2 = BothPreviewRender
 DaastAsset1 = UrlDaastAsset
 DaastAsset2 = InlineDaastAsset
 VastAsset1 = UrlVastAsset
 VastAsset2 = InlineVastAsset
 SubAsset1 = MediaSubAsset
 SubAsset2 = TextSubAsset
-Renders = UrlPreviewRender
-Renders1 = HtmlPreviewRender
-Renders2 = BothPreviewRender
 
 
 class TestSubAssetDiscriminator:
@@ -44,7 +46,7 @@ class TestSubAssetDiscriminator:
             content_uri="https://example.com/thumb.jpg",
         )
         assert asset.asset_kind == "media"
-        assert asset.content_uri == "https://example.com/thumb.jpg"
+        assert str(asset.content_uri) == "https://example.com/thumb.jpg"
 
     def test_text_asset_valid(self):
         """Text asset with asset_kind='text' should validate."""
@@ -347,7 +349,7 @@ class TestDiscriminatorSerializationRoundtrip:
         # Verify it's still the correct variant
         assert isinstance(parsed, MediaSubAsset)
         assert parsed.asset_kind == "media"
-        assert parsed.content_uri == "https://example.com/logo.png"
+        assert str(parsed.content_uri) == "https://example.com/logo.png"
 
     def test_vast_asset_json_roundtrip(self):
         """VastAsset should serialize and deserialize preserving variant type."""

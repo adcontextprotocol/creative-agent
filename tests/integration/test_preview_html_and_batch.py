@@ -52,22 +52,22 @@ class TestHTMLOutputMode:
 
         # Validate response structure
         response = PreviewCreativeResponse.model_validate(structured)
-        assert hasattr(response, "previews")
+        assert hasattr(response.root, "previews")
 
         # Check that preview_html is present
-        first_preview = response.previews[0]
-        first_render = first_preview["renders"][0]
-        assert first_render["preview_html"] is not None
-        assert isinstance(first_render["preview_html"], str)
-        assert len(first_render["preview_html"]) > 0
+        first_preview = response.root.previews[0]
+        first_render = first_preview.renders[0]
+        assert first_render.preview_html is not None
+        assert isinstance(first_render.preview_html, str)
+        assert len(first_render.preview_html) > 0
 
         # Verify output_format discriminator
-        assert first_render["output_format"] == "html"
+        assert first_render.output_format == "html"
         # With discriminated unions, preview_url field doesn't exist for "html" variant
-        assert "preview_url" not in first_render
+        assert not hasattr(first_render, "preview_url")
 
         # HTML should contain expected elements
-        assert "<div" in first_render["preview_html"] or "<html" in first_render["preview_html"]
+        assert "<div" in first_render.preview_html or "<html" in first_render.preview_html
 
     def test_html_output_does_not_upload_to_s3(self, mock_s3_upload):
         """Test that HTML output mode doesn't upload to S3."""
@@ -120,17 +120,17 @@ class TestHTMLOutputMode:
 
         # Validate response structure
         response = PreviewCreativeResponse.model_validate(structured)
-        first_preview = response.previews[0]
-        first_render = first_preview["renders"][0]
+        first_preview = response.root.previews[0]
+        first_render = first_preview.renders[0]
 
         # URL mode should have preview_url
-        assert first_render["preview_url"] is not None
-        assert str(first_render["preview_url"]).startswith("https://")
+        assert first_render.preview_url is not None
+        assert str(first_render.preview_url).startswith("https://")
 
         # Verify output_format discriminator
-        assert first_render["output_format"] == "url"
+        assert first_render.output_format == "url"
         # With discriminated unions, preview_html field doesn't exist for "url" variant
-        assert "preview_html" not in first_render
+        assert not hasattr(first_render, "preview_html")
 
         # S3 upload should be called 3 times (desktop, mobile, tablet)
         assert mock_s3_upload.call_count == 3

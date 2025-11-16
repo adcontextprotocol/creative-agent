@@ -6,16 +6,20 @@
 from typing import Any
 
 from adcp.types.generated import FormatId
+from adcp.types.generated_poc.format import (
+    AssetsRequired as LibAssetsRequired,
+)
+from adcp.types.generated_poc.format import (
+    Render as LibRender,
+)
+from adcp.types.generated_poc.format import (
+    Type as LibType,
+)
+from pydantic import AnyUrl
 
 from ..schemas import CreativeFormat
 from .format_types import (
-    AssetsRequired,
     AssetType,
-    Dimensions,
-    Render,
-    Responsive,
-    Type,
-    Unit,
 )
 
 # Agent configuration
@@ -40,7 +44,7 @@ COMMON_MACROS = [
 
 def create_format_id(format_name: str) -> FormatId:
     """Create a FormatId object with agent URL and format name."""
-    return FormatId(agent_url=AGENT_URL, id=format_name)
+    return FormatId(agent_url=AnyUrl(AGENT_URL), id=format_name)
 
 
 def create_asset_required(
@@ -48,47 +52,68 @@ def create_asset_required(
     asset_type: AssetType,
     required: bool = True,
     requirements: dict[str, str | int | float | bool | list[str]] | None = None,
-) -> dict[str, str | bool | dict[str, str | int | float | bool | list[str]] | AssetType]:
-    """Create an assets_required entry as a dict for the Format model."""
-    asset = AssetsRequired(
+) -> LibAssetsRequired:
+    """Create an assets_required entry using the library's Pydantic model.
+
+    The library model automatically handles exclude_none serialization and
+    includes the item_type discriminator for union types.
+    """
+    # Convert local AssetType enum to library's AssetType
+    from adcp.types.generated_poc.format import AssetType as LibAssetType
+
+    lib_asset_type = LibAssetType(asset_type.value)
+
+    return LibAssetsRequired(
         asset_id=asset_id,
-        asset_type=asset_type,
+        asset_type=lib_asset_type,
         required=required,
         requirements=requirements,
+        item_type="individual",  # Required discriminator for union types
     )
-    return asset.model_dump(mode="json")
 
 
-def create_fixed_render(
-    width: int, height: int, role: str = "primary"
-) -> dict[str, str | dict[str, float | bool | Responsive | Unit]]:
-    """Create a render with fixed dimensions (non-responsive)."""
-    render = Render(
+def create_fixed_render(width: int, height: int, role: str = "primary") -> LibRender:
+    """Create a render with fixed dimensions (non-responsive).
+
+    Returns the library's Pydantic model which automatically handles
+    exclude_none serialization.
+    """
+    from adcp.types.generated_poc.format import Dimensions as LibDimensions
+    from adcp.types.generated_poc.format import Responsive as LibResponsive
+    from adcp.types.generated_poc.format import Unit as LibUnit
+
+    return LibRender(
         role=role,
-        dimensions=Dimensions(
+        dimensions=LibDimensions(
             width=width,
             height=height,
-            responsive=Responsive(width=False, height=False),
-            unit=Unit.px,
+            responsive=LibResponsive(width=False, height=False),
+            unit=LibUnit.px,
         ),
     )
-    return render.model_dump(mode="json")
 
 
 def create_responsive_render(
     role: str = "primary",
-) -> dict[str, str | dict[str, float | None | bool | Responsive | Unit]]:
-    """Create a render with responsive dimensions."""
-    render = Render(
+) -> LibRender:
+    """Create a render with responsive dimensions.
+
+    Returns the library's Pydantic model which automatically handles
+    exclude_none serialization.
+    """
+    from adcp.types.generated_poc.format import Dimensions as LibDimensions
+    from adcp.types.generated_poc.format import Responsive as LibResponsive
+    from adcp.types.generated_poc.format import Unit as LibUnit
+
+    return LibRender(
         role=role,
-        dimensions=Dimensions(
+        dimensions=LibDimensions(
             width=None,
             height=None,
-            responsive=Responsive(width=True, height=True),
-            unit=Unit.px,
+            responsive=LibResponsive(width=True, height=True),
+            unit=LibUnit.px,
         ),
     )
-    return render.model_dump(mode="json")
 
 
 # Generative Formats - AI-powered creative generation
@@ -97,7 +122,7 @@ GENERATIVE_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("display_300x250_generative"),
         name="Medium Rectangle - AI Generated",
-        type="display",
+        type=LibType.display,
         description="AI-generated 300x250 banner from brand context and prompt",
         renders=[create_fixed_render(300, 250)],
         output_format_ids=[create_format_id("display_300x250_image")],
@@ -120,7 +145,7 @@ GENERATIVE_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("display_728x90_generative"),
         name="Leaderboard - AI Generated",
-        type="display",
+        type=LibType.display,
         description="AI-generated 728x90 banner from brand context and prompt",
         renders=[create_fixed_render(728, 90)],
         output_format_ids=[create_format_id("display_728x90_image")],
@@ -143,7 +168,7 @@ GENERATIVE_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("display_320x50_generative"),
         name="Mobile Banner - AI Generated",
-        type="display",
+        type=LibType.display,
         description="AI-generated 320x50 mobile banner from brand context and prompt",
         renders=[create_fixed_render(320, 50)],
         output_format_ids=[create_format_id("display_320x50_image")],
@@ -166,7 +191,7 @@ GENERATIVE_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("display_160x600_generative"),
         name="Wide Skyscraper - AI Generated",
-        type="display",
+        type=LibType.display,
         description="AI-generated 160x600 wide skyscraper from brand context and prompt",
         renders=[create_fixed_render(160, 600)],
         output_format_ids=[create_format_id("display_160x600_image")],
@@ -189,7 +214,7 @@ GENERATIVE_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("display_336x280_generative"),
         name="Large Rectangle - AI Generated",
-        type="display",
+        type=LibType.display,
         description="AI-generated 336x280 large rectangle from brand context and prompt",
         renders=[create_fixed_render(336, 280)],
         output_format_ids=[create_format_id("display_336x280_image")],
@@ -212,7 +237,7 @@ GENERATIVE_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("display_300x600_generative"),
         name="Half Page - AI Generated",
-        type="display",
+        type=LibType.display,
         description="AI-generated 300x600 half page from brand context and prompt",
         renders=[create_fixed_render(300, 600)],
         output_format_ids=[create_format_id("display_300x600_image")],
@@ -235,7 +260,7 @@ GENERATIVE_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("display_970x250_generative"),
         name="Billboard - AI Generated",
-        type="display",
+        type=LibType.display,
         description="AI-generated 970x250 billboard from brand context and prompt",
         renders=[create_fixed_render(970, 250)],
         output_format_ids=[create_format_id("display_970x250_image")],
@@ -262,7 +287,7 @@ VIDEO_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("video_standard_30s"),
         name="Standard Video - 30 seconds",
-        type="video",
+        type=LibType.video,
         description="30-second video ad in standard aspect ratios",
         supported_macros=[*COMMON_MACROS, "VIDEO_ID", "POD_POSITION", "CONTENT_GENRE"],
         assets_required=[
@@ -281,7 +306,7 @@ VIDEO_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("video_standard_15s"),
         name="Standard Video - 15 seconds",
-        type="video",
+        type=LibType.video,
         description="15-second video ad in standard aspect ratios",
         supported_macros=[*COMMON_MACROS, "VIDEO_ID", "POD_POSITION", "CONTENT_GENRE"],
         assets_required=[
@@ -300,7 +325,7 @@ VIDEO_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("video_vast_30s"),
         name="VAST Video - 30 seconds",
-        type="video",
+        type=LibType.video,
         description="30-second video ad via VAST tag",
         supported_macros=[*COMMON_MACROS, "VIDEO_ID", "POD_POSITION", "CONTENT_GENRE"],
         assets_required=[
@@ -317,7 +342,7 @@ VIDEO_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("video_1920x1080"),
         name="Full HD Video - 1920x1080",
-        type="video",
+        type=LibType.video,
         description="1920x1080 Full HD video (16:9)",
         supported_macros=[*COMMON_MACROS, "VIDEO_ID", "POD_POSITION", "CONTENT_GENRE"],
         renders=[create_fixed_render(1920, 1080)],
@@ -338,7 +363,7 @@ VIDEO_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("video_1280x720"),
         name="HD Video - 1280x720",
-        type="video",
+        type=LibType.video,
         description="1280x720 HD video (16:9)",
         supported_macros=[*COMMON_MACROS, "VIDEO_ID", "POD_POSITION", "CONTENT_GENRE"],
         renders=[create_fixed_render(1280, 720)],
@@ -359,7 +384,7 @@ VIDEO_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("video_1080x1920"),
         name="Vertical Video - 1080x1920",
-        type="video",
+        type=LibType.video,
         description="1080x1920 vertical video (9:16) for mobile stories",
         supported_macros=[*COMMON_MACROS, "VIDEO_ID", "POD_POSITION", "CONTENT_GENRE"],
         renders=[create_fixed_render(1080, 1920)],
@@ -380,7 +405,7 @@ VIDEO_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("video_1080x1080"),
         name="Square Video - 1080x1080",
-        type="video",
+        type=LibType.video,
         description="1080x1080 square video (1:1) for social feeds",
         supported_macros=[*COMMON_MACROS, "VIDEO_ID", "POD_POSITION", "CONTENT_GENRE"],
         renders=[create_fixed_render(1080, 1080)],
@@ -401,7 +426,7 @@ VIDEO_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("video_ctv_preroll_30s"),
         name="CTV Pre-Roll - 30 seconds",
-        type="video",
+        type=LibType.video,
         description="30-second pre-roll ad for Connected TV and streaming platforms",
         supported_macros=[*COMMON_MACROS, "VIDEO_ID", "POD_POSITION", "CONTENT_GENRE", "PLAYER_SIZE"],
         assets_required=[
@@ -420,7 +445,7 @@ VIDEO_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("video_ctv_midroll_30s"),
         name="CTV Mid-Roll - 30 seconds",
-        type="video",
+        type=LibType.video,
         description="30-second mid-roll ad for Connected TV and streaming platforms",
         supported_macros=[*COMMON_MACROS, "VIDEO_ID", "POD_POSITION", "CONTENT_GENRE", "PLAYER_SIZE"],
         assets_required=[
@@ -443,7 +468,7 @@ DISPLAY_IMAGE_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("display_300x250_image"),
         name="Medium Rectangle - Image",
-        type="display",
+        type=LibType.display,
         description="300x250 static image banner",
         supported_macros=COMMON_MACROS,
         renders=[create_fixed_render(300, 250)],
@@ -472,7 +497,7 @@ DISPLAY_IMAGE_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("display_728x90_image"),
         name="Leaderboard - Image",
-        type="display",
+        type=LibType.display,
         description="728x90 static image banner",
         supported_macros=COMMON_MACROS,
         renders=[create_fixed_render(728, 90)],
@@ -498,7 +523,7 @@ DISPLAY_IMAGE_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("display_320x50_image"),
         name="Mobile Banner - Image",
-        type="display",
+        type=LibType.display,
         description="320x50 mobile banner",
         supported_macros=COMMON_MACROS,
         renders=[create_fixed_render(320, 50)],
@@ -524,7 +549,7 @@ DISPLAY_IMAGE_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("display_160x600_image"),
         name="Wide Skyscraper - Image",
-        type="display",
+        type=LibType.display,
         description="160x600 wide skyscraper banner",
         supported_macros=COMMON_MACROS,
         renders=[create_fixed_render(160, 600)],
@@ -550,7 +575,7 @@ DISPLAY_IMAGE_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("display_336x280_image"),
         name="Large Rectangle - Image",
-        type="display",
+        type=LibType.display,
         description="336x280 large rectangle banner",
         supported_macros=COMMON_MACROS,
         renders=[create_fixed_render(336, 280)],
@@ -576,7 +601,7 @@ DISPLAY_IMAGE_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("display_300x600_image"),
         name="Half Page - Image",
-        type="display",
+        type=LibType.display,
         description="300x600 half page banner",
         supported_macros=COMMON_MACROS,
         renders=[create_fixed_render(300, 600)],
@@ -602,7 +627,7 @@ DISPLAY_IMAGE_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("display_970x250_image"),
         name="Billboard - Image",
-        type="display",
+        type=LibType.display,
         description="970x250 billboard banner",
         supported_macros=COMMON_MACROS,
         renders=[create_fixed_render(970, 250)],
@@ -632,7 +657,7 @@ DISPLAY_HTML_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("display_300x250_html"),
         name="Medium Rectangle - HTML5",
-        type="display",
+        type=LibType.display,
         description="300x250 HTML5 creative",
         supported_macros=COMMON_MACROS,
         renders=[create_fixed_render(300, 250)],
@@ -653,7 +678,7 @@ DISPLAY_HTML_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("display_728x90_html"),
         name="Leaderboard - HTML5",
-        type="display",
+        type=LibType.display,
         description="728x90 HTML5 creative",
         supported_macros=COMMON_MACROS,
         renders=[create_fixed_render(728, 90)],
@@ -673,7 +698,7 @@ DISPLAY_HTML_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("display_160x600_html"),
         name="Wide Skyscraper - HTML5",
-        type="display",
+        type=LibType.display,
         description="160x600 HTML5 creative",
         supported_macros=COMMON_MACROS,
         renders=[create_fixed_render(160, 600)],
@@ -693,7 +718,7 @@ DISPLAY_HTML_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("display_336x280_html"),
         name="Large Rectangle - HTML5",
-        type="display",
+        type=LibType.display,
         description="336x280 HTML5 creative",
         supported_macros=COMMON_MACROS,
         renders=[create_fixed_render(336, 280)],
@@ -713,7 +738,7 @@ DISPLAY_HTML_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("display_300x600_html"),
         name="Half Page - HTML5",
-        type="display",
+        type=LibType.display,
         description="300x600 HTML5 creative",
         supported_macros=COMMON_MACROS,
         renders=[create_fixed_render(300, 600)],
@@ -733,7 +758,7 @@ DISPLAY_HTML_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("display_970x250_html"),
         name="Billboard - HTML5",
-        type="display",
+        type=LibType.display,
         description="970x250 HTML5 creative",
         supported_macros=COMMON_MACROS,
         renders=[create_fixed_render(970, 250)],
@@ -757,7 +782,7 @@ NATIVE_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("native_standard"),
         name="IAB Native Standard",
-        type="native",
+        type=LibType.native,
         description="Standard native ad with title, description, image, and CTA",
         supported_macros=COMMON_MACROS,
         assets_required=[
@@ -814,7 +839,7 @@ NATIVE_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("native_content"),
         name="Native Content Placement",
-        type="native",
+        type=LibType.native,
         description="In-article native ad with editorial styling",
         supported_macros=COMMON_MACROS,
         assets_required=[
@@ -875,7 +900,7 @@ AUDIO_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("audio_standard_15s"),
         name="Standard Audio - 15 seconds",
-        type="audio",
+        type=LibType.audio,
         description="15-second audio ad",
         supported_macros=[*COMMON_MACROS, "CONTENT_GENRE"],
         assets_required=[
@@ -893,7 +918,7 @@ AUDIO_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("audio_standard_30s"),
         name="Standard Audio - 30 seconds",
-        type="audio",
+        type=LibType.audio,
         description="30-second audio ad",
         supported_macros=[*COMMON_MACROS, "CONTENT_GENRE"],
         assets_required=[
@@ -911,7 +936,7 @@ AUDIO_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("audio_standard_60s"),
         name="Standard Audio - 60 seconds",
-        type="audio",
+        type=LibType.audio,
         description="60-second audio ad",
         supported_macros=[*COMMON_MACROS, "CONTENT_GENRE"],
         assets_required=[
@@ -933,7 +958,7 @@ DOOH_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("dooh_billboard_1920x1080"),
         name="Digital Billboard - 1920x1080",
-        type="dooh",
+        type=LibType.dooh,
         description="Full HD digital billboard",
         supported_macros=[*COMMON_MACROS, "SCREEN_ID", "VENUE_TYPE", "VENUE_LAT", "VENUE_LONG"],
         renders=[create_fixed_render(1920, 1080)],
@@ -953,7 +978,7 @@ DOOH_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("dooh_billboard_landscape"),
         name="Digital Billboard - Landscape",
-        type="dooh",
+        type=LibType.dooh,
         description="Landscape-oriented digital billboard (various sizes)",
         supported_macros=[*COMMON_MACROS, "SCREEN_ID", "VENUE_TYPE", "VENUE_LAT", "VENUE_LONG"],
         assets_required=[
@@ -971,7 +996,7 @@ DOOH_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("dooh_billboard_portrait"),
         name="Digital Billboard - Portrait",
-        type="dooh",
+        type=LibType.dooh,
         description="Portrait-oriented digital billboard (various sizes)",
         supported_macros=[*COMMON_MACROS, "SCREEN_ID", "VENUE_TYPE", "VENUE_LAT", "VENUE_LONG"],
         assets_required=[
@@ -989,7 +1014,7 @@ DOOH_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("dooh_transit_screen"),
         name="Transit Screen",
-        type="dooh",
+        type=LibType.dooh,
         description="Transit and subway screen displays",
         supported_macros=[*COMMON_MACROS, "SCREEN_ID", "VENUE_TYPE", "VENUE_LAT", "VENUE_LONG", "TRANSIT_LINE"],
         renders=[create_fixed_render(1920, 1080)],
@@ -1014,7 +1039,7 @@ INFO_CARD_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("product_card_standard"),
         name="Product Card - Standard",
-        type="display",
+        type=LibType.display,
         description="Standard visual card (300x400px) for displaying ad inventory products",
         supported_macros=COMMON_MACROS,
         renders=[create_fixed_render(300, 400)],
@@ -1088,7 +1113,7 @@ INFO_CARD_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("product_card_detailed"),
         name="Product Card - Detailed",
-        type="display",
+        type=LibType.display,
         description="Detailed card with carousel and full specifications for rich product presentation",
         supported_macros=COMMON_MACROS,
         renders=[create_responsive_render()],
@@ -1162,7 +1187,7 @@ INFO_CARD_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("format_card_standard"),
         name="Format Card - Standard",
-        type="display",
+        type=LibType.display,
         description="Standard visual card (300x400px) for displaying creative formats in user interfaces",
         supported_macros=COMMON_MACROS,
         renders=[create_fixed_render(300, 400)],
@@ -1180,7 +1205,7 @@ INFO_CARD_FORMATS = [
     CreativeFormat(
         format_id=create_format_id("format_card_detailed"),
         name="Format Card - Detailed",
-        type="display",
+        type=LibType.display,
         description="Detailed card with carousel and full specifications for rich format documentation",
         supported_macros=COMMON_MACROS,
         renders=[create_responsive_render()],
@@ -1221,7 +1246,7 @@ def get_format_by_id(format_id: FormatId) -> CreativeFormat | None:
 
 def filter_formats(
     format_ids: list[FormatId] | None = None,
-    type: Type | str | None = None,
+    type: LibType | str | None = None,
     asset_types: list[AssetType | str] | None = None,
     dimensions: str | None = None,
     max_width: int | None = None,
@@ -1241,9 +1266,12 @@ def filter_formats(
 
     if type:
         # Handle both Type enum and string values
+        # fmt.type is always a Type enum (adcp 2.1.0+)
         if isinstance(type, str):
-            results = [fmt for fmt in results if fmt.type == type]
+            # Compare enum value to string
+            results = [fmt for fmt in results if fmt.type.value == type]
         else:
+            # Compare enum to enum
             results = [fmt for fmt in results if fmt.type == type]
 
     if dimensions:
@@ -1252,14 +1280,18 @@ def filter_formats(
         if len(parts) == 2:
             try:
                 target_width, target_height = int(parts[0]), int(parts[1])
-                results = [
-                    fmt
-                    for fmt in results
-                    if fmt.renders
-                    and len(fmt.renders) > 0
-                    and fmt.renders[0].get("dimensions", {}).get("width") == target_width
-                    and fmt.renders[0].get("dimensions", {}).get("height") == target_height
-                ]
+
+                def matches_dimensions(fmt: CreativeFormat) -> bool:
+                    if not fmt.renders or len(fmt.renders) == 0:
+                        return False
+                    render = fmt.renders[0]
+                    # renders are always Pydantic models (adcp 2.2.0+)
+                    dims = render.dimensions
+                    return (
+                        getattr(dims, "width", None) == target_width and getattr(dims, "height", None) == target_height
+                    )
+
+                results = [fmt for fmt in results if matches_dimensions(fmt)]
             except ValueError:
                 pass  # Invalid dimension format, skip filter
 
@@ -1270,8 +1302,9 @@ def filter_formats(
             """Extract width and height from format renders."""
             if fmt.renders and len(fmt.renders) > 0:
                 render = fmt.renders[0]
-                dimensions = render.get("dimensions", {})
-                return dimensions.get("width"), dimensions.get("height")
+                # renders are always Pydantic models (adcp 2.2.0+)
+                dims = render.dimensions
+                return getattr(dims, "width", None), getattr(dims, "height", None)
             return None, None
 
         filtered = []
@@ -1295,29 +1328,21 @@ def filter_formats(
 
     if is_responsive is not None:
         # Filter based on responsive flag in renders
+        def is_format_responsive(fmt: CreativeFormat) -> bool:
+            if not fmt.renders or len(fmt.renders) == 0:
+                return False
+            render = fmt.renders[0]
+            # renders are always Pydantic models (adcp 2.2.0+)
+            dims = render.dimensions
+            if hasattr(dims, "responsive"):
+                resp = dims.responsive
+                return getattr(resp, "width", False) or getattr(resp, "height", False)
+            return False
+
         if is_responsive:
-            results = [
-                fmt
-                for fmt in results
-                if fmt.renders
-                and len(fmt.renders) > 0
-                and fmt.renders[0].get("dimensions", {}).get("responsive", {})
-                and (
-                    fmt.renders[0].get("dimensions", {}).get("responsive", {}).get("width")
-                    or fmt.renders[0].get("dimensions", {}).get("responsive", {}).get("height")
-                )
-            ]
+            results = [fmt for fmt in results if is_format_responsive(fmt)]
         else:
-            # Filter for non-responsive (fixed dimension) formats
-            results = [
-                fmt
-                for fmt in results
-                if fmt.renders
-                and len(fmt.renders) > 0
-                and fmt.renders[0].get("dimensions", {}).get("responsive", {})
-                and not fmt.renders[0].get("dimensions", {}).get("responsive", {}).get("width")
-                and not fmt.renders[0].get("dimensions", {}).get("responsive", {}).get("height")
-            ]
+            results = [fmt for fmt in results if not is_format_responsive(fmt)]
 
     if name_search:
         search_lower = name_search.lower()
@@ -1325,21 +1350,27 @@ def filter_formats(
 
     if asset_types:
         # Filter to formats that include ALL specified asset types
-        def has_asset_type(req: dict[str, Any], target_type: AssetType | str) -> bool:
+        def has_asset_type(req: Any, target_type: AssetType | str) -> bool:
             """Check if a requirement has the target asset type."""
-            # Handle dict format (from model_dump)
-            if isinstance(req, dict):
-                req_asset_type = req.get("asset_type")
-                # Compare string values
-                target_str = target_type.value if isinstance(target_type, AssetType) else target_type
-                if req_asset_type == target_str:
-                    return True
-                # Check if it's a grouped asset requirement with assets array
-                if "assets" in req:
-                    for asset in req["assets"]:
-                        asset_type = asset.get("asset_type")
-                        if asset_type == target_str:
-                            return True
+            # Compare string values
+            target_str = target_type.value if isinstance(target_type, AssetType) else target_type
+
+            # assets_required are always Pydantic models (adcp 2.2.0+)
+            req_asset_type = req.asset_type
+            # Handle enum type
+            if hasattr(req_asset_type, "value"):
+                req_asset_type = req_asset_type.value
+            if req_asset_type == target_str:
+                return True
+            # Check if it's a grouped asset requirement with assets array
+            if hasattr(req, "assets"):
+                for asset in req.assets:
+                    asset_type: Any = getattr(asset, "asset_type", None)
+                    # Handle enum type
+                    if asset_type is not None and hasattr(asset_type, "value"):
+                        asset_type = asset_type.value
+                    if asset_type == target_str:
+                        return True
             return False
 
         results = [

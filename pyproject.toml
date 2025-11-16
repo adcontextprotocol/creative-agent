@@ -16,7 +16,7 @@ dependencies = [
     "boto3>=1.35.0",
     "markdown>=3.6",
     "bleach>=6.3.0",
-    "adcp>=1.2.1",  # Official ADCP Python client for schema types
+    "adcp>=2.2.0",  # Official ADCP Python client with semantic type aliases
 ]
 
 [project.scripts]

@@ -7,9 +7,11 @@ from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from adcp.types.generated import FormatId
+from adcp.types.generated_poc.list_creative_formats_response import Capability, CreativeAgent
 from fastmcp import FastMCP
 from fastmcp.tools.tool import ToolResult
 from mcp.types import TextContent
+from pydantic import AnyUrl
 
 from .data.standard_formats import (
     AGENT_CAPABILITIES,
@@ -87,7 +89,7 @@ def list_creative_formats(
             format_id_objects = []
             for fid in format_ids:
                 if isinstance(fid, str):
-                    format_id_objects.append(FormatId(agent_url=AGENT_URL, id=fid))
+                    format_id_objects.append(FormatId(agent_url=AnyUrl(AGENT_URL), id=fid))
                 else:  # dict
                     format_id_objects.append(FormatId(**fid))
 
@@ -109,11 +111,11 @@ def list_creative_formats(
         response = ListCreativeFormatsResponse(
             formats=formats,  # Already Format objects from library
             creative_agents=[
-                {
-                    "agent_url": AGENT_URL,
-                    "agent_name": AGENT_NAME,
-                    "capabilities": AGENT_CAPABILITIES,  # Already strings
-                }
+                CreativeAgent(
+                    agent_url=AnyUrl(AGENT_URL),
+                    agent_name=AGENT_NAME,
+                    capabilities=[Capability(cap) for cap in AGENT_CAPABILITIES],
+                )
             ],
         )
 
@@ -229,7 +231,7 @@ def _handle_single_preview(
 
     # Handle format_id as string or FormatId object (dict)
     if isinstance(format_id, str):
-        fmt_id = FormatId(agent_url=AGENT_URL, id=format_id)
+        fmt_id = FormatId(agent_url=AnyUrl(AGENT_URL), id=format_id)
     else:  # dict
         fmt_id = FormatId(**format_id)
 
@@ -338,6 +340,7 @@ def _handle_single_preview(
 
     # Build response dict for single mode
     response_dict = {
+        "response_type": "single",
         "previews": previews,
         "interactive_url": str(interactive_url),
         "expires_at": expires_at.isoformat(),
@@ -428,7 +431,7 @@ def _handle_batch_preview(
             )
 
     # Build batch response
-    batch_response = {"results": results}
+    batch_response = {"response_type": "batch", "results": results}
     success_count = sum(1 for r in results if r.get("success"))
     total_count = len(results)
     message = (
@@ -475,15 +478,23 @@ def _generate_preview_variant(
     dimensions = None
     if format_obj.renders and len(format_obj.renders) > 0:
         primary_render = format_obj.renders[0]
-        if (
-            primary_render.get("dimensions")
-            and primary_render.get("dimensions", {}).get("width")
-            and primary_render.get("dimensions", {}).get("height")
-        ):
-            dimensions = {
-                "width": float(primary_render["dimensions"]["width"]),
-                "height": float(primary_render["dimensions"]["height"]),
-            }
+        # Handle both dict and Pydantic model (adcp 2.1.0+)
+        if hasattr(primary_render, "dimensions"):
+            # Pydantic model
+            dims = primary_render.dimensions
+            if dims and getattr(dims, "width", None) and getattr(dims, "height", None):
+                dimensions = {
+                    "width": float(dims.width),
+                    "height": float(dims.height),
+                }
+        elif primary_render.get("dimensions"):
+            # Dict
+            dims = primary_render.get("dimensions", {})
+            if dims.get("width") and dims.get("height"):
+                dimensions = {
+                    "width": float(dims["width"]),
+                    "height": float(dims["height"]),
+                }
 
     # Build embedding metadata
     embedding = {
@@ -557,7 +568,7 @@ def build_creative(
     try:
         # Parse target_format_id
         if isinstance(target_format_id, str):
-            fmt_id = FormatId(agent_url=AGENT_URL, id=target_format_id)
+            fmt_id = FormatId(agent_url=AnyUrl(AGENT_URL), id=target_format_id)
         else:
             fmt_id = FormatId(**target_format_id)
 
@@ -644,14 +655,14 @@ Description: {output_fmt.description}
             format_spec += "\nRequired Assets:\n"
             if output_fmt.assets_required:
                 for asset_req in output_fmt.assets_required:
-                    if isinstance(asset_req, dict):
-                        if "asset_group_id" in asset_req:
-                            # Repeatable group
-                            format_spec += f"- {asset_req['asset_group_id']} (repeatable group)\n"
-                        elif "asset_id" in asset_req:
-                            # Regular asset
-                            asset_type = asset_req.get("asset_type", "unknown")
-                            format_spec += f"- {asset_req['asset_id']} ({asset_type})\n"
+                    # assets_required are always Pydantic models (adcp 2.2.0+)
+                    if hasattr(asset_req, "asset_group_id"):
+                        # Repeatable group (AssetsRequired1)
+                        format_spec += f"- {asset_req.asset_group_id} (repeatable group)\n"
+                    elif hasattr(asset_req, "asset_id"):
+                        # Individual asset (AssetsRequired)
+                        asset_type = getattr(asset_req, "asset_type", "unknown")
+                        format_spec += f"- {asset_req.asset_id} ({asset_type})\n"
 
             # Add brand context if provided
             brand_context = ""

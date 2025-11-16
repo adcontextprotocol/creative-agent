@@ -6,7 +6,7 @@ from typing import Any
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import AnyUrl, BaseModel
 
 from .data.standard_formats import STANDARD_FORMATS, get_format_by_id
 
@@ -65,7 +65,7 @@ async def get_format(format_id: str) -> dict[str, Any]:
     from .data.standard_formats import AGENT_URL
 
     # Convert string ID to FormatId object (assume our agent)
-    fmt_id = FormatId(agent_url=AGENT_URL, id=format_id)
+    fmt_id = FormatId(agent_url=AnyUrl(AGENT_URL), id=format_id)
     fmt = get_format_by_id(fmt_id)
     if not fmt:
         raise HTTPException(status_code=404, detail=f"Format {format_id} not found")
@@ -82,7 +82,7 @@ async def preview_creative(request: PreviewRequest) -> dict[str, Any]:
     from .data.standard_formats import AGENT_URL
 
     # Convert string ID to FormatId object (assume our agent)
-    fmt_id = FormatId(agent_url=AGENT_URL, id=request.format_id)
+    fmt_id = FormatId(agent_url=AnyUrl(AGENT_URL), id=request.format_id)
     fmt = get_format_by_id(fmt_id)
     if not fmt:
         raise HTTPException(status_code=404, detail=f"Format {request.format_id} not found")
