@@ -7,7 +7,7 @@ S3 upload failures, None manifests, and environment validation.
 from unittest.mock import MagicMock, patch
 
 import pytest
-from adcp.types.generated import FormatId
+from adcp import FormatId
 from botocore.exceptions import ClientError, NoCredentialsError
 
 from creative_agent.data.standard_formats import AGENT_URL, get_format_by_id

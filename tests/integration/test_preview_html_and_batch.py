@@ -1,7 +1,7 @@
 """Integration tests for HTML output and batch preview modes."""
 
 import pytest
-from adcp.types.generated import FormatId, PreviewCreativeResponse
+from adcp import FormatId, PreviewCreativeResponse
 
 from creative_agent import server
 from creative_agent.data.standard_formats import AGENT_URL
@@ -25,8 +25,6 @@ class TestHTMLOutputMode:
     def test_html_output_returns_preview_html(self):
         """Test that output_format='html' returns preview_html field."""
         manifest = CreativeManifest(
-            creative_id="test-creative",
-            name="Test Creative",
             format_id=FormatId(agent_url=AGENT_URL, id="display_300x250_image"),
             assets={
                 "banner_image": {
@@ -72,8 +70,6 @@ class TestHTMLOutputMode:
     def test_html_output_does_not_upload_to_s3(self, mock_s3_upload):
         """Test that HTML output mode doesn't upload to S3."""
         manifest = CreativeManifest(
-            creative_id="test-creative",
-            name="Test Creative",
             format_id=FormatId(agent_url=AGENT_URL, id="display_300x250_image"),
             assets={
                 "banner_image": {
@@ -97,8 +93,6 @@ class TestHTMLOutputMode:
     def test_url_output_still_works(self, mock_s3_upload):
         """Test that default URL output mode still works."""
         manifest = CreativeManifest(
-            creative_id="test-creative",
-            name="Test Creative",
             format_id=FormatId(agent_url=AGENT_URL, id="display_300x250_image"),
             assets={
                 "banner_image": {
@@ -150,8 +144,6 @@ class TestBatchPreviewMode:
     def test_batch_mode_with_multiple_requests(self):
         """Test batch mode with multiple preview requests."""
         manifest1 = CreativeManifest(
-            creative_id="test-creative",
-            name="Test Creative",
             format_id=FormatId(agent_url=AGENT_URL, id="display_300x250_image"),
             assets={
                 "banner_image": {
@@ -164,8 +156,6 @@ class TestBatchPreviewMode:
         )
 
         manifest2 = CreativeManifest(
-            creative_id="test-creative",
-            name="Test Creative",
             format_id=FormatId(agent_url=AGENT_URL, id="display_728x90_image"),
             assets={
                 "banner_image": {
@@ -211,8 +201,6 @@ class TestBatchPreviewMode:
     def test_batch_mode_with_html_output(self):
         """Test batch mode with HTML output format."""
         manifest = CreativeManifest(
-            creative_id="test-creative",
-            name="Test Creative",
             format_id=FormatId(agent_url=AGENT_URL, id="display_300x250_image"),
             assets={
                 "banner_image": {
@@ -252,8 +240,6 @@ class TestBatchPreviewMode:
     def test_batch_mode_handles_errors_gracefully(self):
         """Test that batch mode handles individual request errors."""
         valid_manifest = CreativeManifest(
-            creative_id="test-creative",
-            name="Test Creative",
             format_id=FormatId(agent_url=AGENT_URL, id="display_300x250_image"),
             assets={
                 "banner_image": {
@@ -295,8 +281,6 @@ class TestBatchPreviewMode:
     def test_batch_mode_per_request_output_format_override(self):
         """Test that individual requests can override batch output_format."""
         manifest = CreativeManifest(
-            creative_id="test-creative",
-            name="Test Creative",
             format_id=FormatId(agent_url=AGENT_URL, id="display_300x250_image"),
             assets={
                 "banner_image": {

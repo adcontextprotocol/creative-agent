@@ -4,7 +4,7 @@ These tests use generated Pydantic schemas to ensure 100% spec compliance.
 """
 
 import pytest
-from adcp.types.generated import FormatId
+from adcp import FormatId
 
 from creative_agent.data.standard_formats import AGENT_URL, get_format_by_id
 from creative_agent.schemas import CreativeManifest
@@ -28,8 +28,6 @@ class TestGeneratePreviewHtml:
         """
         # First create Pydantic objects to ensure schema compliance
         manifest_obj = CreativeManifest(
-            creative_id="test-creative",
-            name="Test Creative",
             format_id=FormatId(agent_url=AGENT_URL, id="display_300x250_image"),
             assets={
                 "banner_image": {
@@ -83,8 +81,6 @@ class TestGeneratePreviewHtml:
         """Test that javascript: URLs are sanitized for security."""
         # Create manifest with malicious URL (still needs to be schema-valid structure)
         manifest = CreativeManifest(
-            creative_id="test-creative",
-            name="Test Creative",
             format_id=FormatId(agent_url=AGENT_URL, id="display_300x250_image"),
             assets={
                 "banner_image": {
@@ -125,8 +121,6 @@ class TestGeneratePreviewHtml:
         video_format = get_format_by_id(FormatId(agent_url=AGENT_URL, id="video_standard_15s"))
 
         manifest = CreativeManifest(
-            creative_id="test-creative",
-            name="Test Creative",
             format_id=FormatId(agent_url=AGENT_URL, id="video_standard_15s"),
             assets={
                 "video_file": {
@@ -148,8 +142,6 @@ class TestGeneratePreviewHtml:
         """Test that manifests can include optional assets beyond format requirements."""
         # Include optional headline text asset (not required by format)
         manifest = CreativeManifest(
-            creative_id="test-creative",
-            name="Test Creative",
             format_id=FormatId(agent_url=AGENT_URL, id="display_300x250_image"),
             assets={
                 "banner_image": {

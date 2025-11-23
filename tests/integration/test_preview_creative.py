@@ -6,7 +6,7 @@ All tests use generated Pydantic schemas to ensure 100% ADCP spec compliance.
 from datetime import UTC, datetime
 
 import pytest
-from adcp.types.generated import FormatId
+from adcp import FormatId
 from pytest_mock import MockerFixture
 
 from creative_agent import server
@@ -32,8 +32,6 @@ class TestPreviewCreativeIntegration:
         """Test preview_creative tool with fully spec-compliant manifest."""
         # Create spec-compliant Pydantic manifest
         manifest = CreativeManifest(
-            creative_id="test-creative",
-            name="Test Creative",
             format_id=FormatId(agent_url=AGENT_URL, id="display_300x250_image"),
             assets={
                 "banner_image": {
@@ -74,8 +72,6 @@ class TestPreviewCreativeIntegration:
     def test_preview_creative_with_custom_inputs(self, mock_s3_upload):
         """Test preview_creative with custom input variants."""
         manifest = CreativeManifest(
-            creative_id="test-creative",
-            name="Test Creative",
             format_id=FormatId(agent_url=AGENT_URL, id="display_300x250_image"),
             assets={
                 "banner_image": {
@@ -106,8 +102,6 @@ class TestPreviewCreativeIntegration:
         """Test that preview_creative rejects manifest with mismatched format_id."""
         # Create manifest with DIFFERENT format_id than request
         manifest = CreativeManifest(
-            creative_id="test-creative",
-            name="Test Creative",
             format_id=FormatId(agent_url=AGENT_URL, id="display_728x90_image"),
             assets={
                 "banner_image": {
@@ -134,8 +128,6 @@ class TestPreviewCreativeIntegration:
     def test_preview_creative_accepts_format_id_as_dict(self, mock_s3_upload):
         """Test that preview_creative accepts format_id as FormatId object (dict)."""
         manifest = CreativeManifest(
-            creative_id="test-creative",
-            name="Test Creative",
             format_id=FormatId(agent_url=AGENT_URL, id="display_300x250_image"),
             assets={
                 "banner_image": {
@@ -160,8 +152,6 @@ class TestPreviewCreativeIntegration:
     def test_preview_creative_validates_malicious_urls(self, mock_s3_upload):
         """Test that preview_creative validates and sanitizes malicious URLs."""
         manifest = CreativeManifest(
-            creative_id="test-creative",
-            name="Test Creative",
             format_id=FormatId(agent_url=AGENT_URL, id="display_300x250_image"),
             assets={
                 "banner_image": {
@@ -188,8 +178,6 @@ class TestPreviewCreativeIntegration:
     def test_preview_creative_returns_interactive_url(self, mock_s3_upload):
         """Test that preview response includes interactive_url."""
         manifest = CreativeManifest(
-            creative_id="test-creative",
-            name="Test Creative",
             format_id=FormatId(agent_url=AGENT_URL, id="display_300x250_image"),
             assets={
                 "banner_image": {
@@ -213,8 +201,6 @@ class TestPreviewCreativeIntegration:
     def test_preview_creative_returns_expiration(self, mock_s3_upload):
         """Test that preview response includes expires_at timestamp."""
         manifest = CreativeManifest(
-            creative_id="test-creative",
-            name="Test Creative",
             format_id=FormatId(agent_url=AGENT_URL, id="display_300x250_image"),
             assets={
                 "banner_image": {
@@ -240,8 +226,6 @@ class TestPreviewCreativeIntegration:
     def test_preview_creative_rejects_unknown_format(self, mock_s3_upload):
         """Test that preview_creative rejects unknown format_id."""
         manifest = CreativeManifest(
-            creative_id="test-creative",
-            name="Test Creative",
             format_id=FormatId(agent_url=AGENT_URL, id="display_300x250_image"),
             assets={
                 "banner_image": {
@@ -264,11 +248,9 @@ class TestPreviewCreativeIntegration:
 
     def test_preview_creative_returns_spec_compliant_response(self, mock_s3_upload):
         """Test that response matches ADCP PreviewCreativeResponse spec exactly."""
-        from adcp.types.generated import PreviewCreativeResponse
+        from adcp import PreviewCreativeResponse
 
         manifest = CreativeManifest(
-            creative_id="test-creative",
-            name="Test Creative",
             format_id=FormatId(agent_url=AGENT_URL, id="display_300x250_image"),
             assets={
                 "banner_image": {
@@ -299,8 +281,6 @@ class TestPreviewCreativeIntegration:
     def test_preview_expiration_is_valid_iso8601_timestamp(self, mock_s3_upload):
         """Test that expires_at is a valid ISO 8601 timestamp in the future."""
         manifest = CreativeManifest(
-            creative_id="test-creative",
-            name="Test Creative",
             format_id=FormatId(agent_url=AGENT_URL, id="display_300x250_image"),
             assets={
                 "banner_image": {
@@ -340,8 +320,6 @@ class TestPreviewCreativeIntegration:
         """Test that preview_creative returns clear error when required asset is missing."""
         # Create manifest missing required click_url
         manifest = CreativeManifest(
-            creative_id="test-creative",
-            name="Test Creative",
             format_id=FormatId(agent_url=AGENT_URL, id="display_300x250_image"),
             assets={
                 "banner_image": {
