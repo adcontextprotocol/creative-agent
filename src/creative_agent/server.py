@@ -650,7 +650,7 @@ Description: {output_fmt.description}
 
             if output_fmt.renders and len(output_fmt.renders) > 0:
                 render = output_fmt.renders[0]
-                if render.dimensions.width and render.dimensions.height:
+                if render.dimensions and render.dimensions.width and render.dimensions.height:
                     format_spec += f"Dimensions: {int(render.dimensions.width)}x{int(render.dimensions.height)}\n"
 
             format_spec += "\nRequired Assets:\n"

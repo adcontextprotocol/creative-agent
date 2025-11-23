@@ -123,7 +123,7 @@ GENERATIVE_FORMATS = [
         name="Display Banner - AI Generated",
         type=FormatCategory.display,
         description="AI-generated display banner from brand context and prompt (supports any dimensions)",
-        accepts_parameters=["dimensions"],
+        accepts_parameters=[FormatIdParameter.dimensions],
         supported_macros=COMMON_MACROS,
         assets_required=[
             create_asset_required(
@@ -313,7 +313,7 @@ VIDEO_FORMATS = [
         name="Standard Video",
         type=FormatCategory.video,
         description="Video ad in standard aspect ratios (supports any duration)",
-        accepts_parameters=["duration"],
+        accepts_parameters=[FormatIdParameter.duration],
         supported_macros=[*COMMON_MACROS, "VIDEO_ID", "POD_POSITION", "CONTENT_GENRE"],
         assets_required=[
             create_asset_required(
@@ -334,7 +334,7 @@ VIDEO_FORMATS = [
         name="Video with Dimensions",
         type=FormatCategory.video,
         description="Video ad with specific dimensions (supports any size)",
-        accepts_parameters=["dimensions"],
+        accepts_parameters=[FormatIdParameter.dimensions],
         supported_macros=[*COMMON_MACROS, "VIDEO_ID", "POD_POSITION", "CONTENT_GENRE"],
         assets_required=[
             create_asset_required(
@@ -538,7 +538,7 @@ DISPLAY_IMAGE_FORMATS = [
         name="Display Banner - Image",
         type=FormatCategory.display,
         description="Static image banner (supports any dimensions)",
-        accepts_parameters=["dimensions"],
+        accepts_parameters=[FormatIdParameter.dimensions],
         supported_macros=COMMON_MACROS,
         assets_required=[
             create_asset_required(
@@ -758,7 +758,7 @@ DISPLAY_HTML_FORMATS = [
         name="Display Banner - HTML5",
         type=FormatCategory.display,
         description="HTML5 creative (supports any dimensions)",
-        accepts_parameters=["dimensions"],
+        accepts_parameters=[FormatIdParameter.dimensions],
         supported_macros=COMMON_MACROS,
         assets_required=[
             create_asset_required(
@@ -1438,10 +1438,8 @@ def filter_formats(
 
                 def matches_dimensions(fmt: CreativeFormat) -> bool:
                     # Template formats accept dimensions but don't have fixed renders
-                    if (
-                        getattr(fmt, "accepts_parameters", None)
-                        and FormatIdParameter.dimensions in fmt.accepts_parameters
-                    ):
+                    accepts_params = getattr(fmt, "accepts_parameters", None)
+                    if accepts_params is not None and FormatIdParameter.dimensions in accepts_params:
                         return True
                     # Concrete formats have fixed renders
                     if not fmt.renders or len(fmt.renders) == 0:
@@ -1472,7 +1470,8 @@ def filter_formats(
         filtered = []
         for fmt in results:
             # Template formats accept any dimensions within the constraints
-            if getattr(fmt, "accepts_parameters", None) and FormatIdParameter.dimensions in fmt.accepts_parameters:
+            accepts_params = getattr(fmt, "accepts_parameters", None)
+            if accepts_params is not None and FormatIdParameter.dimensions in accepts_params:
                 # Include template formats - they can satisfy any dimension requirements
                 filtered.append(fmt)
                 continue
