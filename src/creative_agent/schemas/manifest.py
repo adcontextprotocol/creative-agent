@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from adcp.types.generated import FormatId
+from adcp import FormatId
 from pydantic import BaseModel
 
 # CreativeManifest is imported from AdCP schemas via __init__.py

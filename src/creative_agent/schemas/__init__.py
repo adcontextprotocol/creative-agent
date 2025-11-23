@@ -9,15 +9,8 @@ https://pypi.org/project/adcp/
 """
 
 # Core schemas from adcp library
-from adcp.types.generated import (
-    CreativeAsset as CreativeManifest,
-)
-from adcp.types.generated import (
-    Format as CreativeFormat,
-)
-from adcp.types.generated import (
-    ListCreativeFormatsResponse,
-)
+from adcp import CreativeManifest, ListCreativeFormatsResponse
+from adcp import Format as CreativeFormat
 
 # Build schemas (agent-specific, not part of AdCP)
 from .build import (

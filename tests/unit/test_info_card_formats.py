@@ -1,6 +1,6 @@
 """Tests for info card format definitions."""
 
-from adcp.types.generated import FormatId
+from adcp import FormatId
 
 from creative_agent.data.format_types import AssetType, Type
 from creative_agent.data.standard_formats import AGENT_URL, INFO_CARD_FORMATS, filter_formats
@@ -228,10 +228,16 @@ class TestInfoCardFormatsFiltering:
     """Test filtering behavior with info card formats."""
 
     def test_filter_by_300x400_dimensions(self):
-        """Filter by 300x400 returns both standard card formats."""
+        """Filter by 300x400 returns both standard card formats plus dimension templates."""
         results = filter_formats(dimensions="300x400")
-        assert len(results) == 2
-        result_ids = {fmt.format_id.id for fmt in results}
+        # Should have 2 concrete info card formats + 4 dimension templates
+        assert len(results) >= 2, f"Expected at least 2 formats, got {len(results)}"
+
+        # Filter out templates to check concrete formats
+        concrete_results = [fmt for fmt in results if not getattr(fmt, "accepts_parameters", None)]
+
+        assert len(concrete_results) == 2, f"Expected 2 concrete formats, got {len(concrete_results)}"
+        result_ids = {fmt.format_id.id for fmt in concrete_results}
         assert "product_card_standard" in result_ids
         assert "format_card_standard" in result_ids
 

@@ -11,7 +11,7 @@ Tests verify that tools return ToolResult with:
 import json
 
 import pytest
-from adcp.types.generated import (
+from adcp import (
     FormatId,
     ListCreativeFormatsResponse,
     PreviewCreativeResponse,
@@ -174,8 +174,6 @@ class TestPreviewCreativeResponseFormat:
     def valid_manifest(self):
         """Create a valid manifest per ADCP spec."""
         return CreativeManifest(
-            creative_id="test-creative-1",
-            name="Test Creative",
             format_id=FormatId(agent_url=AGENT_URL, id="display_300x250_image"),
             assets={
                 "banner_image": {
@@ -306,8 +304,6 @@ class TestToolResponseConsistency:
 
         # Test preview_creative
         manifest = CreativeManifest(
-            creative_id="test-creative-2",
-            name="Test Creative 2",
             format_id=FormatId(agent_url=AGENT_URL, id="display_300x250_image"),
             assets={
                 "banner_image": {

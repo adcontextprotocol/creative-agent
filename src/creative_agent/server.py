@@ -6,8 +6,9 @@ import uuid
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
-from adcp.types.generated import FormatId
-from adcp.types.generated_poc.list_creative_formats_response import Capability, CreativeAgent
+from adcp import FormatId
+from adcp.types import Capability
+from adcp.types.generated_poc.media_buy.list_creative_formats_response import CreativeAgent
 from fastmcp import FastMCP
 from fastmcp.tools.tool import ToolResult
 from mcp.types import TextContent
@@ -649,7 +650,7 @@ Description: {output_fmt.description}
 
             if output_fmt.renders and len(output_fmt.renders) > 0:
                 render = output_fmt.renders[0]
-                if render.dimensions.width and render.dimensions.height:
+                if render.dimensions and render.dimensions.width and render.dimensions.height:
                     format_spec += f"Dimensions: {int(render.dimensions.width)}x{int(render.dimensions.height)}\n"
 
             format_spec += "\nRequired Assets:\n"

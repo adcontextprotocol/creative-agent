@@ -60,7 +60,7 @@ async def list_formats() -> list[dict[str, Any]]:
 async def get_format(format_id: str) -> dict[str, Any]:
     """Get a specific format by ID (assumes this agent's formats)."""
 
-    from adcp.types.generated import FormatId
+    from adcp import FormatId
 
     from .data.standard_formats import AGENT_URL
 
@@ -77,7 +77,7 @@ async def get_format(format_id: str) -> dict[str, Any]:
 async def preview_creative(request: PreviewRequest) -> dict[str, Any]:
     """Generate preview from creative manifest."""
 
-    from adcp.types.generated import FormatId
+    from adcp import FormatId
 
     from .data.standard_formats import AGENT_URL
 

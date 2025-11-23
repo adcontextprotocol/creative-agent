@@ -49,7 +49,7 @@ def test_list_creative_formats():
 @pytest.mark.smoke
 def test_preview_creative_logic():
     """Verify preview generation logic works."""
-    from adcp.types.generated import FormatId
+    from adcp import FormatId
 
     from src.creative_agent.data.standard_formats import AGENT_URL, get_format_by_id
 
