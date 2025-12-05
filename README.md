@@ -502,4 +502,4 @@ Apache 2.0 License - see LICENSE file
 
 ## Spec Reference
 
-Format specifications from [AdCP Media Buy Protocol](https://adcontextprotocol.org/docs/media-buy/specification)
+Format specifications from [AdCP Media Buy Protocol](https://docs.adcontextprotocol.org/docs/media-buy/overview)
