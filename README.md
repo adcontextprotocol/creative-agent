@@ -8,34 +8,31 @@ The AdCP Creative Agent is a stateless service that:
 - Provides complete specifications for standard IAB creative formats (video, display, audio, native, DOOH)
 - Generates live previews from creative manifests using AI (Gemini)
 - Stores preview HTML in Tigris (Fly.io's S3-compatible global storage)
-- Supports both local development (stdio) and production deployment (HTTP)
+- Supports both local development (stdio) and production deployment (streamable-http)
 
 ## Architecture
 
 ```
-┌──────────────────────────────────┐    ┌──────────────────────────────────┐
-│  MCP Clients                     │    │  ADCP HTTP Clients               │
-│  (Claude, Agents)                │    │  (TypeScript, Python)            │
-└────────┬─────────────────────────┘    └────────┬─────────────────────────┘
-         │                                       │
-         │ MCP Protocol                          │ HTTP JSON
-         │ (stdio or HTTP at /mcp)               │ (at /adcp/*)
-         │                                       │
-┌────────▼───────────────────────────────────────▼────────────────────────┐
-│  AdCP Creative Agent (Combined Server)                                  │
+┌──────────────────────────────────┐
+│  MCP Clients                     │
+│  (Claude, Agents, MCP Libraries) │
+└────────┬─────────────────────────┘
+         │
+         │ MCP Protocol
+         │ (stdio locally, streamable-http in production)
+         │
+┌────────▼─────────────────────────────────────────────────────────────────┐
+│  AdCP Creative Agent (MCP Server)                                        │
 │                                                                          │
-│  /mcp - MCP Protocol Endpoint      /adcp - ADCP HTTP Endpoints          │
-│  (JSON-RPC wrapped responses)      (Direct ADCP JSON responses)         │
-│                                                                          │
-│  ┌─────────────────────────────────────────────────────────────────┐   │
-│  │ list_creative_formats - Returns all standard format specs       │   │
-│  └─────────────────────────────────────────────────────────────────┘   │
-│  ┌─────────────────────────────────────────────────────────────────┐   │
-│  │ build_creative - AI-powered creative generation (Gemini)        │   │
-│  └─────────────────────────────────────────────────────────────────┘   │
-│  ┌─────────────────────────────────────────────────────────────────┐   │
-│  │ preview_creative - Renders creative to HTML, uploads to Tigris  │   │
-│  └─────────────────────────────────────────────────────────────────┘   │
+│  ┌─────────────────────────────────────────────────────────────────┐    │
+│  │ list_creative_formats - Returns all standard format specs       │    │
+│  └─────────────────────────────────────────────────────────────────┘    │
+│  ┌─────────────────────────────────────────────────────────────────┐    │
+│  │ build_creative - AI-powered creative generation (Gemini)        │    │
+│  └─────────────────────────────────────────────────────────────────┘    │
+│  ┌─────────────────────────────────────────────────────────────────┐    │
+│  │ preview_creative - Renders creative to HTML, uploads to Tigris  │    │
+│  └─────────────────────────────────────────────────────────────────┘    │
 └──────────────────────────────────┬───────────────────────────────────────┘
                                    │
                                    │ S3 API
@@ -48,24 +45,14 @@ The AdCP Creative Agent is a stateless service that:
 └──────────────────────────────────────────────────────────────────────────┘
 ```
 
-## Endpoints
+## Protocol
 
-The server provides two protocols for accessing the same tools:
+This server implements the [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) using FastMCP:
 
-### MCP Endpoint (`/mcp`)
-For MCP clients (like Claude Desktop, MCP client libraries):
-- Follows MCP JSON-RPC protocol specification
-- Responses wrapped in `{"result": {"content": [{"type": "text", "text": "..."}]}}`
-- Use with MCP client libraries or Claude Desktop integration
+- **Local development**: stdio transport (default)
+- **Production (Fly.io)**: streamable-http transport on port 8080
 
-### ADCP HTTP Endpoints (`/adcp/*`)
-For direct HTTP clients that expect unwrapped ADCP responses:
-- `GET /adcp/list-creative-formats` - List all available formats
-- `POST /adcp/list-creative-formats` - List formats with filters (JSON body)
-- `POST /adcp/preview-creative` - Generate creative preview
-- `POST /adcp/build-creative` - AI-powered creative generation
-
-Returns clean ADCP JSON responses without MCP protocol wrapping.
+Use any MCP client library to connect. For Claude Desktop integration, see the configuration below.
 
 ## Quick Start
 
