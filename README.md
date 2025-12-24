@@ -322,7 +322,7 @@ uv run fastmcp dev src/creative_agent/server.py
 
 Standard macros (included in `COMMON_MACROS`):
 - Privacy: `GDPR`, `GDPR_CONSENT`, `US_PRIVACY`, `GPP_STRING`
-- Tracking: `MEDIA_BUY_ID`, `CREATIVE_ID`, `IMPRESSION_URL`, `CLICK_URL`
+- Tracking: `MEDIA_BUY_ID`, `CREATIVE_ID`, `CLICK_URL`
 - Device: `DEVICE_TYPE`, `OS`, `OS_VERSION`, `USER_AGENT`
 - Context: `CACHEBUSTER`
 

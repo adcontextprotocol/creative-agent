@@ -282,7 +282,6 @@ High-quality video advertising format optimized for desktop and CTV platforms.
             "CREATIVE_ID",
             "CACHEBUSTER",
             "CLICK_URL",
-            "IMPRESSION_URL",
             "DEVICE_TYPE",
             "VIDEO_ID",
             "POD_POSITION",

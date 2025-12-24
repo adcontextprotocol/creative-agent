@@ -27,7 +27,6 @@ COMMON_MACROS = [
     "CREATIVE_ID",
     "CACHEBUSTER",
     "CLICK_URL",
-    "IMPRESSION_URL",
     "DEVICE_TYPE",
     "GDPR",
     "GDPR_CONSENT",
