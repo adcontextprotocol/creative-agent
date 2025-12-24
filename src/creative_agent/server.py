@@ -53,6 +53,49 @@ def normalize_format_id_for_comparison(format_id: FormatId | dict[str, Any] | st
     return ("", "")
 
 
+def _format_to_human_readable(fmt: Any) -> str:
+    """Convert a Format object to human-readable text for LLM consumption.
+
+    Args:
+        fmt: A CreativeFormat object
+
+    Returns:
+        Human-readable string with key format details
+    """
+    # Extract format ID
+    fmt_id = fmt.format_id.id if hasattr(fmt.format_id, "id") else str(fmt.format_id)
+
+    # Extract dimensions
+    dims = "responsive"
+    if fmt.renders and len(fmt.renders) > 0:
+        render = fmt.renders[0]
+        if render.dimensions and render.dimensions.width and render.dimensions.height:
+            dims = f"{int(render.dimensions.width)}x{int(render.dimensions.height)}"
+
+    # Extract macros info
+    macros = fmt.supported_macros or []
+    macro_count_str = f"{len(macros)} supported macros" if macros else "no macros"
+
+    # Extract assets info
+    assets = fmt.assets_required or []
+    asset_ids = [a.asset_id for a in assets if hasattr(a, "asset_id")]
+    asset_str = ", ".join(asset_ids[:5])
+    if len(asset_ids) > 5:
+        asset_str += f" (+{len(asset_ids) - 5} more)"
+
+    # Build human-readable detail
+    detail = f"- **{fmt.name}** (`{fmt_id}`)\n"
+    detail += f"  Type: {fmt.type.value if hasattr(fmt.type, 'value') else fmt.type} | Dimensions: {dims} | {macro_count_str}\n"
+    if fmt.description:
+        detail += f"  {fmt.description[:150]}{'...' if len(fmt.description) > 150 else ''}\n"
+    if asset_str:
+        detail += f"  Assets Required: {asset_str}\n"
+    if macros:
+        detail += f"  Supported Macros: {', '.join(macros)}\n"
+
+    return detail
+
+
 @mcp.tool()
 def list_creative_formats(
     format_ids: list[str | dict[str, Any]] | None = None,
@@ -132,9 +175,18 @@ def list_creative_formats(
         if filter_desc:
             message += f" matching filters ({', '.join(filter_desc)})"
 
+        # Build human-readable format details for LLM consumption
+        response_json = response.model_dump(mode="json", exclude_none=True)
+
+        if formats:
+            format_details = [_format_to_human_readable(fmt) for fmt in formats]
+            full_message = f"{message}:\n\n" + "\n".join(format_details)
+        else:
+            full_message = message
+
         return ToolResult(
-            content=[TextContent(type="text", text=message)],
-            structured_content=response.model_dump(mode="json", exclude_none=True),
+            content=[TextContent(type="text", text=full_message)],
+            structured_content=response_json,
         )
     except ValueError as e:
         error_response = {"error": f"Invalid input: {e}"}
