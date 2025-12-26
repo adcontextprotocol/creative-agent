@@ -321,9 +321,7 @@ VIDEO_FORMATS = [
                 asset_type=AssetType.video,
                 required=True,
                 requirements={
-                    "parameters_from_format_id": True,
                     "acceptable_formats": ["mp4", "mov", "webm"],
-                    "description": "Video file matching format_id duration",
                 },
             ),
         ],
@@ -342,10 +340,24 @@ VIDEO_FORMATS = [
                 asset_type=AssetType.video,
                 required=True,
                 requirements={
-                    "parameters_from_format_id": True,
                     "acceptable_formats": ["mp4", "mov", "webm"],
-                    "description": "Video file matching format_id dimensions",
                 },
+            ),
+        ],
+    ),
+    # Template format - VAST tag with any duration
+    CreativeFormat(
+        format_id=create_format_id("video_vast"),
+        name="VAST Video",
+        type=FormatCategory.video,
+        description="Video ad via VAST tag (supports any duration)",
+        accepts_parameters=[FormatIdParameter.duration],
+        supported_macros=[*COMMON_MACROS, "VIDEO_ID", "POD_POSITION", "CONTENT_GENRE"],
+        assets_required=[
+            create_asset_required(
+                asset_id="vast_tag",
+                asset_type=AssetType.vast,
+                required=True,
             ),
         ],
     ),
@@ -397,7 +409,7 @@ VIDEO_FORMATS = [
         assets_required=[
             create_asset_required(
                 asset_id="vast_tag",
-                asset_type=AssetType.text,
+                asset_type=AssetType.vast,
                 required=True,
                 requirements={
                     "description": "VAST 4.x compatible tag",
@@ -546,9 +558,7 @@ DISPLAY_IMAGE_FORMATS = [
                 asset_type=AssetType.image,
                 required=True,
                 requirements={
-                    "parameters_from_format_id": True,
                     "acceptable_formats": ["jpg", "png", "gif", "webp"],
-                    "description": "Banner image matching format_id dimensions",
                 },
             ),
             create_asset_required(
@@ -766,9 +776,7 @@ DISPLAY_HTML_FORMATS = [
                 asset_type=AssetType.html,
                 required=True,
                 requirements={
-                    "parameters_from_format_id": True,
                     "max_file_size_mb": 0.5,
-                    "description": "HTML5 creative code matching format_id dimensions",
                 },
             ),
         ],
@@ -892,6 +900,27 @@ DISPLAY_HTML_FORMATS = [
                     "height": 250,
                     "max_file_size_mb": 0.5,
                 },
+            ),
+        ],
+    ),
+]
+
+# Display Formats - JavaScript
+# Template format for JavaScript-based display ads
+DISPLAY_JS_FORMATS = [
+    # Template format - supports any dimensions
+    CreativeFormat(
+        format_id=create_format_id("display_js"),
+        name="Display Banner - JavaScript",
+        type=FormatCategory.display,
+        description="JavaScript-based display ad (supports any dimensions)",
+        accepts_parameters=[FormatIdParameter.dimensions],
+        supported_macros=COMMON_MACROS,
+        assets_required=[
+            create_asset_required(
+                asset_id="js_creative",
+                asset_type=AssetType.javascript,
+                required=True,
             ),
         ],
     ),
@@ -1348,6 +1377,7 @@ STANDARD_FORMATS = (
     + VIDEO_FORMATS
     + DISPLAY_IMAGE_FORMATS
     + DISPLAY_HTML_FORMATS
+    + DISPLAY_JS_FORMATS
     + NATIVE_FORMATS
     + AUDIO_FORMATS
     + DOOH_FORMATS

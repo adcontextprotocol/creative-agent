@@ -250,9 +250,8 @@ class TestNoFilters:
         """No filters returns all standard formats."""
         results = filter_formats()
         # Should return all formats including audio, video, display, native, dooh, info card
-        assert (
-            len(results) == 47
-        )  # 8 generative (1 template + 7 concrete) + 11 video (2 templates + 9 concrete) + 8 display_image (1 template + 7 concrete) + 7 display_html (1 template + 6 concrete) + 2 native + 3 audio + 4 dooh + 4 info card
+        # 8 generative (1 template + 7 concrete) + 12 video (3 templates + 9 concrete) + 8 display_image (1 template + 7 concrete) + 7 display_html (1 template + 6 concrete) + 1 display_js template + 2 native + 3 audio + 4 dooh + 4 info card = 49
+        assert len(results) == 49
         # Verify we have multiple types
         types = {fmt.type for fmt in results}
         assert FormatCategory.audio in types
