@@ -349,6 +349,26 @@ VIDEO_FORMATS = [
             ),
         ],
     ),
+    # Template format - VAST tag with any duration
+    CreativeFormat(
+        format_id=create_format_id("video_vast"),
+        name="VAST Video",
+        type=FormatCategory.video,
+        description="Video ad via VAST tag (supports any duration)",
+        accepts_parameters=[FormatIdParameter.duration],
+        supported_macros=[*COMMON_MACROS, "VIDEO_ID", "POD_POSITION", "CONTENT_GENRE"],
+        assets_required=[
+            create_asset_required(
+                asset_id="vast_tag",
+                asset_type=AssetType.text,
+                required=True,
+                requirements={
+                    "parameters_from_format_id": True,
+                    "description": "VAST 4.x compatible tag matching format_id duration",
+                },
+            ),
+        ],
+    ),
     # Concrete formats for backward compatibility
     CreativeFormat(
         format_id=create_format_id("video_standard_30s"),
@@ -897,6 +917,32 @@ DISPLAY_HTML_FORMATS = [
     ),
 ]
 
+# Display Formats - JavaScript
+# Template format for JavaScript-based display ads
+DISPLAY_JS_FORMATS = [
+    # Template format - supports any dimensions
+    CreativeFormat(
+        format_id=create_format_id("display_js"),
+        name="Display Banner - JavaScript",
+        type=FormatCategory.display,
+        description="JavaScript-based display ad (supports any dimensions)",
+        accepts_parameters=[FormatIdParameter.dimensions],
+        supported_macros=COMMON_MACROS,
+        assets_required=[
+            create_asset_required(
+                asset_id="js_creative",
+                asset_type=AssetType.javascript,
+                required=True,
+                requirements={
+                    "parameters_from_format_id": True,
+                    "max_file_size_mb": 0.5,
+                    "description": "JavaScript creative code matching format_id dimensions",
+                },
+            ),
+        ],
+    ),
+]
+
 # Native Formats
 NATIVE_FORMATS = [
     CreativeFormat(
@@ -1348,6 +1394,7 @@ STANDARD_FORMATS = (
     + VIDEO_FORMATS
     + DISPLAY_IMAGE_FORMATS
     + DISPLAY_HTML_FORMATS
+    + DISPLAY_JS_FORMATS
     + NATIVE_FORMATS
     + AUDIO_FORMATS
     + DOOH_FORMATS

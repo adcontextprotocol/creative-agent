@@ -29,7 +29,7 @@ class TestTemplateFormatDiscovery:
         """STANDARD_FORMATS should include template formats with accepts_parameters."""
         template_formats = [f for f in STANDARD_FORMATS if getattr(f, "accepts_parameters", None)]
 
-        assert len(template_formats) == 5, f"Expected 5 template formats, found {len(template_formats)}"
+        assert len(template_formats) == 7, f"Expected 7 template formats, found {len(template_formats)}"
 
         # Verify template format IDs
         template_ids = {f.format_id.id for f in template_formats}
@@ -37,8 +37,10 @@ class TestTemplateFormatDiscovery:
             "display_generative",
             "display_image",
             "display_html",
+            "display_js",
             "video_standard",
             "video_dimensions",
+            "video_vast",
         }
         assert template_ids == expected_ids, f"Template IDs mismatch: {template_ids} != {expected_ids}"
 
@@ -85,7 +87,7 @@ class TestTemplateFormatDiscovery:
 
         # Check for template formats
         template_formats = [f for f in response.formats if getattr(f, "accepts_parameters", None)]
-        assert len(template_formats) == 5, f"Expected 5 template formats in response, found {len(template_formats)}"
+        assert len(template_formats) == 7, f"Expected 7 template formats in response, found {len(template_formats)}"
 
 
 class TestTemplateFormatFiltering:
@@ -100,11 +102,11 @@ class TestTemplateFormatFiltering:
 
         # Should include template formats
         template_displays = [f for f in display_formats if getattr(f, "accepts_parameters", None)]
-        assert len(template_displays) == 3, f"Expected 3 display templates, found {len(template_displays)}"
+        assert len(template_displays) == 4, f"Expected 4 display templates, found {len(template_displays)}"
 
         # Verify IDs
         template_ids = {f.format_id.id for f in template_displays}
-        expected_ids = {"display_generative", "display_image", "display_html"}
+        expected_ids = {"display_generative", "display_image", "display_html", "display_js"}
         assert template_ids == expected_ids
 
     def test_filter_by_type_video_includes_templates(self):
@@ -113,13 +115,13 @@ class TestTemplateFormatFiltering:
 
         video_formats = filter_formats(type=FormatCategory.video)
 
-        # Should include 2 video templates + 9 concrete
+        # Should include 3 video templates + 9 concrete
         template_videos = [f for f in video_formats if getattr(f, "accepts_parameters", None)]
-        assert len(template_videos) == 2, f"Expected 2 video templates, found {len(template_videos)}"
+        assert len(template_videos) == 3, f"Expected 3 video templates, found {len(template_videos)}"
 
         # Verify IDs
         template_ids = {f.format_id.id for f in template_videos}
-        expected_ids = {"video_standard", "video_dimensions"}
+        expected_ids = {"video_standard", "video_dimensions", "video_vast"}
         assert template_ids == expected_ids
 
     def test_dimension_filter_includes_templates(self):
@@ -133,9 +135,9 @@ class TestTemplateFormatFiltering:
             f for f in template_results if FormatIdParameter.dimensions in getattr(f, "accepts_parameters", [])
         ]
 
-        # Should have display_generative, display_image, display_html, video_dimensions
-        assert len(dimension_templates) >= 3, (
-            f"Expected at least 3 dimension templates for 468x60, found {len(dimension_templates)}"
+        # Should have display_generative, display_image, display_html, display_js, video_dimensions
+        assert len(dimension_templates) >= 4, (
+            f"Expected at least 4 dimension templates for 468x60, found {len(dimension_templates)}"
         )
 
         # All should accept dimensions parameter
@@ -153,7 +155,7 @@ class TestTemplateFormatFiltering:
         ]
 
         # Template formats can satisfy any dimension requirement
-        assert len(dimension_templates) >= 3, "Should include dimension-accepting templates"
+        assert len(dimension_templates) >= 4, "Should include dimension-accepting templates"
 
 
 class TestTemplateFormatLookup:
@@ -373,10 +375,11 @@ class TestTemplateFormatCoverage:
 
         template_ids = {f.format_id.id for f in display_templates}
 
-        # Should have templates for: generative, image, html
+        # Should have templates for: generative, image, html, js
         assert "display_generative" in template_ids
         assert "display_image" in template_ids
         assert "display_html" in template_ids
+        assert "display_js" in template_ids
 
     def test_have_video_templates(self):
         """Should have template formats for video with both duration and dimensions."""
@@ -388,7 +391,8 @@ class TestTemplateFormatCoverage:
         duration_templates = [f for f in video_templates if FormatIdParameter.duration in f.accepts_parameters]
         dimension_templates = [f for f in video_templates if FormatIdParameter.dimensions in f.accepts_parameters]
 
-        assert len(duration_templates) >= 1, "Should have video duration template"
+        # video_standard and video_vast accept duration, video_dimensions accepts dimensions
+        assert len(duration_templates) >= 2, "Should have video duration templates (video_standard, video_vast)"
         assert len(dimension_templates) >= 1, "Should have video dimension template"
 
     def test_template_to_concrete_ratio(self):
@@ -397,11 +401,11 @@ class TestTemplateFormatCoverage:
         concrete = [f for f in STANDARD_FORMATS if not getattr(f, "accepts_parameters", None)]
 
         # With templates, we should have far fewer total formats than without
-        # Expected: 5 templates + 42 concrete = 47 total
-        assert len(templates) == 5, f"Expected 5 templates, found {len(templates)}"
+        # Expected: 7 templates + 42 concrete = 49 total
+        assert len(templates) == 7, f"Expected 7 templates, found {len(templates)}"
         assert len(concrete) == 42, f"Expected 42 concrete formats, found {len(concrete)}"
-        assert len(STANDARD_FORMATS) == 47
+        assert len(STANDARD_FORMATS) == 49
 
-        # Ratio should be roughly 1:8 (5 templates replace ~40 potential concrete formats)
+        # Ratio should be roughly 1:6 (7 templates replace ~42 potential concrete formats)
         ratio = len(concrete) / len(templates)
         assert ratio > 5, f"Should have healthy template-to-concrete ratio, got {ratio}"
