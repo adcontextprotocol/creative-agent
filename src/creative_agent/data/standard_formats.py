@@ -321,9 +321,7 @@ VIDEO_FORMATS = [
                 asset_type=AssetType.video,
                 required=True,
                 requirements={
-                    "parameters_from_format_id": True,
                     "acceptable_formats": ["mp4", "mov", "webm"],
-                    "description": "Video file matching format_id duration",
                 },
             ),
         ],
@@ -342,9 +340,7 @@ VIDEO_FORMATS = [
                 asset_type=AssetType.video,
                 required=True,
                 requirements={
-                    "parameters_from_format_id": True,
                     "acceptable_formats": ["mp4", "mov", "webm"],
-                    "description": "Video file matching format_id dimensions",
                 },
             ),
         ],
@@ -362,9 +358,6 @@ VIDEO_FORMATS = [
                 asset_id="vast_tag",
                 asset_type=AssetType.vast,
                 required=True,
-                requirements={
-                    "parameters_from_format_id": True,
-                },
             ),
         ],
     ),
@@ -565,9 +558,7 @@ DISPLAY_IMAGE_FORMATS = [
                 asset_type=AssetType.image,
                 required=True,
                 requirements={
-                    "parameters_from_format_id": True,
                     "acceptable_formats": ["jpg", "png", "gif", "webp"],
-                    "description": "Banner image matching format_id dimensions",
                 },
             ),
             create_asset_required(
@@ -785,9 +776,7 @@ DISPLAY_HTML_FORMATS = [
                 asset_type=AssetType.html,
                 required=True,
                 requirements={
-                    "parameters_from_format_id": True,
                     "max_file_size_mb": 0.5,
-                    "description": "HTML5 creative code matching format_id dimensions",
                 },
             ),
         ],
@@ -932,9 +921,6 @@ DISPLAY_JS_FORMATS = [
                 asset_id="js_creative",
                 asset_type=AssetType.javascript,
                 required=True,
-                requirements={
-                    "parameters_from_format_id": True,
-                },
             ),
         ],
     ),

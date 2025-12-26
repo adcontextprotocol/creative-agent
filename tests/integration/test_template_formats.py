@@ -213,10 +213,10 @@ class TestTemplateFormatLookup:
 
 
 class TestTemplateAssetRequirements:
-    """Test asset requirements with parameters_from_format_id."""
+    """Test asset requirements for template vs concrete formats."""
 
-    def test_template_assets_have_parameters_from_format_id(self):
-        """Template format assets should use parameters_from_format_id."""
+    def test_template_formats_have_assets_required(self):
+        """Template formats should have assets_required defined."""
         # Get display_image template
         format_id = FormatId(agent_url=AnyUrl(str(AGENT_URL)), id="display_image")
         fmt = get_format_by_id(format_id)
@@ -234,35 +234,8 @@ class TestTemplateAssetRequirements:
 
         assert image_asset is not None, "Should have banner_image asset"
 
-        # Check for parameters_from_format_id in requirements
-        requirements = getattr(image_asset, "requirements", None)
-        assert requirements is not None, "Image asset should have requirements"
-        assert "parameters_from_format_id" in requirements, "Image asset should specify parameters_from_format_id"
-        assert requirements["parameters_from_format_id"] is True
-
-    def test_video_template_assets_have_parameters_from_format_id(self):
-        """Video template assets should use parameters_from_format_id for duration."""
-        # Get video_standard template
-        format_id = FormatId(agent_url=AnyUrl(str(AGENT_URL)), id="video_standard")
-        fmt = get_format_by_id(format_id)
-
-        assert fmt is not None
-        assert fmt.assets_required is not None
-        assert len(fmt.assets_required) > 0
-
-        # Find the video asset
-        video_asset = fmt.assets_required[0]
-        assert video_asset.asset_id == "video_file"
-
-        # Check for parameters_from_format_id
-        requirements = getattr(video_asset, "requirements", None)
-        assert requirements is not None
-        assert requirements.get("parameters_from_format_id") is True, (
-            "Video asset should use parameters_from_format_id for duration"
-        )
-
     def test_concrete_formats_have_explicit_requirements(self):
-        """Concrete formats should have explicit dimension requirements, not parameters_from_format_id."""
+        """Concrete formats should have explicit dimension requirements."""
         # Get concrete format
         format_id = FormatId(agent_url=AnyUrl(str(AGENT_URL)), id="display_300x250_image")
         fmt = get_format_by_id(format_id)
@@ -287,9 +260,6 @@ class TestTemplateAssetRequirements:
         assert "height" in requirements, "Concrete format should have explicit height"
         assert requirements["width"] == 300
         assert requirements["height"] == 250
-
-        # Should NOT use parameters_from_format_id
-        assert requirements.get("parameters_from_format_id") is not True
 
 
 class TestTemplateFormatSerialization:

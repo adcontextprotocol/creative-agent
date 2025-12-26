@@ -9,6 +9,7 @@ Tests parameter validation for template formats including:
 
 import pytest
 from adcp import FormatId
+from adcp.types.generated_poc.enums.format_id_parameter import FormatIdParameter
 from pydantic import AnyUrl, ValidationError
 
 from creative_agent.data.standard_formats import AGENT_URL, get_format_by_id
@@ -105,28 +106,18 @@ class TestParameterExtraction:
     """Test extraction of parameters from format_id for asset validation."""
 
     def test_extract_dimensions_from_format_id(self):
-        """Asset requirements should be able to reference format_id dimensions."""
-        # Get template format
+        """Dimensions can be extracted from format_id for template formats."""
+        # Get template format with dimensions
         template_format_id = FormatId(agent_url=AnyUrl(str(AGENT_URL)), id="display_image", width=468, height=60)
         fmt = get_format_by_id(template_format_id)
 
         assert fmt is not None
         assert fmt.assets_required is not None
 
-        # Find image asset requirement
-        image_asset = None
-        for asset in fmt.assets_required:
-            if asset.asset_id == "banner_image":
-                image_asset = asset
-                break
+        # Template format accepts dimensions parameter
+        assert FormatIdParameter.dimensions in getattr(fmt, "accepts_parameters", [])
 
-        assert image_asset is not None
-
-        # Should have parameters_from_format_id flag
-        requirements = getattr(image_asset, "requirements", {})
-        assert requirements.get("parameters_from_format_id") is True, "Asset should specify parameters_from_format_id"
-
-        # In actual validation, dimensions would be extracted from template_format_id
+        # Dimensions can be extracted from format_id
         extracted_width = getattr(template_format_id, "width", None)
         extracted_height = getattr(template_format_id, "height", None)
 
@@ -134,7 +125,7 @@ class TestParameterExtraction:
         assert extracted_height == 60, "Should extract height from format_id"
 
     def test_extract_duration_from_format_id(self):
-        """Asset requirements should be able to reference format_id duration."""
+        """Duration can be extracted from format_id for template formats."""
         # Get video template with duration
         template_format_id = FormatId(agent_url=AnyUrl(str(AGENT_URL)), id="video_standard", duration_ms=15000)
         fmt = get_format_by_id(template_format_id)
@@ -142,12 +133,10 @@ class TestParameterExtraction:
         assert fmt is not None
         assert fmt.assets_required is not None
 
-        # Video asset should reference format_id parameters
-        video_asset = fmt.assets_required[0]
-        requirements = getattr(video_asset, "requirements", {})
-        assert requirements.get("parameters_from_format_id") is True
+        # Template format accepts duration parameter
+        assert FormatIdParameter.duration in getattr(fmt, "accepts_parameters", [])
 
-        # Extract duration
+        # Duration can be extracted from format_id
         extracted_duration = getattr(template_format_id, "duration_ms", None)
         assert extracted_duration == 15000
 
@@ -156,27 +145,19 @@ class TestAssetParameterMatching:
     """Test that asset properties match format_id parameters."""
 
     def test_asset_dimensions_should_match_format_id_dimensions(self):
-        """When parameters_from_format_id is true, asset dimensions should match format_id."""
-        # This would be validated by the validation logic, not just schema
-        # Testing the expected behavior
-
+        """Template formats accept dimensions from format_id."""
         format_id = FormatId(agent_url=AnyUrl(str(AGENT_URL)), id="display_image", width=728, height=90)
 
-        # Get format and check asset requirements
+        # Get format - template should accept dimensions
         fmt = get_format_by_id(format_id)
-        image_asset = next(a for a in fmt.assets_required if a.asset_id == "banner_image")
+        assert FormatIdParameter.dimensions in getattr(fmt, "accepts_parameters", [])
 
-        requirements = getattr(image_asset, "requirements", {})
-
-        # Should indicate parameters come from format_id
-        assert requirements.get("parameters_from_format_id") is True
-
-        # In validation, we would check:
-        # - Asset width == format_id.width (728)
-        # - Asset height == format_id.height (90)
+        # Format_id carries the dimensions
+        assert format_id.width == 728
+        assert format_id.height == 90
 
     def test_concrete_format_has_explicit_dimensions(self):
-        """Concrete formats should have explicit dimension requirements, not from format_id."""
+        """Concrete formats should have explicit dimension requirements."""
         format_id = FormatId(agent_url=AnyUrl(str(AGENT_URL)), id="display_300x250_image")
 
         fmt = get_format_by_id(format_id)
@@ -184,10 +165,7 @@ class TestAssetParameterMatching:
 
         requirements = getattr(image_asset, "requirements", {})
 
-        # Should NOT use parameters_from_format_id
-        assert requirements.get("parameters_from_format_id") is not True
-
-        # Should have explicit values
+        # Concrete format has explicit values in requirements
         assert requirements.get("width") == 300
         assert requirements.get("height") == 250
 
