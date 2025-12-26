@@ -360,7 +360,7 @@ VIDEO_FORMATS = [
         assets_required=[
             create_asset_required(
                 asset_id="vast_tag",
-                asset_type=AssetType.text,
+                asset_type=AssetType.vast,
                 required=True,
                 requirements={
                     "parameters_from_format_id": True,
@@ -417,7 +417,7 @@ VIDEO_FORMATS = [
         assets_required=[
             create_asset_required(
                 asset_id="vast_tag",
-                asset_type=AssetType.text,
+                asset_type=AssetType.vast,
                 required=True,
                 requirements={
                     "description": "VAST 4.x compatible tag",
