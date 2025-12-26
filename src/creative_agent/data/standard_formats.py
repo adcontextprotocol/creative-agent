@@ -364,7 +364,6 @@ VIDEO_FORMATS = [
                 required=True,
                 requirements={
                     "parameters_from_format_id": True,
-                    "description": "VAST 4.x compatible tag matching format_id duration",
                 },
             ),
         ],
@@ -935,8 +934,6 @@ DISPLAY_JS_FORMATS = [
                 required=True,
                 requirements={
                     "parameters_from_format_id": True,
-                    "max_file_size_mb": 0.5,
-                    "description": "JavaScript creative code matching format_id dimensions",
                 },
             ),
         ],
