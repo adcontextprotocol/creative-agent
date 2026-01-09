@@ -6,6 +6,7 @@
 from typing import Any
 
 from adcp import FormatCategory, FormatId
+from adcp.types.generated_poc.core.format import Assets as LibAssets
 from adcp.types.generated_poc.core.format import AssetsRequired as LibAssetsRequired
 from adcp.types.generated_poc.core.format import Renders as LibRender
 from adcp.types.generated_poc.enums.format_id_parameter import FormatIdParameter
@@ -40,28 +41,45 @@ def create_format_id(format_name: str) -> FormatId:
     return FormatId(agent_url=AnyUrl(AGENT_URL), id=format_name)
 
 
-def create_asset_required(
+def create_asset(
     asset_id: str,
     asset_type: AssetType,
     required: bool = True,
     requirements: dict[str, str | int | float | bool | list[str]] | None = None,
-) -> LibAssetsRequired:
-    """Create an assets_required entry using the library's Pydantic model.
+) -> LibAssets:
+    """Create an asset entry using the library's Assets Pydantic model.
 
+    This creates assets for the new 'assets' field (adcp-client-python 2.18.0+).
     The library model automatically handles exclude_none serialization and
     includes the item_type discriminator for union types.
     """
-    # Convert local AssetType enum to library's AssetContentType
     from adcp import AssetContentType as LibAssetType
 
     lib_asset_type = LibAssetType(asset_type.value)
 
-    return LibAssetsRequired(
+    return LibAssets(
         asset_id=asset_id,
         asset_type=lib_asset_type,
         required=required,
         requirements=requirements,
         item_type="individual",  # Required discriminator for union types
+    )
+
+
+def create_impression_tracker_asset() -> LibAssets:
+    """Create an optional impression tracker asset for 3rd party tracking.
+
+    This creates a URL asset with url_type='tracker_pixel' that can be used
+    for third-party impression tracking pixels.
+    """
+    return create_asset(
+        asset_id="impression_tracker",
+        asset_type=AssetType.url,
+        required=False,
+        requirements={
+            "url_type": "tracker_pixel",
+            "description": "3rd party impression tracking pixel URL",
+        },
     )
 
 
@@ -124,19 +142,20 @@ GENERATIVE_FORMATS = [
         description="AI-generated display banner from brand context and prompt (supports any dimensions)",
         accepts_parameters=[FormatIdParameter.dimensions],
         supported_macros=COMMON_MACROS,
-        assets_required=[
-            create_asset_required(
+        assets=[
+            create_asset(
                 asset_id="promoted_offerings",
                 asset_type=AssetType.promoted_offerings,
                 required=True,
                 requirements={"description": "Brand manifest and product offerings for AI generation"},
             ),
-            create_asset_required(
+            create_asset(
                 asset_id="generation_prompt",
                 asset_type=AssetType.text,
                 required=True,
                 requirements={"description": "Text prompt describing the desired creative"},
             ),
+            create_impression_tracker_asset(),
         ],
     ),
     # Concrete formats for backward compatibility
@@ -148,19 +167,20 @@ GENERATIVE_FORMATS = [
         renders=[create_fixed_render(300, 250)],
         output_format_ids=[create_format_id("display_300x250_image")],
         supported_macros=COMMON_MACROS,
-        assets_required=[
-            create_asset_required(
+        assets=[
+            create_asset(
                 asset_id="promoted_offerings",
                 asset_type=AssetType.promoted_offerings,
                 required=True,
                 requirements={"description": "Brand manifest and product offerings for AI generation"},
             ),
-            create_asset_required(
+            create_asset(
                 asset_id="generation_prompt",
                 asset_type=AssetType.text,
                 required=True,
                 requirements={"description": "Text prompt describing the desired creative"},
             ),
+            create_impression_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -171,19 +191,20 @@ GENERATIVE_FORMATS = [
         renders=[create_fixed_render(728, 90)],
         output_format_ids=[create_format_id("display_728x90_image")],
         supported_macros=COMMON_MACROS,
-        assets_required=[
-            create_asset_required(
+        assets=[
+            create_asset(
                 asset_id="promoted_offerings",
                 asset_type=AssetType.promoted_offerings,
                 required=True,
                 requirements={"description": "Brand manifest and product offerings for AI generation"},
             ),
-            create_asset_required(
+            create_asset(
                 asset_id="generation_prompt",
                 asset_type=AssetType.text,
                 required=True,
                 requirements={"description": "Text prompt describing the desired creative"},
             ),
+            create_impression_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -194,19 +215,20 @@ GENERATIVE_FORMATS = [
         renders=[create_fixed_render(320, 50)],
         output_format_ids=[create_format_id("display_320x50_image")],
         supported_macros=COMMON_MACROS,
-        assets_required=[
-            create_asset_required(
+        assets=[
+            create_asset(
                 asset_id="promoted_offerings",
                 asset_type=AssetType.promoted_offerings,
                 required=True,
                 requirements={"description": "Brand manifest and product offerings for AI generation"},
             ),
-            create_asset_required(
+            create_asset(
                 asset_id="generation_prompt",
                 asset_type=AssetType.text,
                 required=True,
                 requirements={"description": "Text prompt describing the desired creative"},
             ),
+            create_impression_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -217,19 +239,20 @@ GENERATIVE_FORMATS = [
         renders=[create_fixed_render(160, 600)],
         output_format_ids=[create_format_id("display_160x600_image")],
         supported_macros=COMMON_MACROS,
-        assets_required=[
-            create_asset_required(
+        assets=[
+            create_asset(
                 asset_id="promoted_offerings",
                 asset_type=AssetType.promoted_offerings,
                 required=True,
                 requirements={"description": "Brand manifest and product offerings for AI generation"},
             ),
-            create_asset_required(
+            create_asset(
                 asset_id="generation_prompt",
                 asset_type=AssetType.text,
                 required=True,
                 requirements={"description": "Text prompt describing the desired creative"},
             ),
+            create_impression_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -240,19 +263,20 @@ GENERATIVE_FORMATS = [
         renders=[create_fixed_render(336, 280)],
         output_format_ids=[create_format_id("display_336x280_image")],
         supported_macros=COMMON_MACROS,
-        assets_required=[
-            create_asset_required(
+        assets=[
+            create_asset(
                 asset_id="promoted_offerings",
                 asset_type=AssetType.promoted_offerings,
                 required=True,
                 requirements={"description": "Brand manifest and product offerings for AI generation"},
             ),
-            create_asset_required(
+            create_asset(
                 asset_id="generation_prompt",
                 asset_type=AssetType.text,
                 required=True,
                 requirements={"description": "Text prompt describing the desired creative"},
             ),
+            create_impression_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -263,19 +287,20 @@ GENERATIVE_FORMATS = [
         renders=[create_fixed_render(300, 600)],
         output_format_ids=[create_format_id("display_300x600_image")],
         supported_macros=COMMON_MACROS,
-        assets_required=[
-            create_asset_required(
+        assets=[
+            create_asset(
                 asset_id="promoted_offerings",
                 asset_type=AssetType.promoted_offerings,
                 required=True,
                 requirements={"description": "Brand manifest and product offerings for AI generation"},
             ),
-            create_asset_required(
+            create_asset(
                 asset_id="generation_prompt",
                 asset_type=AssetType.text,
                 required=True,
                 requirements={"description": "Text prompt describing the desired creative"},
             ),
+            create_impression_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -286,19 +311,20 @@ GENERATIVE_FORMATS = [
         renders=[create_fixed_render(970, 250)],
         output_format_ids=[create_format_id("display_970x250_image")],
         supported_macros=COMMON_MACROS,
-        assets_required=[
-            create_asset_required(
+        assets=[
+            create_asset(
                 asset_id="promoted_offerings",
                 asset_type=AssetType.promoted_offerings,
                 required=True,
                 requirements={"description": "Brand manifest and product offerings for AI generation"},
             ),
-            create_asset_required(
+            create_asset(
                 asset_id="generation_prompt",
                 asset_type=AssetType.text,
                 required=True,
                 requirements={"description": "Text prompt describing the desired creative"},
             ),
+            create_impression_tracker_asset(),
         ],
     ),
 ]
@@ -314,8 +340,8 @@ VIDEO_FORMATS = [
         description="Video ad in standard aspect ratios (supports any duration)",
         accepts_parameters=[FormatIdParameter.duration],
         supported_macros=[*COMMON_MACROS, "VIDEO_ID", "POD_POSITION", "CONTENT_GENRE"],
-        assets_required=[
-            create_asset_required(
+        assets=[
+            create_asset(
                 asset_id="video_file",
                 asset_type=AssetType.video,
                 required=True,
@@ -323,6 +349,7 @@ VIDEO_FORMATS = [
                     "acceptable_formats": ["mp4", "mov", "webm"],
                 },
             ),
+            create_impression_tracker_asset(),
         ],
     ),
     # Template format - supports any dimensions
@@ -333,8 +360,8 @@ VIDEO_FORMATS = [
         description="Video ad with specific dimensions (supports any size)",
         accepts_parameters=[FormatIdParameter.dimensions],
         supported_macros=[*COMMON_MACROS, "VIDEO_ID", "POD_POSITION", "CONTENT_GENRE"],
-        assets_required=[
-            create_asset_required(
+        assets=[
+            create_asset(
                 asset_id="video_file",
                 asset_type=AssetType.video,
                 required=True,
@@ -342,6 +369,7 @@ VIDEO_FORMATS = [
                     "acceptable_formats": ["mp4", "mov", "webm"],
                 },
             ),
+            create_impression_tracker_asset(),
         ],
     ),
     # Template format - VAST tag with any duration
@@ -352,8 +380,8 @@ VIDEO_FORMATS = [
         description="Video ad via VAST tag (supports any duration)",
         accepts_parameters=[FormatIdParameter.duration],
         supported_macros=[*COMMON_MACROS, "VIDEO_ID", "POD_POSITION", "CONTENT_GENRE"],
-        assets_required=[
-            create_asset_required(
+        assets=[
+            create_asset(
                 asset_id="vast_tag",
                 asset_type=AssetType.vast,
                 required=True,
@@ -367,8 +395,8 @@ VIDEO_FORMATS = [
         type=FormatCategory.video,
         description="30-second video ad in standard aspect ratios",
         supported_macros=[*COMMON_MACROS, "VIDEO_ID", "POD_POSITION", "CONTENT_GENRE"],
-        assets_required=[
-            create_asset_required(
+        assets=[
+            create_asset(
                 asset_id="video_file",
                 asset_type=AssetType.video,
                 required=True,
@@ -378,6 +406,7 @@ VIDEO_FORMATS = [
                     "description": "30-second video file",
                 },
             ),
+            create_impression_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -386,8 +415,8 @@ VIDEO_FORMATS = [
         type=FormatCategory.video,
         description="15-second video ad in standard aspect ratios",
         supported_macros=[*COMMON_MACROS, "VIDEO_ID", "POD_POSITION", "CONTENT_GENRE"],
-        assets_required=[
-            create_asset_required(
+        assets=[
+            create_asset(
                 asset_id="video_file",
                 asset_type=AssetType.video,
                 required=True,
@@ -397,6 +426,7 @@ VIDEO_FORMATS = [
                     "description": "15-second video file",
                 },
             ),
+            create_impression_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -405,8 +435,8 @@ VIDEO_FORMATS = [
         type=FormatCategory.video,
         description="30-second video ad via VAST tag",
         supported_macros=[*COMMON_MACROS, "VIDEO_ID", "POD_POSITION", "CONTENT_GENRE"],
-        assets_required=[
-            create_asset_required(
+        assets=[
+            create_asset(
                 asset_id="vast_tag",
                 asset_type=AssetType.vast,
                 required=True,
@@ -423,8 +453,8 @@ VIDEO_FORMATS = [
         description="1920x1080 Full HD video (16:9)",
         supported_macros=[*COMMON_MACROS, "VIDEO_ID", "POD_POSITION", "CONTENT_GENRE"],
         renders=[create_fixed_render(1920, 1080)],
-        assets_required=[
-            create_asset_required(
+        assets=[
+            create_asset(
                 asset_id="video_file",
                 asset_type=AssetType.video,
                 required=True,
@@ -435,6 +465,7 @@ VIDEO_FORMATS = [
                     "description": "1920x1080 video file",
                 },
             ),
+            create_impression_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -444,8 +475,8 @@ VIDEO_FORMATS = [
         description="1280x720 HD video (16:9)",
         supported_macros=[*COMMON_MACROS, "VIDEO_ID", "POD_POSITION", "CONTENT_GENRE"],
         renders=[create_fixed_render(1280, 720)],
-        assets_required=[
-            create_asset_required(
+        assets=[
+            create_asset(
                 asset_id="video_file",
                 asset_type=AssetType.video,
                 required=True,
@@ -456,6 +487,7 @@ VIDEO_FORMATS = [
                     "description": "1280x720 video file",
                 },
             ),
+            create_impression_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -465,8 +497,8 @@ VIDEO_FORMATS = [
         description="1080x1920 vertical video (9:16) for mobile stories",
         supported_macros=[*COMMON_MACROS, "VIDEO_ID", "POD_POSITION", "CONTENT_GENRE"],
         renders=[create_fixed_render(1080, 1920)],
-        assets_required=[
-            create_asset_required(
+        assets=[
+            create_asset(
                 asset_id="video_file",
                 asset_type=AssetType.video,
                 required=True,
@@ -477,6 +509,7 @@ VIDEO_FORMATS = [
                     "description": "1080x1920 vertical video file",
                 },
             ),
+            create_impression_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -486,8 +519,8 @@ VIDEO_FORMATS = [
         description="1080x1080 square video (1:1) for social feeds",
         supported_macros=[*COMMON_MACROS, "VIDEO_ID", "POD_POSITION", "CONTENT_GENRE"],
         renders=[create_fixed_render(1080, 1080)],
-        assets_required=[
-            create_asset_required(
+        assets=[
+            create_asset(
                 asset_id="video_file",
                 asset_type=AssetType.video,
                 required=True,
@@ -498,6 +531,7 @@ VIDEO_FORMATS = [
                     "description": "1080x1080 square video file",
                 },
             ),
+            create_impression_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -506,8 +540,8 @@ VIDEO_FORMATS = [
         type=FormatCategory.video,
         description="30-second pre-roll ad for Connected TV and streaming platforms",
         supported_macros=[*COMMON_MACROS, "VIDEO_ID", "POD_POSITION", "CONTENT_GENRE", "PLAYER_SIZE"],
-        assets_required=[
-            create_asset_required(
+        assets=[
+            create_asset(
                 asset_id="video_file",
                 asset_type=AssetType.video,
                 required=True,
@@ -517,6 +551,7 @@ VIDEO_FORMATS = [
                     "description": "30-second CTV-optimized video file (1920x1080 recommended)",
                 },
             ),
+            create_impression_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -525,8 +560,8 @@ VIDEO_FORMATS = [
         type=FormatCategory.video,
         description="30-second mid-roll ad for Connected TV and streaming platforms",
         supported_macros=[*COMMON_MACROS, "VIDEO_ID", "POD_POSITION", "CONTENT_GENRE", "PLAYER_SIZE"],
-        assets_required=[
-            create_asset_required(
+        assets=[
+            create_asset(
                 asset_id="video_file",
                 asset_type=AssetType.video,
                 required=True,
@@ -536,6 +571,7 @@ VIDEO_FORMATS = [
                     "description": "30-second CTV-optimized video file (1920x1080 recommended)",
                 },
             ),
+            create_impression_tracker_asset(),
         ],
     ),
 ]
@@ -551,8 +587,8 @@ DISPLAY_IMAGE_FORMATS = [
         description="Static image banner (supports any dimensions)",
         accepts_parameters=[FormatIdParameter.dimensions],
         supported_macros=COMMON_MACROS,
-        assets_required=[
-            create_asset_required(
+        assets=[
+            create_asset(
                 asset_id="banner_image",
                 asset_type=AssetType.image,
                 required=True,
@@ -560,7 +596,7 @@ DISPLAY_IMAGE_FORMATS = [
                     "acceptable_formats": ["jpg", "png", "gif", "webp"],
                 },
             ),
-            create_asset_required(
+            create_asset(
                 asset_id="click_url",
                 asset_type=AssetType.url,
                 required=True,
@@ -568,6 +604,7 @@ DISPLAY_IMAGE_FORMATS = [
                     "description": "Clickthrough destination URL",
                 },
             ),
+            create_impression_tracker_asset(),
         ],
     ),
     # Concrete formats for backward compatibility
@@ -578,8 +615,8 @@ DISPLAY_IMAGE_FORMATS = [
         description="300x250 static image banner",
         supported_macros=COMMON_MACROS,
         renders=[create_fixed_render(300, 250)],
-        assets_required=[
-            create_asset_required(
+        assets=[
+            create_asset(
                 asset_id="banner_image",
                 asset_type=AssetType.image,
                 required=True,
@@ -590,7 +627,7 @@ DISPLAY_IMAGE_FORMATS = [
                     "acceptable_formats": ["jpg", "png", "gif", "webp"],
                 },
             ),
-            create_asset_required(
+            create_asset(
                 asset_id="click_url",
                 asset_type=AssetType.url,
                 required=True,
@@ -598,6 +635,7 @@ DISPLAY_IMAGE_FORMATS = [
                     "description": "Clickthrough destination URL",
                 },
             ),
+            create_impression_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -607,8 +645,8 @@ DISPLAY_IMAGE_FORMATS = [
         description="728x90 static image banner",
         supported_macros=COMMON_MACROS,
         renders=[create_fixed_render(728, 90)],
-        assets_required=[
-            create_asset_required(
+        assets=[
+            create_asset(
                 asset_id="banner_image",
                 asset_type=AssetType.image,
                 required=True,
@@ -619,11 +657,12 @@ DISPLAY_IMAGE_FORMATS = [
                     "acceptable_formats": ["jpg", "png", "gif", "webp"],
                 },
             ),
-            create_asset_required(
+            create_asset(
                 asset_id="click_url",
                 asset_type=AssetType.url,
                 required=True,
             ),
+            create_impression_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -633,8 +672,8 @@ DISPLAY_IMAGE_FORMATS = [
         description="320x50 mobile banner",
         supported_macros=COMMON_MACROS,
         renders=[create_fixed_render(320, 50)],
-        assets_required=[
-            create_asset_required(
+        assets=[
+            create_asset(
                 asset_id="banner_image",
                 asset_type=AssetType.image,
                 required=True,
@@ -645,11 +684,12 @@ DISPLAY_IMAGE_FORMATS = [
                     "acceptable_formats": ["jpg", "png", "gif", "webp"],
                 },
             ),
-            create_asset_required(
+            create_asset(
                 asset_id="click_url",
                 asset_type=AssetType.url,
                 required=True,
             ),
+            create_impression_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -659,8 +699,8 @@ DISPLAY_IMAGE_FORMATS = [
         description="160x600 wide skyscraper banner",
         supported_macros=COMMON_MACROS,
         renders=[create_fixed_render(160, 600)],
-        assets_required=[
-            create_asset_required(
+        assets=[
+            create_asset(
                 asset_id="banner_image",
                 asset_type=AssetType.image,
                 required=True,
@@ -671,11 +711,12 @@ DISPLAY_IMAGE_FORMATS = [
                     "acceptable_formats": ["jpg", "png", "gif", "webp"],
                 },
             ),
-            create_asset_required(
+            create_asset(
                 asset_id="click_url",
                 asset_type=AssetType.url,
                 required=True,
             ),
+            create_impression_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -685,8 +726,8 @@ DISPLAY_IMAGE_FORMATS = [
         description="336x280 large rectangle banner",
         supported_macros=COMMON_MACROS,
         renders=[create_fixed_render(336, 280)],
-        assets_required=[
-            create_asset_required(
+        assets=[
+            create_asset(
                 asset_id="banner_image",
                 asset_type=AssetType.image,
                 required=True,
@@ -697,11 +738,12 @@ DISPLAY_IMAGE_FORMATS = [
                     "acceptable_formats": ["jpg", "png", "gif", "webp"],
                 },
             ),
-            create_asset_required(
+            create_asset(
                 asset_id="click_url",
                 asset_type=AssetType.url,
                 required=True,
             ),
+            create_impression_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -711,8 +753,8 @@ DISPLAY_IMAGE_FORMATS = [
         description="300x600 half page banner",
         supported_macros=COMMON_MACROS,
         renders=[create_fixed_render(300, 600)],
-        assets_required=[
-            create_asset_required(
+        assets=[
+            create_asset(
                 asset_id="banner_image",
                 asset_type=AssetType.image,
                 required=True,
@@ -723,11 +765,12 @@ DISPLAY_IMAGE_FORMATS = [
                     "acceptable_formats": ["jpg", "png", "gif", "webp"],
                 },
             ),
-            create_asset_required(
+            create_asset(
                 asset_id="click_url",
                 asset_type=AssetType.url,
                 required=True,
             ),
+            create_impression_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -737,8 +780,8 @@ DISPLAY_IMAGE_FORMATS = [
         description="970x250 billboard banner",
         supported_macros=COMMON_MACROS,
         renders=[create_fixed_render(970, 250)],
-        assets_required=[
-            create_asset_required(
+        assets=[
+            create_asset(
                 asset_id="banner_image",
                 asset_type=AssetType.image,
                 required=True,
@@ -749,11 +792,12 @@ DISPLAY_IMAGE_FORMATS = [
                     "acceptable_formats": ["jpg", "png", "gif", "webp"],
                 },
             ),
-            create_asset_required(
+            create_asset(
                 asset_id="click_url",
                 asset_type=AssetType.url,
                 required=True,
             ),
+            create_impression_tracker_asset(),
         ],
     ),
 ]
@@ -769,8 +813,8 @@ DISPLAY_HTML_FORMATS = [
         description="HTML5 creative (supports any dimensions)",
         accepts_parameters=[FormatIdParameter.dimensions],
         supported_macros=COMMON_MACROS,
-        assets_required=[
-            create_asset_required(
+        assets=[
+            create_asset(
                 asset_id="html_creative",
                 asset_type=AssetType.html,
                 required=True,
@@ -778,6 +822,7 @@ DISPLAY_HTML_FORMATS = [
                     "max_file_size_mb": 0.5,
                 },
             ),
+            create_impression_tracker_asset(),
         ],
     ),
     # Concrete formats for backward compatibility
@@ -788,8 +833,8 @@ DISPLAY_HTML_FORMATS = [
         description="300x250 HTML5 creative",
         supported_macros=COMMON_MACROS,
         renders=[create_fixed_render(300, 250)],
-        assets_required=[
-            create_asset_required(
+        assets=[
+            create_asset(
                 asset_id="html_creative",
                 asset_type=AssetType.html,
                 required=True,
@@ -800,6 +845,7 @@ DISPLAY_HTML_FORMATS = [
                     "description": "HTML5 creative code",
                 },
             ),
+            create_impression_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -809,8 +855,8 @@ DISPLAY_HTML_FORMATS = [
         description="728x90 HTML5 creative",
         supported_macros=COMMON_MACROS,
         renders=[create_fixed_render(728, 90)],
-        assets_required=[
-            create_asset_required(
+        assets=[
+            create_asset(
                 asset_id="html_creative",
                 asset_type=AssetType.html,
                 required=True,
@@ -820,6 +866,7 @@ DISPLAY_HTML_FORMATS = [
                     "max_file_size_mb": 0.5,
                 },
             ),
+            create_impression_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -829,8 +876,8 @@ DISPLAY_HTML_FORMATS = [
         description="160x600 HTML5 creative",
         supported_macros=COMMON_MACROS,
         renders=[create_fixed_render(160, 600)],
-        assets_required=[
-            create_asset_required(
+        assets=[
+            create_asset(
                 asset_id="html_creative",
                 asset_type=AssetType.html,
                 required=True,
@@ -840,6 +887,7 @@ DISPLAY_HTML_FORMATS = [
                     "max_file_size_mb": 0.5,
                 },
             ),
+            create_impression_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -849,8 +897,8 @@ DISPLAY_HTML_FORMATS = [
         description="336x280 HTML5 creative",
         supported_macros=COMMON_MACROS,
         renders=[create_fixed_render(336, 280)],
-        assets_required=[
-            create_asset_required(
+        assets=[
+            create_asset(
                 asset_id="html_creative",
                 asset_type=AssetType.html,
                 required=True,
@@ -860,6 +908,7 @@ DISPLAY_HTML_FORMATS = [
                     "max_file_size_mb": 0.5,
                 },
             ),
+            create_impression_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -869,8 +918,8 @@ DISPLAY_HTML_FORMATS = [
         description="300x600 HTML5 creative",
         supported_macros=COMMON_MACROS,
         renders=[create_fixed_render(300, 600)],
-        assets_required=[
-            create_asset_required(
+        assets=[
+            create_asset(
                 asset_id="html_creative",
                 asset_type=AssetType.html,
                 required=True,
@@ -880,6 +929,7 @@ DISPLAY_HTML_FORMATS = [
                     "max_file_size_mb": 0.5,
                 },
             ),
+            create_impression_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -889,8 +939,8 @@ DISPLAY_HTML_FORMATS = [
         description="970x250 HTML5 creative",
         supported_macros=COMMON_MACROS,
         renders=[create_fixed_render(970, 250)],
-        assets_required=[
-            create_asset_required(
+        assets=[
+            create_asset(
                 asset_id="html_creative",
                 asset_type=AssetType.html,
                 required=True,
@@ -900,6 +950,7 @@ DISPLAY_HTML_FORMATS = [
                     "max_file_size_mb": 0.5,
                 },
             ),
+            create_impression_tracker_asset(),
         ],
     ),
 ]
@@ -915,12 +966,13 @@ DISPLAY_JS_FORMATS = [
         description="JavaScript-based display ad (supports any dimensions)",
         accepts_parameters=[FormatIdParameter.dimensions],
         supported_macros=COMMON_MACROS,
-        assets_required=[
-            create_asset_required(
+        assets=[
+            create_asset(
                 asset_id="js_creative",
                 asset_type=AssetType.javascript,
                 required=True,
             ),
+            create_impression_tracker_asset(),
         ],
     ),
 ]
@@ -933,8 +985,8 @@ NATIVE_FORMATS = [
         type=FormatCategory.native,
         description="Standard native ad with title, description, image, and CTA",
         supported_macros=COMMON_MACROS,
-        assets_required=[
-            create_asset_required(
+        assets=[
+            create_asset(
                 asset_id="title",
                 asset_type=AssetType.text,
                 required=True,
@@ -942,7 +994,7 @@ NATIVE_FORMATS = [
                     "description": "Headline text (25 chars recommended)",
                 },
             ),
-            create_asset_required(
+            create_asset(
                 asset_id="description",
                 asset_type=AssetType.text,
                 required=True,
@@ -950,7 +1002,7 @@ NATIVE_FORMATS = [
                     "description": "Body copy (90 chars recommended)",
                 },
             ),
-            create_asset_required(
+            create_asset(
                 asset_id="main_image",
                 asset_type=AssetType.image,
                 required=True,
@@ -958,7 +1010,7 @@ NATIVE_FORMATS = [
                     "description": "Primary image (1200x627 recommended)",
                 },
             ),
-            create_asset_required(
+            create_asset(
                 asset_id="icon",
                 asset_type=AssetType.image,
                 required=False,
@@ -966,7 +1018,7 @@ NATIVE_FORMATS = [
                     "description": "Brand icon (square, 200x200 recommended)",
                 },
             ),
-            create_asset_required(
+            create_asset(
                 asset_id="cta_text",
                 asset_type=AssetType.text,
                 required=True,
@@ -974,7 +1026,7 @@ NATIVE_FORMATS = [
                     "description": "Call-to-action text",
                 },
             ),
-            create_asset_required(
+            create_asset(
                 asset_id="sponsored_by",
                 asset_type=AssetType.text,
                 required=True,
@@ -982,6 +1034,7 @@ NATIVE_FORMATS = [
                     "description": "Advertiser name for disclosure",
                 },
             ),
+            create_impression_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -990,8 +1043,8 @@ NATIVE_FORMATS = [
         type=FormatCategory.native,
         description="In-article native ad with editorial styling",
         supported_macros=COMMON_MACROS,
-        assets_required=[
-            create_asset_required(
+        assets=[
+            create_asset(
                 asset_id="headline",
                 asset_type=AssetType.text,
                 required=True,
@@ -999,7 +1052,7 @@ NATIVE_FORMATS = [
                     "description": "Editorial-style headline (60 chars recommended)",
                 },
             ),
-            create_asset_required(
+            create_asset(
                 asset_id="body",
                 asset_type=AssetType.text,
                 required=True,
@@ -1007,7 +1060,7 @@ NATIVE_FORMATS = [
                     "description": "Article-style body copy (200 chars recommended)",
                 },
             ),
-            create_asset_required(
+            create_asset(
                 asset_id="thumbnail",
                 asset_type=AssetType.image,
                 required=True,
@@ -1015,7 +1068,7 @@ NATIVE_FORMATS = [
                     "description": "Thumbnail image (square, 300x300 recommended)",
                 },
             ),
-            create_asset_required(
+            create_asset(
                 asset_id="author",
                 asset_type=AssetType.text,
                 required=False,
@@ -1023,7 +1076,7 @@ NATIVE_FORMATS = [
                     "description": "Author name for editorial context",
                 },
             ),
-            create_asset_required(
+            create_asset(
                 asset_id="click_url",
                 asset_type=AssetType.url,
                 required=True,
@@ -1031,7 +1084,7 @@ NATIVE_FORMATS = [
                     "description": "Landing page URL",
                 },
             ),
-            create_asset_required(
+            create_asset(
                 asset_id="disclosure",
                 asset_type=AssetType.text,
                 required=True,
@@ -1039,6 +1092,7 @@ NATIVE_FORMATS = [
                     "description": "Sponsored content disclosure text",
                 },
             ),
+            create_impression_tracker_asset(),
         ],
     ),
 ]
@@ -1051,8 +1105,8 @@ AUDIO_FORMATS = [
         type=FormatCategory.audio,
         description="15-second audio ad",
         supported_macros=[*COMMON_MACROS, "CONTENT_GENRE"],
-        assets_required=[
-            create_asset_required(
+        assets=[
+            create_asset(
                 asset_id="audio_file",
                 asset_type=AssetType.audio,
                 required=True,
@@ -1061,6 +1115,7 @@ AUDIO_FORMATS = [
                     "acceptable_formats": ["mp3", "aac", "m4a"],
                 },
             ),
+            create_impression_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -1069,8 +1124,8 @@ AUDIO_FORMATS = [
         type=FormatCategory.audio,
         description="30-second audio ad",
         supported_macros=[*COMMON_MACROS, "CONTENT_GENRE"],
-        assets_required=[
-            create_asset_required(
+        assets=[
+            create_asset(
                 asset_id="audio_file",
                 asset_type=AssetType.audio,
                 required=True,
@@ -1079,6 +1134,7 @@ AUDIO_FORMATS = [
                     "acceptable_formats": ["mp3", "aac", "m4a"],
                 },
             ),
+            create_impression_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -1087,8 +1143,8 @@ AUDIO_FORMATS = [
         type=FormatCategory.audio,
         description="60-second audio ad",
         supported_macros=[*COMMON_MACROS, "CONTENT_GENRE"],
-        assets_required=[
-            create_asset_required(
+        assets=[
+            create_asset(
                 asset_id="audio_file",
                 asset_type=AssetType.audio,
                 required=True,
@@ -1097,6 +1153,7 @@ AUDIO_FORMATS = [
                     "acceptable_formats": ["mp3", "aac", "m4a"],
                 },
             ),
+            create_impression_tracker_asset(),
         ],
     ),
 ]
@@ -1110,8 +1167,8 @@ DOOH_FORMATS = [
         description="Full HD digital billboard",
         supported_macros=[*COMMON_MACROS, "SCREEN_ID", "VENUE_TYPE", "VENUE_LAT", "VENUE_LONG"],
         renders=[create_fixed_render(1920, 1080)],
-        assets_required=[
-            create_asset_required(
+        assets=[
+            create_asset(
                 asset_id="billboard_image",
                 asset_type=AssetType.image,
                 required=True,
@@ -1121,6 +1178,7 @@ DOOH_FORMATS = [
                     "acceptable_formats": ["jpg", "png"],
                 },
             ),
+            create_impression_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -1129,8 +1187,8 @@ DOOH_FORMATS = [
         type=FormatCategory.dooh,
         description="Landscape-oriented digital billboard (various sizes)",
         supported_macros=[*COMMON_MACROS, "SCREEN_ID", "VENUE_TYPE", "VENUE_LAT", "VENUE_LONG"],
-        assets_required=[
-            create_asset_required(
+        assets=[
+            create_asset(
                 asset_id="billboard_image",
                 asset_type=AssetType.image,
                 required=True,
@@ -1139,6 +1197,7 @@ DOOH_FORMATS = [
                     "description": "Landscape image (1920x1080 or larger)",
                 },
             ),
+            create_impression_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -1147,8 +1206,8 @@ DOOH_FORMATS = [
         type=FormatCategory.dooh,
         description="Portrait-oriented digital billboard (various sizes)",
         supported_macros=[*COMMON_MACROS, "SCREEN_ID", "VENUE_TYPE", "VENUE_LAT", "VENUE_LONG"],
-        assets_required=[
-            create_asset_required(
+        assets=[
+            create_asset(
                 asset_id="billboard_image",
                 asset_type=AssetType.image,
                 required=True,
@@ -1157,6 +1216,7 @@ DOOH_FORMATS = [
                     "description": "Portrait image (1080x1920 or similar)",
                 },
             ),
+            create_impression_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -1166,8 +1226,8 @@ DOOH_FORMATS = [
         description="Transit and subway screen displays",
         supported_macros=[*COMMON_MACROS, "SCREEN_ID", "VENUE_TYPE", "VENUE_LAT", "VENUE_LONG", "TRANSIT_LINE"],
         renders=[create_fixed_render(1920, 1080)],
-        assets_required=[
-            create_asset_required(
+        assets=[
+            create_asset(
                 asset_id="screen_image",
                 asset_type=AssetType.image,
                 required=True,
@@ -1178,6 +1238,7 @@ DOOH_FORMATS = [
                     "description": "Transit screen content",
                 },
             ),
+            create_impression_tracker_asset(),
         ],
     ),
 ]
@@ -1191,8 +1252,8 @@ INFO_CARD_FORMATS = [
         description="Standard visual card (300x400px) for displaying ad inventory products",
         supported_macros=COMMON_MACROS,
         renders=[create_fixed_render(300, 400)],
-        assets_required=[
-            create_asset_required(
+        assets=[
+            create_asset(
                 asset_id="product_image",
                 asset_type=AssetType.image,
                 required=True,
@@ -1200,7 +1261,7 @@ INFO_CARD_FORMATS = [
                     "description": "Primary product image or placement preview",
                 },
             ),
-            create_asset_required(
+            create_asset(
                 asset_id="product_name",
                 asset_type=AssetType.text,
                 required=True,
@@ -1208,7 +1269,7 @@ INFO_CARD_FORMATS = [
                     "description": "Display name of the product (e.g., 'Homepage Leaderboard')",
                 },
             ),
-            create_asset_required(
+            create_asset(
                 asset_id="product_description",
                 asset_type=AssetType.text,
                 required=True,
@@ -1216,7 +1277,7 @@ INFO_CARD_FORMATS = [
                     "description": "Short description of the product (supports markdown)",
                 },
             ),
-            create_asset_required(
+            create_asset(
                 asset_id="pricing_model",
                 asset_type=AssetType.text,
                 required=False,
@@ -1224,7 +1285,7 @@ INFO_CARD_FORMATS = [
                     "description": "Pricing model (e.g., 'CPM', 'flat_rate', 'CPC')",
                 },
             ),
-            create_asset_required(
+            create_asset(
                 asset_id="pricing_amount",
                 asset_type=AssetType.text,
                 required=False,
@@ -1232,7 +1293,7 @@ INFO_CARD_FORMATS = [
                     "description": "Price amount (e.g., '15.00')",
                 },
             ),
-            create_asset_required(
+            create_asset(
                 asset_id="pricing_currency",
                 asset_type=AssetType.text,
                 required=False,
@@ -1240,7 +1301,7 @@ INFO_CARD_FORMATS = [
                     "description": "Currency code (e.g., 'USD')",
                 },
             ),
-            create_asset_required(
+            create_asset(
                 asset_id="delivery_type",
                 asset_type=AssetType.text,
                 required=False,
@@ -1248,7 +1309,7 @@ INFO_CARD_FORMATS = [
                     "description": "Delivery type: 'guaranteed' or 'bidded'",
                 },
             ),
-            create_asset_required(
+            create_asset(
                 asset_id="primary_asset_type",
                 asset_type=AssetType.text,
                 required=False,
@@ -1256,6 +1317,7 @@ INFO_CARD_FORMATS = [
                     "description": "Primary asset type: 'display', 'video', 'audio', 'native'",
                 },
             ),
+            create_impression_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -1265,8 +1327,8 @@ INFO_CARD_FORMATS = [
         description="Detailed card with carousel and full specifications for rich product presentation",
         supported_macros=COMMON_MACROS,
         renders=[create_responsive_render()],
-        assets_required=[
-            create_asset_required(
+        assets=[
+            create_asset(
                 asset_id="product_image",
                 asset_type=AssetType.image,
                 required=True,
@@ -1274,7 +1336,7 @@ INFO_CARD_FORMATS = [
                     "description": "Primary product image or placement preview",
                 },
             ),
-            create_asset_required(
+            create_asset(
                 asset_id="product_name",
                 asset_type=AssetType.text,
                 required=True,
@@ -1282,7 +1344,7 @@ INFO_CARD_FORMATS = [
                     "description": "Display name of the product (e.g., 'Homepage Leaderboard')",
                 },
             ),
-            create_asset_required(
+            create_asset(
                 asset_id="product_description",
                 asset_type=AssetType.text,
                 required=True,
@@ -1290,7 +1352,7 @@ INFO_CARD_FORMATS = [
                     "description": "Detailed description of the product (supports markdown)",
                 },
             ),
-            create_asset_required(
+            create_asset(
                 asset_id="pricing_model",
                 asset_type=AssetType.text,
                 required=False,
@@ -1298,7 +1360,7 @@ INFO_CARD_FORMATS = [
                     "description": "Pricing model (e.g., 'CPM', 'flat_rate', 'CPC')",
                 },
             ),
-            create_asset_required(
+            create_asset(
                 asset_id="pricing_amount",
                 asset_type=AssetType.text,
                 required=False,
@@ -1306,7 +1368,7 @@ INFO_CARD_FORMATS = [
                     "description": "Price amount (e.g., '15.00')",
                 },
             ),
-            create_asset_required(
+            create_asset(
                 asset_id="pricing_currency",
                 asset_type=AssetType.text,
                 required=False,
@@ -1314,7 +1376,7 @@ INFO_CARD_FORMATS = [
                     "description": "Currency code (e.g., 'USD')",
                 },
             ),
-            create_asset_required(
+            create_asset(
                 asset_id="delivery_type",
                 asset_type=AssetType.text,
                 required=False,
@@ -1322,7 +1384,7 @@ INFO_CARD_FORMATS = [
                     "description": "Delivery type: 'guaranteed' or 'bidded'",
                 },
             ),
-            create_asset_required(
+            create_asset(
                 asset_id="primary_asset_type",
                 asset_type=AssetType.text,
                 required=False,
@@ -1330,6 +1392,7 @@ INFO_CARD_FORMATS = [
                     "description": "Primary asset type: 'display', 'video', 'audio', 'native'",
                 },
             ),
+            create_impression_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -1339,8 +1402,8 @@ INFO_CARD_FORMATS = [
         description="Standard visual card (300x400px) for displaying creative formats in user interfaces",
         supported_macros=COMMON_MACROS,
         renders=[create_fixed_render(300, 400)],
-        assets_required=[
-            create_asset_required(
+        assets=[
+            create_asset(
                 asset_id="format",
                 asset_type=AssetType.text,
                 required=True,
@@ -1348,6 +1411,7 @@ INFO_CARD_FORMATS = [
                     "description": "Creative format specification to visualize on the card",
                 },
             ),
+            create_impression_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -1357,8 +1421,8 @@ INFO_CARD_FORMATS = [
         description="Detailed card with carousel and full specifications for rich format documentation",
         supported_macros=COMMON_MACROS,
         renders=[create_responsive_render()],
-        assets_required=[
-            create_asset_required(
+        assets=[
+            create_asset(
                 asset_id="format",
                 asset_type=AssetType.text,
                 required=True,
@@ -1366,6 +1430,7 @@ INFO_CARD_FORMATS = [
                     "description": "Creative format specification with full details for detailed card",
                 },
             ),
+            create_impression_tracker_asset(),
         ],
     ),
 ]
@@ -1382,6 +1447,41 @@ STANDARD_FORMATS = (
     + DOOH_FORMATS
     + INFO_CARD_FORMATS
 )
+
+
+def _backfill_deprecated_assets_required() -> list[CreativeFormat]:
+    """Backfill the deprecated assets_required field for backward compatibility.
+
+    The assets_required field is deprecated in adcp-client-python 2.18.0+ in favor
+    of the new assets field. This function derives assets_required from assets
+    using adcp's get_required_assets utility to maintain backward compatibility
+    with code that still uses assets_required.
+
+    Since Pydantic models are frozen, we rebuild them with the backfilled field.
+    """
+    from adcp import get_required_assets
+
+    rebuilt = []
+
+    for fmt in STANDARD_FORMATS:
+        if not fmt.assets:
+            rebuilt.append(fmt)
+            continue
+
+        # Use adcp utility to get required assets, then convert to AssetsRequired type
+        required_assets = get_required_assets(fmt)
+        fmt_dict = fmt.model_dump()
+        fmt_dict["assets_required"] = [
+            LibAssetsRequired.model_validate(a.model_dump()) for a in required_assets
+        ]
+
+        rebuilt.append(CreativeFormat.model_validate(fmt_dict))
+
+    return rebuilt
+
+
+# Backfill deprecated assets_required field for backward compatibility
+STANDARD_FORMATS = _backfill_deprecated_assets_required()  # type: ignore[misc]
 
 
 def get_format_by_id(format_id: FormatId) -> CreativeFormat | None:

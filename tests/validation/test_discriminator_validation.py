@@ -80,27 +80,31 @@ class TestSubAssetDiscriminator:
                 content_uri="https://example.com/img.png",
             )
 
-    def test_media_asset_cannot_have_extra_fields(self):
-        """Media asset should reject extra fields (like 'content')."""
-        with pytest.raises(ValidationError, match="Extra inputs are not permitted"):
-            SubAsset1(
-                asset_kind="media",
-                asset_type="thumbnail_image",
-                asset_id="test",
-                content_uri="https://example.com/img.png",
-                content="This shouldn't be allowed",  # Extra field
-            )
+    def test_media_asset_allows_extra_fields(self):
+        """Media asset allows extra fields in adcp 2.18.0+ (relaxed schema)."""
+        # adcp 2.18.0 relaxed schema constraints to allow additional fields
+        asset = SubAsset1(
+            asset_kind="media",
+            asset_type="thumbnail_image",
+            asset_id="test",
+            content_uri="https://example.com/img.png",
+            content="This is now allowed",  # Extra field - allowed in 2.18.0+
+        )
+        assert asset.asset_kind == "media"
+        assert asset.asset_id == "test"
 
-    def test_text_asset_cannot_have_extra_fields(self):
-        """Text asset should reject extra fields (like 'content_uri')."""
-        with pytest.raises(ValidationError, match="Extra inputs are not permitted"):
-            SubAsset2(
-                asset_kind="text",
-                asset_type="headline",
-                asset_id="test",
-                content="Hello World",
-                content_uri="https://example.com/img.png",  # Extra field
-            )
+    def test_text_asset_allows_extra_fields(self):
+        """Text asset allows extra fields in adcp 2.18.0+ (relaxed schema)."""
+        # adcp 2.18.0 relaxed schema constraints to allow additional fields
+        asset = SubAsset2(
+            asset_kind="text",
+            asset_type="headline",
+            asset_id="test",
+            content="Hello World",
+            content_uri="https://example.com/img.png",  # Extra field - allowed in 2.18.0+
+        )
+        assert asset.asset_kind == "text"
+        assert asset.content == "Hello World"
 
     def test_media_asset_requires_content_uri(self):
         """Media asset must have content_uri field."""
@@ -176,23 +180,25 @@ class TestVastAssetDiscriminator:
                 url="https://adserver.com/vast.xml",
             )
 
-    def test_url_delivery_cannot_have_content(self):
-        """URL delivery should reject 'content' field."""
-        with pytest.raises(ValidationError, match="Extra inputs are not permitted"):
-            VastAsset1(
-                delivery_type="url",
-                url="https://adserver.com/vast.xml",
-                content="<VAST>...</VAST>",  # Extra field
-            )
+    def test_url_delivery_allows_extra_fields(self):
+        """URL delivery allows extra fields in adcp 2.18.0+ (relaxed schema)."""
+        asset = VastAsset1(
+            delivery_type="url",
+            url="https://adserver.com/vast.xml",
+            content="<VAST>...</VAST>",  # Extra field - allowed in 2.18.0+
+        )
+        assert asset.delivery_type == "url"
+        assert str(asset.url) == "https://adserver.com/vast.xml"
 
-    def test_inline_delivery_cannot_have_url(self):
-        """Inline delivery should reject 'url' field."""
-        with pytest.raises(ValidationError, match="Extra inputs are not permitted"):
-            VastAsset2(
-                delivery_type="inline",
-                content="<VAST>...</VAST>",
-                url="https://adserver.com/vast.xml",  # Extra field
-            )
+    def test_inline_delivery_allows_extra_fields(self):
+        """Inline delivery allows extra fields in adcp 2.18.0+ (relaxed schema)."""
+        asset = VastAsset2(
+            delivery_type="inline",
+            content="<VAST>...</VAST>",
+            url="https://adserver.com/vast.xml",  # Extra field - allowed in 2.18.0+
+        )
+        assert asset.delivery_type == "inline"
+        assert asset.content == "<VAST>...</VAST>"
 
     def test_vast_union_validates_from_dict(self):
         """VastAsset union can validate from dict with correct discriminator."""
@@ -237,23 +243,25 @@ class TestDaastAssetDiscriminator:
         assert asset.delivery_type == "inline"
         assert asset.content == "<DAAST version='1.0'>...</DAAST>"
 
-    def test_url_delivery_cannot_have_content(self):
-        """URL delivery should reject 'content' field."""
-        with pytest.raises(ValidationError, match="Extra inputs are not permitted"):
-            DaastAsset1(
-                delivery_type="url",
-                url="https://audioserver.com/daast.xml",
-                content="<DAAST>...</DAAST>",  # Extra field
-            )
+    def test_url_delivery_allows_extra_fields(self):
+        """URL delivery allows extra fields in adcp 2.18.0+ (relaxed schema)."""
+        asset = DaastAsset1(
+            delivery_type="url",
+            url="https://audioserver.com/daast.xml",
+            content="<DAAST>...</DAAST>",  # Extra field - allowed in 2.18.0+
+        )
+        assert asset.delivery_type == "url"
+        assert str(asset.url) == "https://audioserver.com/daast.xml"
 
-    def test_inline_delivery_cannot_have_url(self):
-        """Inline delivery should reject 'url' field."""
-        with pytest.raises(ValidationError, match="Extra inputs are not permitted"):
-            DaastAsset2(
-                delivery_type="inline",
-                content="<DAAST>...</DAAST>",
-                url="https://audioserver.com/daast.xml",  # Extra field
-            )
+    def test_inline_delivery_allows_extra_fields(self):
+        """Inline delivery allows extra fields in adcp 2.18.0+ (relaxed schema)."""
+        asset = DaastAsset2(
+            delivery_type="inline",
+            content="<DAAST>...</DAAST>",
+            url="https://audioserver.com/daast.xml",  # Extra field - allowed in 2.18.0+
+        )
+        assert asset.delivery_type == "inline"
+        assert asset.content == "<DAAST>...</DAAST>"
 
 
 class TestPreviewRenderDiscriminator:
@@ -294,27 +302,29 @@ class TestPreviewRenderDiscriminator:
         assert str(render.preview_url) == "https://preview.example.com/creative.html"
         assert render.preview_html == "<div>Creative content</div>"
 
-    def test_url_format_cannot_have_preview_html(self):
-        """URL format should reject 'preview_html' field."""
-        with pytest.raises(ValidationError, match="Extra inputs are not permitted"):
-            Renders(
-                render_id="render_1",
-                output_format="url",
-                preview_url="https://preview.example.com/creative.html",
-                preview_html="<div>Not allowed</div>",  # Extra field
-                role="primary",
-            )
+    def test_url_format_allows_extra_fields(self):
+        """URL format allows extra fields in adcp 2.18.0+ (relaxed schema)."""
+        render = Renders(
+            render_id="render_1",
+            output_format="url",
+            preview_url="https://preview.example.com/creative.html",
+            preview_html="<div>Now allowed</div>",  # Extra field - allowed in 2.18.0+
+            role="primary",
+        )
+        assert render.output_format == "url"
+        assert str(render.preview_url) == "https://preview.example.com/creative.html"
 
-    def test_html_format_cannot_have_preview_url(self):
-        """HTML format should reject 'preview_url' field."""
-        with pytest.raises(ValidationError, match="Extra inputs are not permitted"):
-            Renders1(
-                render_id="render_1",
-                output_format="html",
-                preview_html="<div>Creative content</div>",
-                preview_url="https://preview.example.com/creative.html",  # Extra field
-                role="primary",
-            )
+    def test_html_format_allows_extra_fields(self):
+        """HTML format allows extra fields in adcp 2.18.0+ (relaxed schema)."""
+        render = Renders1(
+            render_id="render_1",
+            output_format="html",
+            preview_html="<div>Creative content</div>",
+            preview_url="https://preview.example.com/creative.html",  # Extra field - allowed in 2.18.0+
+            role="primary",
+        )
+        assert render.output_format == "html"
+        assert render.preview_html == "<div>Creative content</div>"
 
     def test_invalid_output_format_rejected(self):
         """Invalid output_format literal should fail validation."""

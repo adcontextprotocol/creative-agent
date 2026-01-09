@@ -246,9 +246,13 @@ class TestPreviewCreativeResponseFormat:
 
             # Check first render
             render = renders[0]
-            preview_url = (
-                render.get("preview_url") if isinstance(render, dict) else getattr(render, "preview_url", None)
-            )
+            # PreviewRender is a RootModel in adcp 2.18.0, access fields via .root
+            if isinstance(render, dict):
+                preview_url = render.get("preview_url")
+            elif hasattr(render, "root"):
+                preview_url = getattr(render.root, "preview_url", None)
+            else:
+                preview_url = getattr(render, "preview_url", None)
             assert preview_url is not None, "render.preview_url is required"
             assert str(preview_url).startswith("http"), "preview_url must be valid HTTP(S) URL"
 

@@ -6,7 +6,7 @@ import uuid
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
-from adcp import FormatId
+from adcp import FormatId, get_optional_assets, get_required_assets
 from adcp.types import Capability
 from adcp.types.generated_poc.media_buy.list_creative_formats_response import CreativeAgent
 from fastmcp import FastMCP
@@ -76,20 +76,28 @@ def _format_to_human_readable(fmt: Any) -> str:
     macros = fmt.supported_macros or []
     macro_count_str = f"{len(macros)} supported macros" if macros else "no macros"
 
-    # Extract assets info
-    assets = fmt.assets_required or []
-    asset_ids = [a.asset_id for a in assets if hasattr(a, "asset_id")]
-    asset_str = ", ".join(asset_ids[:5])
-    if len(asset_ids) > 5:
-        asset_str += f" (+{len(asset_ids) - 5} more)"
+    # Extract assets info using adcp 2.18.0 utilities
+    # Filter to individual assets (Assets) which have asset_id, skip repeatable groups (Assets1)
+    required_assets = [a.asset_id for a in get_required_assets(fmt) if hasattr(a, "asset_id")]
+    optional_assets = [a.asset_id for a in get_optional_assets(fmt) if hasattr(a, "asset_id")]
+
+    asset_req_str = ", ".join(required_assets[:5])
+    if len(required_assets) > 5:
+        asset_req_str += f" (+{len(required_assets) - 5} more)"
+
+    asset_opt_str = ", ".join(optional_assets[:5])
+    if len(optional_assets) > 5:
+        asset_opt_str += f" (+{len(optional_assets) - 5} more)"
 
     # Build human-readable detail
     detail = f"- **{fmt.name}** (`{fmt_id}`)\n"
     detail += f"  Type: {fmt.type.value if hasattr(fmt.type, 'value') else fmt.type} | Dimensions: {dims} | {macro_count_str}\n"
     if fmt.description:
         detail += f"  {fmt.description[:150]}{'...' if len(fmt.description) > 150 else ''}\n"
-    if asset_str:
-        detail += f"  Assets Required: {asset_str}\n"
+    if asset_req_str:
+        detail += f"  Assets Required: {asset_req_str}\n"
+    if asset_opt_str:
+        detail += f"  Assets Optional: {asset_opt_str}\n"
     if macros:
         detail += f"  Supported Macros: {', '.join(macros)}\n"
 
