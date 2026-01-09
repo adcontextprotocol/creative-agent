@@ -1471,9 +1471,7 @@ def _backfill_deprecated_assets_required() -> list[CreativeFormat]:
         # Use adcp utility to get required assets, then convert to AssetsRequired type
         required_assets = get_required_assets(fmt)
         fmt_dict = fmt.model_dump()
-        fmt_dict["assets_required"] = [
-            LibAssetsRequired.model_validate(a.model_dump()) for a in required_assets
-        ]
+        fmt_dict["assets_required"] = [LibAssetsRequired.model_validate(a.model_dump()) for a in required_assets]
 
         rebuilt.append(CreativeFormat.model_validate(fmt_dict))
 

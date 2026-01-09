@@ -116,9 +116,7 @@ class TestProductCardStandard:
 
         # Check optional assets are in assets but not in assets_required
         optional_asset_ids = {
-            get_asset_attr(asset, "asset_id")
-            for asset in fmt.assets
-            if not get_asset_attr(asset, "required")
+            get_asset_attr(asset, "asset_id") for asset in fmt.assets if not get_asset_attr(asset, "required")
         }
         assert "pricing_model" in optional_asset_ids
         assert "impression_tracker" in optional_asset_ids
@@ -172,9 +170,7 @@ class TestProductCardDetailed:
 
         # Check optional assets are in assets but not in assets_required
         optional_asset_ids = {
-            get_asset_attr(asset, "asset_id")
-            for asset in fmt.assets
-            if not get_asset_attr(asset, "required")
+            get_asset_attr(asset, "asset_id") for asset in fmt.assets if not get_asset_attr(asset, "required")
         }
         assert "pricing_model" in optional_asset_ids
         assert "impression_tracker" in optional_asset_ids
