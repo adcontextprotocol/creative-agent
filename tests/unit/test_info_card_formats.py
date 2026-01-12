@@ -86,34 +86,40 @@ class TestProductCardStandard:
         assert get_render_attr(responsive, "height") is False
 
     def test_requires_product_assets(self):
-        """Product card standard requires individual product assets."""
+        """Product card standard has required and optional assets."""
         format_id = FormatId(agent_url=AGENT_URL, id="product_card_standard")
         results = filter_formats(format_ids=[format_id])
         fmt = results[0]
+
+        # Check assets field (all assets including optional)
+        assert fmt.assets
+        assert len(fmt.assets) == 9  # 8 original + impression_tracker
+
+        # Check required assets are in assets_required (backward compatibility)
         assert fmt.assets_required
-        assert len(fmt.assets_required) == 8
+        assert len(fmt.assets_required) == 3  # Only required=True assets
 
-        # Check required assets
-        asset_ids = {get_asset_attr(asset, "asset_id") for asset in fmt.assets_required}
-        assert "product_image" in asset_ids
-        assert "product_name" in asset_ids
-        assert "product_description" in asset_ids
+        # Check required asset ids in assets_required
+        required_asset_ids = {get_asset_attr(asset, "asset_id") for asset in fmt.assets_required}
+        assert "product_image" in required_asset_ids
+        assert "product_name" in required_asset_ids
+        assert "product_description" in required_asset_ids
 
-        # Check asset types
+        # Check asset types in assets (full list)
         asset_type_map = {
-            get_asset_attr(asset, "asset_id"): get_asset_attr(asset, "asset_type") for asset in fmt.assets_required
+            get_asset_attr(asset, "asset_id"): get_asset_attr(asset, "asset_type") for asset in fmt.assets
         }
         assert asset_type_map["product_image"] == "image"
         assert asset_type_map["product_name"] == "text"
         assert asset_type_map["product_description"] == "text"
+        assert asset_type_map["impression_tracker"] == "url"
 
-        # Check required fields
-        required_asset_ids = {
-            get_asset_attr(asset, "asset_id") for asset in fmt.assets_required if get_asset_attr(asset, "required")
+        # Check optional assets are in assets but not in assets_required
+        optional_asset_ids = {
+            get_asset_attr(asset, "asset_id") for asset in fmt.assets if not get_asset_attr(asset, "required")
         }
-        assert "product_image" in required_asset_ids
-        assert "product_name" in required_asset_ids
-        assert "product_description" in required_asset_ids
+        assert "pricing_model" in optional_asset_ids
+        assert "impression_tracker" in optional_asset_ids
 
 
 class TestProductCardDetailed:
@@ -134,34 +140,40 @@ class TestProductCardDetailed:
         assert get_render_attr(responsive, "height") is True
 
     def test_requires_product_assets(self):
-        """Product card detailed requires individual product assets."""
+        """Product card detailed has required and optional assets."""
         format_id = FormatId(agent_url=AGENT_URL, id="product_card_detailed")
         results = filter_formats(format_ids=[format_id])
         fmt = results[0]
+
+        # Check assets field (all assets including optional)
+        assert fmt.assets
+        assert len(fmt.assets) == 9  # 8 original + impression_tracker
+
+        # Check required assets are in assets_required (backward compatibility)
         assert fmt.assets_required
-        assert len(fmt.assets_required) == 8
+        assert len(fmt.assets_required) == 3  # Only required=True assets
 
-        # Check required assets
-        asset_ids = {get_asset_attr(asset, "asset_id") for asset in fmt.assets_required}
-        assert "product_image" in asset_ids
-        assert "product_name" in asset_ids
-        assert "product_description" in asset_ids
+        # Check required asset ids in assets_required
+        required_asset_ids = {get_asset_attr(asset, "asset_id") for asset in fmt.assets_required}
+        assert "product_image" in required_asset_ids
+        assert "product_name" in required_asset_ids
+        assert "product_description" in required_asset_ids
 
-        # Check asset types
+        # Check asset types in assets (full list)
         asset_type_map = {
-            get_asset_attr(asset, "asset_id"): get_asset_attr(asset, "asset_type") for asset in fmt.assets_required
+            get_asset_attr(asset, "asset_id"): get_asset_attr(asset, "asset_type") for asset in fmt.assets
         }
         assert asset_type_map["product_image"] == "image"
         assert asset_type_map["product_name"] == "text"
         assert asset_type_map["product_description"] == "text"
+        assert asset_type_map["impression_tracker"] == "url"
 
-        # Check required fields
-        required_asset_ids = {
-            get_asset_attr(asset, "asset_id") for asset in fmt.assets_required if get_asset_attr(asset, "required")
+        # Check optional assets are in assets but not in assets_required
+        optional_asset_ids = {
+            get_asset_attr(asset, "asset_id") for asset in fmt.assets if not get_asset_attr(asset, "required")
         }
-        assert "product_image" in required_asset_ids
-        assert "product_name" in required_asset_ids
-        assert "product_description" in required_asset_ids
+        assert "pricing_model" in optional_asset_ids
+        assert "impression_tracker" in optional_asset_ids
 
 
 class TestFormatCardStandard:

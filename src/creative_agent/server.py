@@ -6,7 +6,7 @@ import uuid
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
-from adcp import FormatId
+from adcp import FormatId, get_optional_assets, get_required_assets
 from adcp.types import Capability
 from adcp.types.generated_poc.media_buy.list_creative_formats_response import CreativeAgent
 from fastmcp import FastMCP
@@ -51,6 +51,57 @@ def normalize_format_id_for_comparison(format_id: FormatId | dict[str, Any] | st
         # Plain string format_id - assume it's from our agent
         return (format_id, str(AGENT_URL))
     return ("", "")
+
+
+def _format_to_human_readable(fmt: Any) -> str:
+    """Convert a Format object to human-readable text for LLM consumption.
+
+    Args:
+        fmt: A CreativeFormat object
+
+    Returns:
+        Human-readable string with key format details
+    """
+    # Extract format ID
+    fmt_id = fmt.format_id.id if hasattr(fmt.format_id, "id") else str(fmt.format_id)
+
+    # Extract dimensions
+    dims = "responsive"
+    if fmt.renders and len(fmt.renders) > 0:
+        render = fmt.renders[0]
+        if render.dimensions and render.dimensions.width and render.dimensions.height:
+            dims = f"{int(render.dimensions.width)}x{int(render.dimensions.height)}"
+
+    # Extract macros info
+    macros = fmt.supported_macros or []
+    macro_count_str = f"{len(macros)} supported macros" if macros else "no macros"
+
+    # Extract assets info using adcp 2.18.0 utilities
+    # Filter to individual assets (Assets) which have asset_id, skip repeatable groups (Assets1)
+    required_assets = [a.asset_id for a in get_required_assets(fmt) if hasattr(a, "asset_id")]
+    optional_assets = [a.asset_id for a in get_optional_assets(fmt) if hasattr(a, "asset_id")]
+
+    asset_req_str = ", ".join(required_assets[:5])
+    if len(required_assets) > 5:
+        asset_req_str += f" (+{len(required_assets) - 5} more)"
+
+    asset_opt_str = ", ".join(optional_assets[:5])
+    if len(optional_assets) > 5:
+        asset_opt_str += f" (+{len(optional_assets) - 5} more)"
+
+    # Build human-readable detail
+    detail = f"- **{fmt.name}** (`{fmt_id}`)\n"
+    detail += f"  Type: {fmt.type.value if hasattr(fmt.type, 'value') else fmt.type} | Dimensions: {dims} | {macro_count_str}\n"
+    if fmt.description:
+        detail += f"  {fmt.description[:150]}{'...' if len(fmt.description) > 150 else ''}\n"
+    if asset_req_str:
+        detail += f"  Assets Required: {asset_req_str}\n"
+    if asset_opt_str:
+        detail += f"  Assets Optional: {asset_opt_str}\n"
+    if macros:
+        detail += f"  Supported Macros: {', '.join(macros)}\n"
+
+    return detail
 
 
 @mcp.tool()
@@ -132,9 +183,18 @@ def list_creative_formats(
         if filter_desc:
             message += f" matching filters ({', '.join(filter_desc)})"
 
+        # Build human-readable format details for LLM consumption
+        response_json = response.model_dump(mode="json", exclude_none=True)
+
+        if formats:
+            format_details = [_format_to_human_readable(fmt) for fmt in formats]
+            full_message = f"{message}:\n\n" + "\n".join(format_details)
+        else:
+            full_message = message
+
         return ToolResult(
-            content=[TextContent(type="text", text=message)],
-            structured_content=response.model_dump(mode="json", exclude_none=True),
+            content=[TextContent(type="text", text=full_message)],
+            structured_content=response_json,
         )
     except ValueError as e:
         error_response = {"error": f"Invalid input: {e}"}

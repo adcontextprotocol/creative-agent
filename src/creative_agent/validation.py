@@ -374,18 +374,15 @@ def validate_manifest_assets(
         return ["Manifest assets must be a dictionary"]
 
     # Build a map of asset_id -> asset_type from format if provided
+    # Uses adcp utilities which handle both new `assets` and deprecated `assets_required` fields
     asset_type_map = {}
-    if format_obj and hasattr(format_obj, "assets_required") and format_obj.assets_required:
-        for required_asset in format_obj.assets_required:
-            # Handle both dict and object formats for required_asset
-            if isinstance(required_asset, dict):
-                asset_id = required_asset.get("asset_id")
-                asset_type = required_asset.get("asset_type")
-                is_required = required_asset.get("required", True)
-            else:
-                asset_id = getattr(required_asset, "asset_id", None)
-                asset_type = getattr(required_asset, "asset_type", None)
-                is_required = getattr(required_asset, "required", True)
+    if format_obj:
+        from adcp import get_format_assets, get_required_assets
+
+        # Build asset type map from all format assets
+        for asset in get_format_assets(format_obj):
+            asset_id = getattr(asset, "asset_id", None)
+            asset_type = getattr(asset, "asset_type", None)
 
             if asset_id and asset_type:
                 # Handle enum or string asset_type
@@ -394,8 +391,10 @@ def validate_manifest_assets(
                 else:
                     asset_type_map[asset_id] = str(asset_type)
 
-            # Check if this is a required (non-optional) asset
-            if is_required and asset_id and asset_id not in assets:
+        # Check required assets are present in manifest
+        for required_asset in get_required_assets(format_obj):
+            asset_id = getattr(required_asset, "asset_id", None)
+            if asset_id and asset_id not in assets:
                 errors.append(f"Required asset missing: {asset_id}")
 
     # Validate each asset
