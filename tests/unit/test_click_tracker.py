@@ -5,6 +5,34 @@ from creative_agent.data.standard_formats import (
     create_click_tracker_asset,
 )
 
+# Expected formats that should have click_tracker
+EXPECTED_FORMATS_WITH_CLICK_TRACKER = [
+    # Image formats
+    "display_image",
+    "display_300x250_image",
+    "display_728x90_image",
+    "display_320x50_image",
+    "display_160x600_image",
+    "display_336x280_image",
+    "display_300x600_image",
+    "display_970x250_image",
+    # HTML formats
+    "display_html",
+    "display_300x250_html",
+    "display_728x90_html",
+    "display_160x600_html",
+    "display_336x280_html",
+    "display_300x600_html",
+    "display_970x250_html",
+    # JS format
+    "display_js",
+    # VAST formats
+    "video_vast",
+    "video_vast_30s",
+    # Native
+    "native_content",
+]
+
 
 class TestClickTrackerAsset:
     """Tests for the click_tracker asset helper function."""
@@ -39,33 +67,6 @@ class TestClickTrackerAsset:
 class TestClickTrackerFormatCoverage:
     """Tests for click_tracker coverage across formats."""
 
-    EXPECTED_FORMATS_WITH_CLICK_TRACKER = [
-        # Image formats
-        "display_image",
-        "display_300x250_image",
-        "display_728x90_image",
-        "display_320x50_image",
-        "display_160x600_image",
-        "display_336x280_image",
-        "display_300x600_image",
-        "display_970x250_image",
-        # HTML formats
-        "display_html",
-        "display_300x250_html",
-        "display_728x90_html",
-        "display_160x600_html",
-        "display_336x280_html",
-        "display_300x600_html",
-        "display_970x250_html",
-        # JS format
-        "display_js",
-        # VAST formats
-        "video_vast",
-        "video_vast_30s",
-        # Native
-        "native_content",
-    ]
-
     def test_click_tracker_format_count(self):
         """Verify exactly 19 formats have click_tracker."""
         count = sum(
@@ -79,7 +80,7 @@ class TestClickTrackerFormatCoverage:
         """Verify click_tracker is on all expected formats."""
         for fmt in STANDARD_FORMATS:
             asset_ids = [a.asset_id for a in (fmt.assets or [])]
-            if fmt.format_id.id in self.EXPECTED_FORMATS_WITH_CLICK_TRACKER:
+            if fmt.format_id.id in EXPECTED_FORMATS_WITH_CLICK_TRACKER:
                 assert "click_tracker" in asset_ids, (
                     f"{fmt.format_id.id} should have click_tracker"
                 )
@@ -89,7 +90,7 @@ class TestClickTrackerFormatCoverage:
         for fmt in STANDARD_FORMATS:
             asset_ids = [a.asset_id for a in (fmt.assets or [])]
             if "click_tracker" in asset_ids:
-                assert fmt.format_id.id in self.EXPECTED_FORMATS_WITH_CLICK_TRACKER, (
+                assert fmt.format_id.id in EXPECTED_FORMATS_WITH_CLICK_TRACKER, (
                     f"{fmt.format_id.id} has click_tracker but is not in expected list"
                 )
 
