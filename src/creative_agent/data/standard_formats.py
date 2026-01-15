@@ -173,6 +173,7 @@ GENERATIVE_FORMATS = [
                 requirements={"description": "Text prompt describing the desired creative"},
             ),
             create_impression_tracker_asset(),
+            create_click_tracker_asset(),
         ],
     ),
     # Concrete formats for backward compatibility
@@ -198,6 +199,7 @@ GENERATIVE_FORMATS = [
                 requirements={"description": "Text prompt describing the desired creative"},
             ),
             create_impression_tracker_asset(),
+            create_click_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -222,6 +224,7 @@ GENERATIVE_FORMATS = [
                 requirements={"description": "Text prompt describing the desired creative"},
             ),
             create_impression_tracker_asset(),
+            create_click_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -246,6 +249,7 @@ GENERATIVE_FORMATS = [
                 requirements={"description": "Text prompt describing the desired creative"},
             ),
             create_impression_tracker_asset(),
+            create_click_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -270,6 +274,7 @@ GENERATIVE_FORMATS = [
                 requirements={"description": "Text prompt describing the desired creative"},
             ),
             create_impression_tracker_asset(),
+            create_click_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -294,6 +299,7 @@ GENERATIVE_FORMATS = [
                 requirements={"description": "Text prompt describing the desired creative"},
             ),
             create_impression_tracker_asset(),
+            create_click_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -318,6 +324,7 @@ GENERATIVE_FORMATS = [
                 requirements={"description": "Text prompt describing the desired creative"},
             ),
             create_impression_tracker_asset(),
+            create_click_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -342,6 +349,7 @@ GENERATIVE_FORMATS = [
                 requirements={"description": "Text prompt describing the desired creative"},
             ),
             create_impression_tracker_asset(),
+            create_click_tracker_asset(),
         ],
     ),
 ]

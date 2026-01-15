@@ -7,6 +7,15 @@ from creative_agent.data.standard_formats import (
 
 # Expected formats that should have click_tracker
 EXPECTED_FORMATS_WITH_CLICK_TRACKER = [
+    # Generative formats
+    "display_generative",
+    "display_300x250_generative",
+    "display_728x90_generative",
+    "display_320x50_generative",
+    "display_160x600_generative",
+    "display_336x280_generative",
+    "display_300x600_generative",
+    "display_970x250_generative",
     # Image formats
     "display_image",
     "display_300x250_image",
@@ -68,9 +77,9 @@ class TestClickTrackerFormatCoverage:
     """Tests for click_tracker coverage across formats."""
 
     def test_click_tracker_format_count(self):
-        """Verify exactly 19 formats have click_tracker."""
+        """Verify exactly 27 formats have click_tracker."""
         count = sum(1 for fmt in STANDARD_FORMATS if "click_tracker" in [a.asset_id for a in (fmt.assets or [])])
-        assert count == 19
+        assert count == 27
 
     def test_click_tracker_on_expected_formats(self):
         """Verify click_tracker is on all expected formats."""
