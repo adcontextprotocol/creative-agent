@@ -83,6 +83,23 @@ def create_impression_tracker_asset() -> LibAssets:
     )
 
 
+def create_click_tracker_asset() -> LibAssets:
+    """Create an optional click tracker asset for 3rd party tracking.
+
+    This creates a URL asset with url_type='tracker_redirect' that can be used
+    for third-party click tracking redirects.
+    """
+    return create_asset(
+        asset_id="click_tracker",
+        asset_type=AssetType.url,
+        required=False,
+        requirements={
+            "url_type": "tracker_redirect",
+            "description": "3rd party click tracking redirect URL",
+        },
+    )
+
+
 def create_fixed_render(width: int, height: int, role: str = "primary") -> LibRender:
     """Create a render with fixed dimensions (non-responsive).
 
@@ -156,6 +173,7 @@ GENERATIVE_FORMATS = [
                 requirements={"description": "Text prompt describing the desired creative"},
             ),
             create_impression_tracker_asset(),
+            create_click_tracker_asset(),
         ],
     ),
     # Concrete formats for backward compatibility
@@ -181,6 +199,7 @@ GENERATIVE_FORMATS = [
                 requirements={"description": "Text prompt describing the desired creative"},
             ),
             create_impression_tracker_asset(),
+            create_click_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -205,6 +224,7 @@ GENERATIVE_FORMATS = [
                 requirements={"description": "Text prompt describing the desired creative"},
             ),
             create_impression_tracker_asset(),
+            create_click_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -229,6 +249,7 @@ GENERATIVE_FORMATS = [
                 requirements={"description": "Text prompt describing the desired creative"},
             ),
             create_impression_tracker_asset(),
+            create_click_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -253,6 +274,7 @@ GENERATIVE_FORMATS = [
                 requirements={"description": "Text prompt describing the desired creative"},
             ),
             create_impression_tracker_asset(),
+            create_click_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -277,6 +299,7 @@ GENERATIVE_FORMATS = [
                 requirements={"description": "Text prompt describing the desired creative"},
             ),
             create_impression_tracker_asset(),
+            create_click_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -301,6 +324,7 @@ GENERATIVE_FORMATS = [
                 requirements={"description": "Text prompt describing the desired creative"},
             ),
             create_impression_tracker_asset(),
+            create_click_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -325,6 +349,7 @@ GENERATIVE_FORMATS = [
                 requirements={"description": "Text prompt describing the desired creative"},
             ),
             create_impression_tracker_asset(),
+            create_click_tracker_asset(),
         ],
     ),
 ]
@@ -386,6 +411,7 @@ VIDEO_FORMATS = [
                 asset_type=AssetType.vast,
                 required=True,
             ),
+            create_click_tracker_asset(),
         ],
     ),
     # Concrete formats for backward compatibility
@@ -444,6 +470,7 @@ VIDEO_FORMATS = [
                     "description": "VAST 4.x compatible tag",
                 },
             ),
+            create_click_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -605,6 +632,7 @@ DISPLAY_IMAGE_FORMATS = [
                 },
             ),
             create_impression_tracker_asset(),
+            create_click_tracker_asset(),
         ],
     ),
     # Concrete formats for backward compatibility
@@ -636,6 +664,7 @@ DISPLAY_IMAGE_FORMATS = [
                 },
             ),
             create_impression_tracker_asset(),
+            create_click_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -663,6 +692,7 @@ DISPLAY_IMAGE_FORMATS = [
                 required=True,
             ),
             create_impression_tracker_asset(),
+            create_click_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -690,6 +720,7 @@ DISPLAY_IMAGE_FORMATS = [
                 required=True,
             ),
             create_impression_tracker_asset(),
+            create_click_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -717,6 +748,7 @@ DISPLAY_IMAGE_FORMATS = [
                 required=True,
             ),
             create_impression_tracker_asset(),
+            create_click_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -744,6 +776,7 @@ DISPLAY_IMAGE_FORMATS = [
                 required=True,
             ),
             create_impression_tracker_asset(),
+            create_click_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -771,6 +804,7 @@ DISPLAY_IMAGE_FORMATS = [
                 required=True,
             ),
             create_impression_tracker_asset(),
+            create_click_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -798,6 +832,7 @@ DISPLAY_IMAGE_FORMATS = [
                 required=True,
             ),
             create_impression_tracker_asset(),
+            create_click_tracker_asset(),
         ],
     ),
 ]
@@ -823,6 +858,7 @@ DISPLAY_HTML_FORMATS = [
                 },
             ),
             create_impression_tracker_asset(),
+            create_click_tracker_asset(),
         ],
     ),
     # Concrete formats for backward compatibility
@@ -846,6 +882,7 @@ DISPLAY_HTML_FORMATS = [
                 },
             ),
             create_impression_tracker_asset(),
+            create_click_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -867,6 +904,7 @@ DISPLAY_HTML_FORMATS = [
                 },
             ),
             create_impression_tracker_asset(),
+            create_click_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -888,6 +926,7 @@ DISPLAY_HTML_FORMATS = [
                 },
             ),
             create_impression_tracker_asset(),
+            create_click_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -909,6 +948,7 @@ DISPLAY_HTML_FORMATS = [
                 },
             ),
             create_impression_tracker_asset(),
+            create_click_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -930,6 +970,7 @@ DISPLAY_HTML_FORMATS = [
                 },
             ),
             create_impression_tracker_asset(),
+            create_click_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -951,6 +992,7 @@ DISPLAY_HTML_FORMATS = [
                 },
             ),
             create_impression_tracker_asset(),
+            create_click_tracker_asset(),
         ],
     ),
 ]
@@ -973,6 +1015,7 @@ DISPLAY_JS_FORMATS = [
                 required=True,
             ),
             create_impression_tracker_asset(),
+            create_click_tracker_asset(),
         ],
     ),
 ]
@@ -1093,6 +1136,7 @@ NATIVE_FORMATS = [
                 },
             ),
             create_impression_tracker_asset(),
+            create_click_tracker_asset(),
         ],
     ),
 ]
