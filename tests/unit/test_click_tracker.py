@@ -69,11 +69,7 @@ class TestClickTrackerFormatCoverage:
 
     def test_click_tracker_format_count(self):
         """Verify exactly 19 formats have click_tracker."""
-        count = sum(
-            1
-            for fmt in STANDARD_FORMATS
-            if "click_tracker" in [a.asset_id for a in (fmt.assets or [])]
-        )
+        count = sum(1 for fmt in STANDARD_FORMATS if "click_tracker" in [a.asset_id for a in (fmt.assets or [])])
         assert count == 19
 
     def test_click_tracker_on_expected_formats(self):
@@ -81,9 +77,7 @@ class TestClickTrackerFormatCoverage:
         for fmt in STANDARD_FORMATS:
             asset_ids = [a.asset_id for a in (fmt.assets or [])]
             if fmt.format_id.id in EXPECTED_FORMATS_WITH_CLICK_TRACKER:
-                assert "click_tracker" in asset_ids, (
-                    f"{fmt.format_id.id} should have click_tracker"
-                )
+                assert "click_tracker" in asset_ids, f"{fmt.format_id.id} should have click_tracker"
 
     def test_click_tracker_only_on_expected_formats(self):
         """Verify click_tracker is only on formats in the expected list."""
@@ -107,6 +101,4 @@ class TestClickTrackerFormatCoverage:
             if not any(t in fmt_type for t in non_clickable_types):
                 continue
 
-            assert "click_tracker" not in asset_ids, (
-                f"{fmt.format_id.id} ({fmt_type}) should not have click_tracker"
-            )
+            assert "click_tracker" not in asset_ids, f"{fmt.format_id.id} ({fmt_type}) should not have click_tracker"
