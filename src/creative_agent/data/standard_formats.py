@@ -403,6 +403,7 @@ VIDEO_FORMATS = [
                 asset_type=AssetType.vast,
                 required=True,
             ),
+            create_click_tracker_asset(),
         ],
     ),
     # Concrete formats for backward compatibility
@@ -461,6 +462,7 @@ VIDEO_FORMATS = [
                     "description": "VAST 4.x compatible tag",
                 },
             ),
+            create_click_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -848,6 +850,7 @@ DISPLAY_HTML_FORMATS = [
                 },
             ),
             create_impression_tracker_asset(),
+            create_click_tracker_asset(),
         ],
     ),
     # Concrete formats for backward compatibility
@@ -871,6 +874,7 @@ DISPLAY_HTML_FORMATS = [
                 },
             ),
             create_impression_tracker_asset(),
+            create_click_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -892,6 +896,7 @@ DISPLAY_HTML_FORMATS = [
                 },
             ),
             create_impression_tracker_asset(),
+            create_click_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -913,6 +918,7 @@ DISPLAY_HTML_FORMATS = [
                 },
             ),
             create_impression_tracker_asset(),
+            create_click_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -934,6 +940,7 @@ DISPLAY_HTML_FORMATS = [
                 },
             ),
             create_impression_tracker_asset(),
+            create_click_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -955,6 +962,7 @@ DISPLAY_HTML_FORMATS = [
                 },
             ),
             create_impression_tracker_asset(),
+            create_click_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -976,6 +984,7 @@ DISPLAY_HTML_FORMATS = [
                 },
             ),
             create_impression_tracker_asset(),
+            create_click_tracker_asset(),
         ],
     ),
 ]
@@ -998,6 +1007,7 @@ DISPLAY_JS_FORMATS = [
                 required=True,
             ),
             create_impression_tracker_asset(),
+            create_click_tracker_asset(),
         ],
     ),
 ]
