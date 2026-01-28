@@ -85,15 +85,15 @@ class BaseRenderer(ABC):
             Dictionary mapping asset_id to asset_type string
         """
         asset_type_map = {}
-        if hasattr(format_obj, "assets_required") and format_obj.assets_required:
-            for required_asset in format_obj.assets_required:
+        if hasattr(format_obj, "assets") and format_obj.assets:
+            for asset in format_obj.assets:
                 # Handle both dict and object access
-                if isinstance(required_asset, dict):
-                    asset_id = required_asset.get("asset_id")
-                    asset_type = required_asset.get("asset_type")
+                if isinstance(asset, dict):
+                    asset_id = asset.get("asset_id")
+                    asset_type = asset.get("asset_type")
                 else:
-                    asset_id = getattr(required_asset, "asset_id", None)
-                    asset_type = getattr(required_asset, "asset_type", None)
+                    asset_id = getattr(asset, "asset_id", None)
+                    asset_type = getattr(asset, "asset_type", None)
 
                 if asset_id and asset_type:
                     # Handle enum or string asset_type

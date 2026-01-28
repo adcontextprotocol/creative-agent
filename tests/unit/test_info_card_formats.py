@@ -1,6 +1,6 @@
 """Tests for info card format definitions."""
 
-from adcp import FormatId
+from adcp import FormatId, get_required_assets
 
 from creative_agent.data.format_types import AssetType, Type
 from creative_agent.data.standard_formats import AGENT_URL, INFO_CARD_FORMATS, filter_formats
@@ -95,12 +95,13 @@ class TestProductCardStandard:
         assert fmt.assets
         assert len(fmt.assets) == 9  # 8 original + impression_tracker
 
-        # Check required assets are in assets_required (backward compatibility)
-        assert fmt.assets_required
-        assert len(fmt.assets_required) == 3  # Only required=True assets
+        # Check required assets
+        required_assets = get_required_assets(fmt)
+        assert required_assets
+        assert len(required_assets) == 3  # Only required=True assets
 
-        # Check required asset ids in assets_required
-        required_asset_ids = {get_asset_attr(asset, "asset_id") for asset in fmt.assets_required}
+        # Check required asset ids
+        required_asset_ids = {get_asset_attr(asset, "asset_id") for asset in required_assets}
         assert "product_image" in required_asset_ids
         assert "product_name" in required_asset_ids
         assert "product_description" in required_asset_ids
@@ -114,7 +115,7 @@ class TestProductCardStandard:
         assert asset_type_map["product_description"] == "text"
         assert asset_type_map["impression_tracker"] == "url"
 
-        # Check optional assets are in assets but not in assets_required
+        # Check optional assets are in assets but not required
         optional_asset_ids = {
             get_asset_attr(asset, "asset_id") for asset in fmt.assets if not get_asset_attr(asset, "required")
         }
@@ -149,12 +150,13 @@ class TestProductCardDetailed:
         assert fmt.assets
         assert len(fmt.assets) == 9  # 8 original + impression_tracker
 
-        # Check required assets are in assets_required (backward compatibility)
-        assert fmt.assets_required
-        assert len(fmt.assets_required) == 3  # Only required=True assets
+        # Check required assets
+        required_assets = get_required_assets(fmt)
+        assert required_assets
+        assert len(required_assets) == 3  # Only required=True assets
 
-        # Check required asset ids in assets_required
-        required_asset_ids = {get_asset_attr(asset, "asset_id") for asset in fmt.assets_required}
+        # Check required asset ids
+        required_asset_ids = {get_asset_attr(asset, "asset_id") for asset in required_assets}
         assert "product_image" in required_asset_ids
         assert "product_name" in required_asset_ids
         assert "product_description" in required_asset_ids
@@ -168,7 +170,7 @@ class TestProductCardDetailed:
         assert asset_type_map["product_description"] == "text"
         assert asset_type_map["impression_tracker"] == "url"
 
-        # Check optional assets are in assets but not in assets_required
+        # Check optional assets are in assets but not required
         optional_asset_ids = {
             get_asset_attr(asset, "asset_id") for asset in fmt.assets if not get_asset_attr(asset, "required")
         }
@@ -198,9 +200,10 @@ class TestFormatCardStandard:
         format_id = FormatId(agent_url=AGENT_URL, id="format_card_standard")
         results = filter_formats(format_ids=[format_id])
         fmt = results[0]
-        assert fmt.assets_required
-        assert len(fmt.assets_required) == 1
-        asset = fmt.assets_required[0]
+        required_assets = get_required_assets(fmt)
+        assert required_assets
+        assert len(required_assets) == 1
+        asset = required_assets[0]
         assert get_asset_attr(asset, "asset_id") == "format"
         assert get_asset_attr(asset, "asset_type") == "text"
         assert get_asset_attr(asset, "required") is True
@@ -228,9 +231,10 @@ class TestFormatCardDetailed:
         format_id = FormatId(agent_url=AGENT_URL, id="format_card_detailed")
         results = filter_formats(format_ids=[format_id])
         fmt = results[0]
-        assert fmt.assets_required
-        assert len(fmt.assets_required) == 1
-        asset = fmt.assets_required[0]
+        required_assets = get_required_assets(fmt)
+        assert required_assets
+        assert len(required_assets) == 1
+        asset = required_assets[0]
         assert get_asset_attr(asset, "asset_id") == "format"
         assert get_asset_attr(asset, "asset_type") == "text"
         assert get_asset_attr(asset, "required") is True

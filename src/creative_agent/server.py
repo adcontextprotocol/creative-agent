@@ -714,16 +714,12 @@ Description: {output_fmt.description}
                     format_spec += f"Dimensions: {int(render.dimensions.width)}x{int(render.dimensions.height)}\n"
 
             format_spec += "\nRequired Assets:\n"
-            if output_fmt.assets_required:
-                for asset_req in output_fmt.assets_required:
-                    # assets_required are always Pydantic models (adcp 2.2.0+)
-                    if hasattr(asset_req, "asset_group_id"):
-                        # Repeatable group (AssetsRequired1)
-                        format_spec += f"- {asset_req.asset_group_id} (repeatable group)\n"
-                    elif hasattr(asset_req, "asset_id"):
-                        # Individual asset (AssetsRequired)
-                        asset_type = getattr(asset_req, "asset_type", "unknown")
-                        format_spec += f"- {asset_req.asset_id} ({asset_type})\n"
+            required_assets = get_required_assets(output_fmt)
+            for asset_req in required_assets:
+                asset_id = getattr(asset_req, "asset_id", None)
+                asset_type = getattr(asset_req, "asset_type", "unknown")
+                if asset_id:
+                    format_spec += f"- {asset_id} ({asset_type})\n"
 
             # Add brand context if provided
             brand_context = ""

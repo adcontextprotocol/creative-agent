@@ -5,7 +5,7 @@
 
 from typing import Any
 
-from adcp import FormatCategory, FormatId
+from adcp import FormatCategory, FormatId, get_required_assets
 from adcp.types.generated_poc.core.format import Assets as LibAssets
 from adcp.types.generated_poc.core.format import AssetsRequired as LibAssetsRequired
 from adcp.types.generated_poc.core.format import Renders as LibRender
@@ -1716,8 +1716,10 @@ def filter_formats(
         results = [
             fmt
             for fmt in results
-            if fmt.assets_required
-            and all(any(has_asset_type(req, asset_type) for req in fmt.assets_required) for asset_type in asset_types)
+            if get_required_assets(fmt)
+            and all(
+                any(has_asset_type(req, asset_type) for req in get_required_assets(fmt)) for asset_type in asset_types
+            )
         ]
 
     return results

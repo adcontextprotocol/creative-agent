@@ -8,7 +8,7 @@ Tests parameter validation for template formats including:
 """
 
 import pytest
-from adcp import FormatId
+from adcp import FormatId, get_required_assets
 from adcp.types.generated_poc.enums.format_id_parameter import FormatIdParameter
 from pydantic import AnyUrl, ValidationError
 
@@ -112,7 +112,7 @@ class TestParameterExtraction:
         fmt = get_format_by_id(template_format_id)
 
         assert fmt is not None
-        assert fmt.assets_required is not None
+        assert get_required_assets(fmt) is not None
 
         # Template format accepts dimensions parameter
         assert FormatIdParameter.dimensions in getattr(fmt, "accepts_parameters", [])
@@ -131,7 +131,7 @@ class TestParameterExtraction:
         fmt = get_format_by_id(template_format_id)
 
         assert fmt is not None
-        assert fmt.assets_required is not None
+        assert get_required_assets(fmt) is not None
 
         # Template format accepts duration parameter
         assert FormatIdParameter.duration in getattr(fmt, "accepts_parameters", [])
@@ -161,7 +161,7 @@ class TestAssetParameterMatching:
         format_id = FormatId(agent_url=AnyUrl(str(AGENT_URL)), id="display_300x250_image")
 
         fmt = get_format_by_id(format_id)
-        image_asset = next(a for a in fmt.assets_required if a.asset_id == "banner_image")
+        image_asset = next(a for a in get_required_assets(fmt) if a.asset_id == "banner_image")
 
         requirements = getattr(image_asset, "requirements", {})
 
