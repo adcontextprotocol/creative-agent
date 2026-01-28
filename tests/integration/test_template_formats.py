@@ -6,7 +6,7 @@ instantiated with specific values, avoiding the need for hundreds of concrete fo
 
 import json
 
-from adcp import FormatId, ListCreativeFormatsResponse
+from adcp import FormatId, ListCreativeFormatsResponse, get_required_assets
 from adcp.types.generated_poc.enums.format_id_parameter import FormatIdParameter
 from pydantic import AnyUrl
 
@@ -215,19 +215,20 @@ class TestTemplateFormatLookup:
 class TestTemplateAssetRequirements:
     """Test asset requirements for template vs concrete formats."""
 
-    def test_template_formats_have_assets_required(self):
-        """Template formats should have assets_required defined."""
+    def test_template_formats_have_required_assets(self):
+        """Template formats should have required assets defined."""
         # Get display_image template
         format_id = FormatId(agent_url=AnyUrl(str(AGENT_URL)), id="display_image")
         fmt = get_format_by_id(format_id)
 
         assert fmt is not None
-        assert fmt.assets_required is not None
-        assert len(fmt.assets_required) > 0
+        required_assets = get_required_assets(fmt)
+        assert required_assets is not None
+        assert len(required_assets) > 0
 
         # Find the image asset
         image_asset = None
-        for asset in fmt.assets_required:
+        for asset in required_assets:
             if asset.asset_id == "banner_image":
                 image_asset = asset
                 break
@@ -241,12 +242,13 @@ class TestTemplateAssetRequirements:
         fmt = get_format_by_id(format_id)
 
         assert fmt is not None
-        assert fmt.assets_required is not None
-        assert len(fmt.assets_required) > 0
+        required_assets = get_required_assets(fmt)
+        assert required_assets is not None
+        assert len(required_assets) > 0
 
         # Find the image asset
         image_asset = None
-        for asset in fmt.assets_required:
+        for asset in required_assets:
             if asset.asset_id == "banner_image":
                 image_asset = asset
                 break

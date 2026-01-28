@@ -15,6 +15,7 @@ from adcp import (
     FormatId,
     ListCreativeFormatsResponse,
     PreviewCreativeResponse,
+    get_required_assets,
 )
 
 from creative_agent import server
@@ -118,16 +119,16 @@ class TestListCreativeFormatsResponseFormat:
             f"Response must have required keys {expected_keys}, got {actual_keys}"
         )
 
-    def test_assets_required_have_asset_id(self):
-        """Per ADCP PR #135, all AssetsRequired must have asset_id field."""
+    def test_assets_have_asset_id(self):
+        """Per ADCP PR #135, all assets must have asset_id field."""
         result = list_creative_formats()
         response = ListCreativeFormatsResponse.model_validate(result.structured_content)
 
-        formats_with_assets = [fmt for fmt in response.formats if fmt.assets_required]
-        assert len(formats_with_assets) > 0, "Should have formats with assets_required"
+        formats_with_assets = [fmt for fmt in response.formats if get_required_assets(fmt)]
+        assert len(formats_with_assets) > 0, "Should have formats with required assets"
 
         for fmt in formats_with_assets:
-            for asset in fmt.assets_required:
+            for asset in get_required_assets(fmt):
                 # Access asset_id - will raise AttributeError if missing
                 asset_dict = asset.model_dump() if hasattr(asset, "model_dump") else dict(asset)
                 assert "asset_id" in asset_dict, f"Format {fmt.format_id.id} has asset without asset_id: {asset_dict}"

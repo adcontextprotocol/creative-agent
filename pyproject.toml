@@ -16,7 +16,7 @@ dependencies = [
     "boto3>=1.35.0",
     "markdown>=3.6",
     "bleach>=6.3.0",
-    "adcp>=2.18.0",  # Official ADCP Python client with template format support
+    "adcp>=3.1.0",  # Official ADCP Python client with template format support
 ]
 
 [project.scripts]
