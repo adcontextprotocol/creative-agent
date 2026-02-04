@@ -1492,9 +1492,6 @@ STANDARD_FORMATS = (
 )
 
 
-# STANDARD_FORMATS is already defined above with all format definitions
-
-
 def get_format_by_id(format_id: FormatId) -> CreativeFormat | None:
     """Get format by FormatId object.
 

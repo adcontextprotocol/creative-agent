@@ -842,7 +842,7 @@ def get_adcp_capabilities(
     """Get the ADCP capabilities supported by this agent.
 
     Returns information about the ADCP protocol version and which domain protocols
-    (media_buy, signals, governance, sponsored_intelligence) this agent supports.
+    (e.g., creative, media_buy, signals) this agent supports.
 
     Args:
         protocols: Optional list of specific protocols to query capabilities for.

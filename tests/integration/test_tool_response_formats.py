@@ -463,3 +463,11 @@ class TestGetAdcpCapabilitiesResponseFormat:
         # Should still have required fields
         assert response.adcp is not None
         assert response.supported_protocols is not None
+
+    def test_protocols_filter_with_unsupported_protocol_returns_error(self):
+        """If protocols param contains only unsupported protocols, returns error."""
+        result = get_adcp_capabilities(protocols=["media_buy"])  # This agent only supports creative
+
+        # ADCP schema requires at least one protocol, so filtering to unsupported
+        # protocols results in a validation error
+        assert "error" in result.structured_content
