@@ -17,6 +17,7 @@ from adcp import (
     PreviewCreativeResponse,
     get_required_assets,
 )
+from adcp.types import GetAdcpCapabilitiesResponse
 
 from creative_agent import server
 from creative_agent.data.standard_formats import AGENT_URL
@@ -25,6 +26,7 @@ from creative_agent.schemas import CreativeManifest
 # Get actual functions from FastMCP wrappers
 list_creative_formats = server.list_creative_formats.fn
 preview_creative = server.preview_creative.fn
+get_adcp_capabilities = server.get_adcp_capabilities.fn
 
 
 class TestListCreativeFormatsResponseFormat:
@@ -133,6 +135,26 @@ class TestListCreativeFormatsResponseFormat:
                 asset_dict = asset.model_dump() if hasattr(asset, "model_dump") else dict(asset)
                 assert "asset_id" in asset_dict, f"Format {fmt.format_id.id} has asset without asset_id: {asset_dict}"
                 assert asset_dict["asset_id"], f"Format {fmt.format_id.id} has empty asset_id: {asset_dict}"
+
+    def test_backward_compat_assets_required_field(self):
+        """For 2.5.x client compatibility, formats must include assets_required field."""
+        result = list_creative_formats()
+        result_dict = result.structured_content
+
+        # Find a format that has assets
+        formats_with_assets = [f for f in result_dict["formats"] if f.get("assets")]
+        assert len(formats_with_assets) > 0, "Should have formats with assets"
+
+        for fmt in formats_with_assets:
+            # assets_required must be present for backward compatibility
+            assert "assets_required" in fmt, (
+                f"Format {fmt.get('format_id', {}).get('id')} missing assets_required for 2.5.x compatibility"
+            )
+            # assets_required should only contain assets where required=True
+            for asset in fmt["assets_required"]:
+                assert asset.get("required", False) is True, (
+                    f"assets_required should only contain required assets, got: {asset}"
+                )
 
     def test_accepts_format_ids_as_dicts(self):
         """Test that list_creative_formats accepts format_ids as FormatId objects (dicts)."""
@@ -333,3 +355,119 @@ class TestToolResponseConsistency:
                     pytest.fail(f"Found double-encoded JSON in field '{key}': {value[:100]}")
                 except json.JSONDecodeError:
                     pass
+
+
+class TestGetAdcpCapabilitiesResponseFormat:
+    """Test that get_adcp_capabilities returns valid ADCP GetAdcpCapabilitiesResponse.
+
+    Written by reading the ADCP spec - GetAdcpCapabilitiesResponse schema.
+    NOT by looking at server.py code.
+
+    Required fields per spec:
+    - adcp: object with major_versions array
+    - supported_protocols: array of protocol names (media_buy, signals, etc.)
+    """
+
+    def test_returns_tool_result_with_structured_content(self):
+        """Tool must return ToolResult with structured_content."""
+        result = get_adcp_capabilities()
+
+        # Verify ToolResult structure
+        assert hasattr(result, "content"), "Must return ToolResult with content"
+        assert hasattr(result, "structured_content"), "Must return ToolResult with structured_content"
+        assert result.content, "Content must not be empty"
+        assert result.structured_content, "Structured content must not be empty"
+
+        # Verify content is human-readable message
+        assert result.content[0].type == "text"
+        assert "capabilit" in result.content[0].text.lower(), "Content should mention capabilities"
+
+    def test_structured_content_matches_adcp_schema(self):
+        """Structured content must validate against GetAdcpCapabilitiesResponse schema."""
+        result = get_adcp_capabilities()
+
+        # Get structured_content (already a dict, no JSON parsing needed)
+        result_dict = result.structured_content
+
+        # This validates ALL fields, types, constraints per ADCP spec
+        response = GetAdcpCapabilitiesResponse.model_validate(result_dict)
+
+        # Verify required fields per spec
+        assert response.adcp is not None, "'adcp' field is required per ADCP spec"
+        assert response.supported_protocols is not None, "'supported_protocols' field is required per ADCP spec"
+
+    def test_adcp_field_structure(self):
+        """Per spec, adcp must have major_versions array with at least one version."""
+        result = get_adcp_capabilities()
+        response = GetAdcpCapabilitiesResponse.model_validate(result.structured_content)
+
+        assert response.adcp is not None, "adcp is required"
+        assert response.adcp.major_versions is not None, "adcp.major_versions is required"
+        assert isinstance(response.adcp.major_versions, list), "major_versions must be array"
+        assert len(response.adcp.major_versions) >= 1, "must have at least one major version"
+        # Version must be positive integer (may be wrapped in MajorVersion type)
+        for version in response.adcp.major_versions:
+            # Handle MajorVersion wrapper type that has .root attribute
+            version_int = version.root if hasattr(version, "root") else version
+            assert isinstance(version_int, int), f"major_version must be integer, got {type(version_int)}"
+            assert version_int >= 1, "major_version must be >= 1"
+
+    def test_supported_protocols_structure(self):
+        """Per spec, supported_protocols must be array of valid protocol names."""
+        result = get_adcp_capabilities()
+        response = GetAdcpCapabilitiesResponse.model_validate(result.structured_content)
+
+        assert isinstance(response.supported_protocols, list), "supported_protocols must be array"
+        assert len(response.supported_protocols) >= 1, "must support at least one protocol"
+
+        # Valid protocols per ADCP spec
+        valid_protocols = {"media_buy", "signals", "governance", "sponsored_intelligence", "creative"}
+        for protocol in response.supported_protocols:
+            # Handle both string and enum
+            protocol_str = protocol.value if hasattr(protocol, "value") else str(protocol)
+            assert protocol_str in valid_protocols, f"Invalid protocol: {protocol_str}"
+
+    def test_creative_agent_supports_creative_protocol(self):
+        """A creative agent must support the creative protocol."""
+        result = get_adcp_capabilities()
+        response = GetAdcpCapabilitiesResponse.model_validate(result.structured_content)
+
+        protocol_strs = [p.value if hasattr(p, "value") else str(p) for p in response.supported_protocols]
+        assert "creative" in protocol_strs, "Creative agent must support creative protocol"
+
+    def test_no_extra_wrapper_fields(self):
+        """Structured content must match ADCP schema exactly with no wrappers."""
+        result = get_adcp_capabilities()
+        result_dict = result.structured_content
+
+        # These are common bugs - wrapping valid response in extra structure
+        assert "result" not in result_dict or not isinstance(result_dict.get("result"), str), (
+            "structured_content must not have JSON string in 'result' field"
+        )
+        assert "data" not in result_dict or result_dict.get("data") != result_dict, (
+            "structured_content must not be wrapped in 'data' field"
+        )
+
+        # Top-level keys should include required schema keys
+        required_keys = {"adcp", "supported_protocols"}
+        actual_keys = set(result_dict.keys())
+        assert required_keys.issubset(actual_keys), (
+            f"Response must have required keys {required_keys}, got {actual_keys}"
+        )
+
+    def test_protocols_filter_works(self):
+        """If protocols param is provided, should filter to those protocols."""
+        result = get_adcp_capabilities(protocols=["creative"])
+
+        response = GetAdcpCapabilitiesResponse.model_validate(result.structured_content)
+        # Should still have required fields
+        assert response.adcp is not None
+        assert response.supported_protocols is not None
+
+    def test_protocols_filter_with_unsupported_protocol_returns_error(self):
+        """If protocols param contains only unsupported protocols, returns error."""
+        result = get_adcp_capabilities(protocols=["media_buy"])  # This agent only supports creative
+
+        # ADCP schema requires at least one protocol, so filtering to unsupported
+        # protocols results in a validation error
+        assert "error" in result.structured_content

@@ -7,7 +7,6 @@ from typing import Any
 
 from adcp import FormatCategory, FormatId, get_required_assets
 from adcp.types.generated_poc.core.format import Assets as LibAssets
-from adcp.types.generated_poc.core.format import AssetsRequired as LibAssetsRequired
 from adcp.types.generated_poc.core.format import Renders as LibRender
 from adcp.types.generated_poc.enums.format_id_parameter import FormatIdParameter
 from pydantic import AnyUrl
@@ -1491,39 +1490,6 @@ STANDARD_FORMATS = (
     + DOOH_FORMATS
     + INFO_CARD_FORMATS
 )
-
-
-def _backfill_deprecated_assets_required() -> list[CreativeFormat]:
-    """Backfill the deprecated assets_required field for backward compatibility.
-
-    The assets_required field is deprecated in adcp-client-python 2.18.0+ in favor
-    of the new assets field. This function derives assets_required from assets
-    using adcp's get_required_assets utility to maintain backward compatibility
-    with code that still uses assets_required.
-
-    Since Pydantic models are frozen, we rebuild them with the backfilled field.
-    """
-    from adcp import get_required_assets
-
-    rebuilt = []
-
-    for fmt in STANDARD_FORMATS:
-        if not fmt.assets:
-            rebuilt.append(fmt)
-            continue
-
-        # Use adcp utility to get required assets, then convert to AssetsRequired type
-        required_assets = get_required_assets(fmt)
-        fmt_dict = fmt.model_dump()
-        fmt_dict["assets_required"] = [LibAssetsRequired.model_validate(a.model_dump()) for a in required_assets]
-
-        rebuilt.append(CreativeFormat.model_validate(fmt_dict))
-
-    return rebuilt
-
-
-# Backfill deprecated assets_required field for backward compatibility
-STANDARD_FORMATS = _backfill_deprecated_assets_required()  # type: ignore[misc]
 
 
 def get_format_by_id(format_id: FormatId) -> CreativeFormat | None:
