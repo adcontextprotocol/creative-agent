@@ -9,7 +9,7 @@ from typing import Any
 from adcp import FormatId, get_optional_assets, get_required_assets
 from adcp.types import Capability, GetAdcpCapabilitiesResponse
 from adcp.types.generated_poc.media_buy.list_creative_formats_response import CreativeAgent
-from adcp.types.generated_poc.protocol.get_adcp_capabilities_response import Adcp, SupportedProtocol
+from adcp.types.generated_poc.protocol.get_adcp_capabilities_response import Adcp, MajorVersion, SupportedProtocol
 from fastmcp import FastMCP
 from fastmcp.tools.tool import ToolResult
 from mcp.types import TextContent
@@ -862,7 +862,7 @@ def get_adcp_capabilities(
 
         # Build response per ADCP spec
         response = GetAdcpCapabilitiesResponse(
-            adcp=Adcp(major_versions=[1]),  # ADCP v1
+            adcp=Adcp(major_versions=[MajorVersion(1)]),  # ADCP v1
             supported_protocols=supported,
         )
 
