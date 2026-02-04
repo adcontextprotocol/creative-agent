@@ -7,8 +7,9 @@ from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from adcp import FormatId, get_optional_assets, get_required_assets
-from adcp.types import Capability
+from adcp.types import Capability, GetAdcpCapabilitiesResponse
 from adcp.types.generated_poc.media_buy.list_creative_formats_response import CreativeAgent
+from adcp.types.generated_poc.protocol.get_adcp_capabilities_response import Adcp, SupportedProtocol
 from fastmcp import FastMCP
 from fastmcp.tools.tool import ToolResult
 from mcp.types import TextContent
@@ -185,6 +186,11 @@ def list_creative_formats(
 
         # Build human-readable format details for LLM consumption
         response_json = response.model_dump(mode="json", exclude_none=True)
+
+        # Add assets_required for backward compatibility with 2.5.x clients
+        for fmt_json in response_json.get("formats", []):
+            if fmt_json.get("assets"):
+                fmt_json["assets_required"] = [asset for asset in fmt_json["assets"] if asset.get("required", False)]
 
         if formats:
             format_details = [_format_to_human_readable(fmt) for fmt in formats]
@@ -826,6 +832,63 @@ Return ONLY the JSON manifest, no additional text."""
                 "error": error_msg,
                 "traceback": traceback.format_exc()[-500:],
             },
+        )
+
+
+@mcp.tool()
+def get_adcp_capabilities(
+    protocols: list[str] | None = None,
+) -> ToolResult:
+    """Get the ADCP capabilities supported by this agent.
+
+    Returns information about the ADCP protocol version and which domain protocols
+    (media_buy, signals, governance, sponsored_intelligence) this agent supports.
+
+    Args:
+        protocols: Optional list of specific protocols to query capabilities for.
+                   If omitted, returns capabilities for all supported protocols.
+
+    Returns:
+        ToolResult with human-readable message and structured ADCP capabilities data
+    """
+    try:
+        # This creative agent supports the creative protocol
+        # Note: ADCP library uses lowercase enum names (creative, not CREATIVE)
+        supported = [SupportedProtocol.creative]
+
+        # Filter to requested protocols if specified
+        if protocols:
+            supported = [p for p in supported if p.value in protocols]
+
+        # Build response per ADCP spec
+        response = GetAdcpCapabilitiesResponse(
+            adcp=Adcp(major_versions=[1]),  # ADCP v1
+            supported_protocols=supported,
+        )
+
+        response_json = response.model_dump(mode="json", exclude_none=True)
+
+        # Build human-readable message
+        protocol_names = [p.value for p in supported]
+        message = f"ADCP capabilities: supports {', '.join(protocol_names)} protocol(s), ADCP version 1"
+
+        return ToolResult(
+            content=[TextContent(type="text", text=message)],
+            structured_content=response_json,
+        )
+    except ValueError as e:
+        error_response = {"error": f"Invalid input: {e}"}
+        return ToolResult(
+            content=[TextContent(type="text", text=f"Error: Invalid input - {e}")],
+            structured_content=error_response,
+        )
+    except Exception as e:
+        import traceback
+
+        error_response = {"error": f"Server error: {e}", "traceback": traceback.format_exc()[-500:]}
+        return ToolResult(
+            content=[TextContent(type="text", text=f"Error: Server error - {e}")],
+            structured_content=error_response,
         )
 
 
