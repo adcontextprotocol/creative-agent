@@ -82,19 +82,19 @@ def create_impression_tracker_asset() -> LibAssets:
     )
 
 
-def create_click_tracker_asset() -> LibAssets:
-    """Create an optional click tracker asset for 3rd party tracking.
+def create_click_url_asset() -> LibAssets:
+    """Create a required clickthrough URL asset.
 
-    This creates a URL asset with url_type='tracker_redirect' that can be used
-    for third-party click tracking redirects.
+    This creates a URL asset with url_type='clickthrough' for the landing page
+    destination when users click on the ad.
     """
     return create_asset(
-        asset_id="click_tracker",
+        asset_id="click_url",
         asset_type=AssetType.url,
-        required=False,
+        required=True,
         requirements={
-            "url_type": "tracker_redirect",
-            "description": "3rd party click tracking redirect URL",
+            "url_type": "clickthrough",
+            "description": "Clickthrough destination URL",
         },
     )
 
@@ -172,7 +172,6 @@ GENERATIVE_FORMATS = [
                 requirements={"description": "Text prompt describing the desired creative"},
             ),
             create_impression_tracker_asset(),
-            create_click_tracker_asset(),
         ],
     ),
     # Concrete formats for backward compatibility
@@ -198,7 +197,6 @@ GENERATIVE_FORMATS = [
                 requirements={"description": "Text prompt describing the desired creative"},
             ),
             create_impression_tracker_asset(),
-            create_click_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -223,7 +221,6 @@ GENERATIVE_FORMATS = [
                 requirements={"description": "Text prompt describing the desired creative"},
             ),
             create_impression_tracker_asset(),
-            create_click_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -248,7 +245,6 @@ GENERATIVE_FORMATS = [
                 requirements={"description": "Text prompt describing the desired creative"},
             ),
             create_impression_tracker_asset(),
-            create_click_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -273,7 +269,6 @@ GENERATIVE_FORMATS = [
                 requirements={"description": "Text prompt describing the desired creative"},
             ),
             create_impression_tracker_asset(),
-            create_click_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -298,7 +293,6 @@ GENERATIVE_FORMATS = [
                 requirements={"description": "Text prompt describing the desired creative"},
             ),
             create_impression_tracker_asset(),
-            create_click_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -323,7 +317,6 @@ GENERATIVE_FORMATS = [
                 requirements={"description": "Text prompt describing the desired creative"},
             ),
             create_impression_tracker_asset(),
-            create_click_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -348,7 +341,6 @@ GENERATIVE_FORMATS = [
                 requirements={"description": "Text prompt describing the desired creative"},
             ),
             create_impression_tracker_asset(),
-            create_click_tracker_asset(),
         ],
     ),
 ]
@@ -410,7 +402,6 @@ VIDEO_FORMATS = [
                 asset_type=AssetType.vast,
                 required=True,
             ),
-            create_click_tracker_asset(),
         ],
     ),
     # Concrete formats for backward compatibility
@@ -469,7 +460,6 @@ VIDEO_FORMATS = [
                     "description": "VAST 4.x compatible tag",
                 },
             ),
-            create_click_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -622,16 +612,8 @@ DISPLAY_IMAGE_FORMATS = [
                     "acceptable_formats": ["jpg", "png", "gif", "webp"],
                 },
             ),
-            create_asset(
-                asset_id="click_url",
-                asset_type=AssetType.url,
-                required=True,
-                requirements={
-                    "description": "Clickthrough destination URL",
-                },
-            ),
+            create_click_url_asset(),
             create_impression_tracker_asset(),
-            create_click_tracker_asset(),
         ],
     ),
     # Concrete formats for backward compatibility
@@ -654,16 +636,8 @@ DISPLAY_IMAGE_FORMATS = [
                     "acceptable_formats": ["jpg", "png", "gif", "webp"],
                 },
             ),
-            create_asset(
-                asset_id="click_url",
-                asset_type=AssetType.url,
-                required=True,
-                requirements={
-                    "description": "Clickthrough destination URL",
-                },
-            ),
+            create_click_url_asset(),
             create_impression_tracker_asset(),
-            create_click_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -685,13 +659,8 @@ DISPLAY_IMAGE_FORMATS = [
                     "acceptable_formats": ["jpg", "png", "gif", "webp"],
                 },
             ),
-            create_asset(
-                asset_id="click_url",
-                asset_type=AssetType.url,
-                required=True,
-            ),
+            create_click_url_asset(),
             create_impression_tracker_asset(),
-            create_click_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -713,13 +682,8 @@ DISPLAY_IMAGE_FORMATS = [
                     "acceptable_formats": ["jpg", "png", "gif", "webp"],
                 },
             ),
-            create_asset(
-                asset_id="click_url",
-                asset_type=AssetType.url,
-                required=True,
-            ),
+            create_click_url_asset(),
             create_impression_tracker_asset(),
-            create_click_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -741,13 +705,8 @@ DISPLAY_IMAGE_FORMATS = [
                     "acceptable_formats": ["jpg", "png", "gif", "webp"],
                 },
             ),
-            create_asset(
-                asset_id="click_url",
-                asset_type=AssetType.url,
-                required=True,
-            ),
+            create_click_url_asset(),
             create_impression_tracker_asset(),
-            create_click_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -769,13 +728,8 @@ DISPLAY_IMAGE_FORMATS = [
                     "acceptable_formats": ["jpg", "png", "gif", "webp"],
                 },
             ),
-            create_asset(
-                asset_id="click_url",
-                asset_type=AssetType.url,
-                required=True,
-            ),
+            create_click_url_asset(),
             create_impression_tracker_asset(),
-            create_click_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -797,13 +751,8 @@ DISPLAY_IMAGE_FORMATS = [
                     "acceptable_formats": ["jpg", "png", "gif", "webp"],
                 },
             ),
-            create_asset(
-                asset_id="click_url",
-                asset_type=AssetType.url,
-                required=True,
-            ),
+            create_click_url_asset(),
             create_impression_tracker_asset(),
-            create_click_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -825,13 +774,8 @@ DISPLAY_IMAGE_FORMATS = [
                     "acceptable_formats": ["jpg", "png", "gif", "webp"],
                 },
             ),
-            create_asset(
-                asset_id="click_url",
-                asset_type=AssetType.url,
-                required=True,
-            ),
+            create_click_url_asset(),
             create_impression_tracker_asset(),
-            create_click_tracker_asset(),
         ],
     ),
 ]
@@ -857,7 +801,6 @@ DISPLAY_HTML_FORMATS = [
                 },
             ),
             create_impression_tracker_asset(),
-            create_click_tracker_asset(),
         ],
     ),
     # Concrete formats for backward compatibility
@@ -881,7 +824,6 @@ DISPLAY_HTML_FORMATS = [
                 },
             ),
             create_impression_tracker_asset(),
-            create_click_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -903,7 +845,6 @@ DISPLAY_HTML_FORMATS = [
                 },
             ),
             create_impression_tracker_asset(),
-            create_click_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -925,7 +866,6 @@ DISPLAY_HTML_FORMATS = [
                 },
             ),
             create_impression_tracker_asset(),
-            create_click_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -947,7 +887,6 @@ DISPLAY_HTML_FORMATS = [
                 },
             ),
             create_impression_tracker_asset(),
-            create_click_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -969,7 +908,6 @@ DISPLAY_HTML_FORMATS = [
                 },
             ),
             create_impression_tracker_asset(),
-            create_click_tracker_asset(),
         ],
     ),
     CreativeFormat(
@@ -991,7 +929,6 @@ DISPLAY_HTML_FORMATS = [
                 },
             ),
             create_impression_tracker_asset(),
-            create_click_tracker_asset(),
         ],
     ),
 ]
@@ -1014,7 +951,6 @@ DISPLAY_JS_FORMATS = [
                 required=True,
             ),
             create_impression_tracker_asset(),
-            create_click_tracker_asset(),
         ],
     ),
 ]
@@ -1118,14 +1054,7 @@ NATIVE_FORMATS = [
                     "description": "Author name for editorial context",
                 },
             ),
-            create_asset(
-                asset_id="click_url",
-                asset_type=AssetType.url,
-                required=True,
-                requirements={
-                    "description": "Landing page URL",
-                },
-            ),
+            create_click_url_asset(),
             create_asset(
                 asset_id="disclosure",
                 asset_type=AssetType.text,
@@ -1135,7 +1064,6 @@ NATIVE_FORMATS = [
                 },
             ),
             create_impression_tracker_asset(),
-            create_click_tracker_asset(),
         ],
     ),
 ]
