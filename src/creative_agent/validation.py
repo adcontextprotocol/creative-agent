@@ -373,55 +373,88 @@ def validate_manifest_assets(
     if not isinstance(assets, dict):
         return ["Manifest assets must be a dictionary"]
 
-    # Build a map of asset_id -> asset_type from format if provided
-    # Uses adcp utilities which handle both new `assets` and deprecated `assets_required` fields
-    asset_type_map = {}
+    # Build maps from format spec if provided:
+    #   asset_type_map: (asset_id or asset_group_id) -> content type string
+    #   group_counts:   asset_group_id -> (min_count, max_count)
+    asset_type_map: dict[str, str] = {}
+    group_counts: dict[str, tuple[int | None, int | None]] = {}
+
     if format_obj:
         from adcp import get_format_assets, get_required_assets
 
-        # Build asset type map from all format assets
         for asset in get_format_assets(format_obj):
             asset_id = getattr(asset, "asset_id", None)
             asset_type = getattr(asset, "asset_type", None)
-
             if asset_id and asset_type:
-                # Handle enum or string asset_type
-                if hasattr(asset_type, "value"):
-                    asset_type_map[asset_id] = asset_type.value
-                else:
-                    asset_type_map[asset_id] = str(asset_type)
+                asset_type_map[asset_id] = asset_type.value if hasattr(asset_type, "value") else str(asset_type)
+                continue
+
+            asset_group_id = getattr(asset, "asset_group_id", None)
+            if asset_group_id:
+                inner_assets = getattr(asset, "assets", [])
+                if inner_assets:
+                    inner_type = getattr(inner_assets[0], "asset_type", None)
+                    if inner_type:
+                        asset_type_map[asset_group_id] = (
+                            inner_type.value if hasattr(inner_type, "value") else str(inner_type)
+                        )
+                group_counts[asset_group_id] = (
+                    getattr(asset, "min_count", None),
+                    getattr(asset, "max_count", None),
+                )
 
         # Check required assets are present in manifest
         for required_asset in get_required_assets(format_obj):
-            asset_id = getattr(required_asset, "asset_id", None)
+            asset_id = getattr(required_asset, "asset_id", None) or getattr(required_asset, "asset_group_id", None)
             if asset_id and asset_id not in assets:
                 errors.append(f"Required asset missing: {asset_id}")
 
     # Validate each asset
     for asset_id, asset_data in assets.items():
-        # Get expected asset type from format spec
         expected_type = asset_type_map.get(asset_id)
 
-        if not expected_type:
-            # No format provided or asset not in format spec
-            # Try to infer type from asset data (for backward compatibility during transition)
-            if "url" in asset_data and "width" in asset_data and "height" in asset_data:
-                expected_type = "image"
-            elif "url" in asset_data and "duration_seconds" in asset_data:
-                expected_type = "video"  # or audio, hard to distinguish
-            elif "content" in asset_data:
-                expected_type = "text"  # could be html/js/css too
-            elif "url" in asset_data:
-                expected_type = "url"
-            else:
-                errors.append(
-                    f"Asset '{asset_id}': Cannot determine asset type (format not provided or asset_id not in format spec)"
-                )
-                continue
+        if isinstance(asset_data, list):
+            # Repeatable group: validate count constraints and each item
+            min_c, max_c = group_counts.get(asset_id, (None, None))
+            if min_c is not None and len(asset_data) < min_c:
+                errors.append(f"Asset '{asset_id}': requires at least {min_c} items, got {len(asset_data)}")
+            if max_c is not None and len(asset_data) > max_c:
+                errors.append(f"Asset '{asset_id}': allows at most {max_c} items, got {len(asset_data)}")
 
-        try:
-            validate_asset(asset_data, expected_type, check_remote_mime=check_remote_mime)
-        except AssetValidationError as e:
-            errors.append(f"Asset '{asset_id}': {e}")
+            for i, item in enumerate(asset_data):
+                if not isinstance(item, dict) or len(item) != 1:
+                    errors.append(
+                        f"Asset '{asset_id}[{i}]': each item must be a single-key dict like {{\"text\": {{...}}}}"
+                    )
+                    continue
+                item_type_key, item_data = next(iter(item.items()))
+                validate_type = expected_type or item_type_key
+                try:
+                    validate_asset(item_data, validate_type, check_remote_mime=check_remote_mime)
+                except AssetValidationError as e:
+                    errors.append(f"Asset '{asset_id}[{i}]': {e}")
+
+        else:
+            # Individual asset
+            if not expected_type:
+                # Try to infer type from asset data (for backward compatibility during transition)
+                if "url" in asset_data and "width" in asset_data and "height" in asset_data:
+                    expected_type = "image"
+                elif "url" in asset_data and "duration_seconds" in asset_data:
+                    expected_type = "video"  # or audio, hard to distinguish
+                elif "content" in asset_data:
+                    expected_type = "text"  # could be html/js/css too
+                elif "url" in asset_data:
+                    expected_type = "url"
+                else:
+                    errors.append(
+                        f"Asset '{asset_id}': Cannot determine asset type (format not provided or asset_id not in format spec)"
+                    )
+                    continue
+
+            try:
+                validate_asset(asset_data, expected_type, check_remote_mime=check_remote_mime)
+            except AssetValidationError as e:
+                errors.append(f"Asset '{asset_id}': {e}")
 
     return errors
