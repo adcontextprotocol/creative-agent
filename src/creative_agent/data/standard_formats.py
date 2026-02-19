@@ -5,8 +5,11 @@
 
 from typing import Any
 
+from adcp import AssetContentType as LibAssetType
 from adcp import FormatCategory, FormatId, get_required_assets
+from adcp.types.generated_poc.core.format import Asset as LibInnerAsset
 from adcp.types.generated_poc.core.format import Assets as LibAssets
+from adcp.types.generated_poc.core.format import Assets5 as LibAssetsGroup
 from adcp.types.generated_poc.core.format import Renders as LibRender
 from adcp.types.generated_poc.enums.format_id_parameter import FormatIdParameter
 from pydantic import AnyUrl
@@ -52,8 +55,6 @@ def create_asset(
     The library model automatically handles exclude_none serialization and
     includes the item_type discriminator for union types.
     """
-    from adcp import AssetContentType as LibAssetType
-
     lib_asset_type = LibAssetType(asset_type.value)
 
     return LibAssets(
@@ -62,6 +63,39 @@ def create_asset(
         required=required,
         requirements=requirements,
         item_type="individual",  # Required discriminator for union types
+    )
+
+
+def create_repeatable_group(
+    asset_group_id: str,
+    asset_type: AssetType,
+    required: bool,
+    min_count: int,
+    max_count: int,
+    requirements: dict[str, str | int | float | bool | list[str]] | None = None,
+) -> LibAssetsGroup:
+    """Create a repeatable group asset that allows multiple values of the same type.
+
+    Used for asset pools like headlines (up to 15) or images (up to 20), where
+    publishers pick the best combination for each placement.
+
+    Each group instance contains a single inner asset whose asset_id matches the
+    content type string (e.g. "text", "image", "video").
+    """
+    lib_asset_type = LibAssetType(asset_type.value)
+    inner = LibInnerAsset(
+        asset_id=asset_type.value,  # "text", "image", or "video" — inner id within each instance
+        asset_type=lib_asset_type,
+        required=True,
+        requirements=requirements,
+    )
+    return LibAssetsGroup(
+        asset_group_id=asset_group_id,
+        assets=[inner],
+        item_type="repeatable_group",
+        min_count=min_count,
+        max_count=max_count,
+        required=required,
     )
 
 
@@ -1406,9 +1440,164 @@ INFO_CARD_FORMATS = [
     ),
 ]
 
+# Universal Format - multi-channel asset pool
+# Publishers assemble from this pool into whatever placements they support.
+# No output_format_ids — this is a submission container, not a generative format.
+UNIVERSAL_FORMATS = [
+    CreativeFormat(
+        format_id=create_format_id("universal"),
+        name="Universal Creative",
+        type=FormatCategory.universal,
+        description=(
+            "Multi-channel asset pool. Provide headlines, descriptions, images, logos, videos, "
+            "and optional product catalog. Publishers assemble the right combination for each placement."
+        ),
+        supported_macros=COMMON_MACROS,
+        assets=[
+            # Text assets
+            # Single-value text assets
+            create_asset(
+                asset_id="brand_name",
+                asset_type=AssetType.text,
+                required=True,
+                requirements={"max_length": 25, "description": "Business or brand name"},
+            ),
+            create_asset(
+                asset_id="cta",
+                asset_type=AssetType.text,
+                required=False,
+                requirements={"max_length": 15, "description": "Call-to-action button text"},
+            ),
+            # Repeatable text asset pools
+            create_repeatable_group(
+                asset_group_id="headlines",
+                asset_type=AssetType.text,
+                required=True,
+                min_count=1,
+                max_count=15,
+                requirements={"max_length": 30, "description": "Short headline (max 30 chars)"},
+            ),
+            create_repeatable_group(
+                asset_group_id="long_headlines",
+                asset_type=AssetType.text,
+                required=False,
+                min_count=0,
+                max_count=5,
+                requirements={"max_length": 90, "description": "Long headline (max 90 chars)"},
+            ),
+            create_repeatable_group(
+                asset_group_id="descriptions",
+                asset_type=AssetType.text,
+                required=True,
+                min_count=1,
+                max_count=5,
+                requirements={"max_length": 90, "description": "Description (max 90 chars)"},
+            ),
+            # Repeatable image asset pools
+            create_repeatable_group(
+                asset_group_id="images_landscape",
+                asset_type=AssetType.image,
+                required=True,
+                min_count=1,
+                max_count=20,
+                requirements={
+                    "aspect_ratio": "1.91:1",
+                    "min_width": 600,
+                    "description": "Landscape image (1.91:1 ratio, min 600px wide)",
+                },
+            ),
+            create_repeatable_group(
+                asset_group_id="images_square",
+                asset_type=AssetType.image,
+                required=True,
+                min_count=1,
+                max_count=20,
+                requirements={
+                    "aspect_ratio": "1:1",
+                    "min_width": 300,
+                    "description": "Square image (min 300x300px)",
+                },
+            ),
+            create_repeatable_group(
+                asset_group_id="images_portrait",
+                asset_type=AssetType.image,
+                required=False,
+                min_count=0,
+                max_count=20,
+                requirements={
+                    "aspect_ratio": "4:5",
+                    "description": "Portrait image (4:5 ratio)",
+                },
+            ),
+            # Repeatable logo asset pools
+            create_repeatable_group(
+                asset_group_id="logos_square",
+                asset_type=AssetType.image,
+                required=False,
+                min_count=0,
+                max_count=5,
+                requirements={"aspect_ratio": "1:1", "description": "Square logo"},
+            ),
+            create_repeatable_group(
+                asset_group_id="logos_landscape",
+                asset_type=AssetType.image,
+                required=False,
+                min_count=0,
+                max_count=5,
+                requirements={"aspect_ratio": "4:1", "description": "Landscape logo"},
+            ),
+            # Repeatable video asset pools
+            create_repeatable_group(
+                asset_group_id="videos_landscape",
+                asset_type=AssetType.video,
+                required=False,
+                min_count=0,
+                max_count=15,
+                requirements={
+                    "aspect_ratio": "16:9",
+                    "description": "Landscape video (16:9, min 10s)",
+                },
+            ),
+            create_repeatable_group(
+                asset_group_id="videos_portrait",
+                asset_type=AssetType.video,
+                required=False,
+                min_count=0,
+                max_count=15,
+                requirements={
+                    "aspect_ratio": "9:16",
+                    "description": "Portrait/vertical video (9:16, min 10s) for Shorts, Reels, Stories",
+                },
+            ),
+            create_repeatable_group(
+                asset_group_id="videos_square",
+                asset_type=AssetType.video,
+                required=False,
+                min_count=0,
+                max_count=5,
+                requirements={
+                    "aspect_ratio": "1:1",
+                    "description": "Square video (1:1)",
+                },
+            ),
+            # Product catalog — for retail/e-commerce advertisers
+            create_asset(
+                asset_id="promoted_offerings",
+                asset_type=AssetType.promoted_offerings,
+                required=False,
+                requirements={"description": "Product catalog and brand manifest for retail advertisers"},
+            ),
+            # Tracking
+            create_impression_tracker_asset(),
+            create_click_url_asset(),
+        ],
+    ),
+]
+
 # Combine all formats
 STANDARD_FORMATS = (
     GENERATIVE_FORMATS
+    + UNIVERSAL_FORMATS
     + VIDEO_FORMATS
     + DISPLAY_IMAGE_FORMATS
     + DISPLAY_HTML_FORMATS
@@ -1589,18 +1778,17 @@ def filter_formats(
             # Compare string values
             target_str = target_type.value if isinstance(target_type, AssetType) else target_type
 
-            # assets_required are always Pydantic models (adcp 2.2.0+)
-            req_asset_type = req.asset_type
-            # Handle enum type
-            if hasattr(req_asset_type, "value"):
-                req_asset_type = req_asset_type.value
-            if req_asset_type == target_str:
-                return True
-            # Check if it's a grouped asset requirement with assets array
+            # Individual assets have asset_type directly; repeatable groups do not
+            req_asset_type = getattr(req, "asset_type", None)
+            if req_asset_type is not None:
+                if hasattr(req_asset_type, "value"):
+                    req_asset_type = req_asset_type.value
+                if req_asset_type == target_str:
+                    return True
+            # Repeatable groups carry inner assets — check those
             if hasattr(req, "assets"):
                 for asset in req.assets:
                     asset_type: Any = getattr(asset, "asset_type", None)
-                    # Handle enum type
                     if asset_type is not None and hasattr(asset_type, "value"):
                         asset_type = asset_type.value
                     if asset_type == target_str:

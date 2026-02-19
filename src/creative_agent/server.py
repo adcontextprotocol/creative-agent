@@ -77,10 +77,13 @@ def _format_to_human_readable(fmt: Any) -> str:
     macros = fmt.supported_macros or []
     macro_count_str = f"{len(macros)} supported macros" if macros else "no macros"
 
-    # Extract assets info using adcp 2.18.0 utilities
-    # Filter to individual assets (Assets) which have asset_id, skip repeatable groups (Assets1)
-    required_assets = [a.asset_id for a in get_required_assets(fmt) if hasattr(a, "asset_id")]
-    optional_assets = [a.asset_id for a in get_optional_assets(fmt) if hasattr(a, "asset_id")]
+    # Extract assets info using adcp utilities — handles both individual (asset_id) and repeatable groups (asset_group_id)
+    required_assets: list[str] = [
+        x for a in get_required_assets(fmt) if (x := getattr(a, "asset_id", None) or getattr(a, "asset_group_id", None))
+    ]
+    optional_assets: list[str] = [
+        x for a in get_optional_assets(fmt) if (x := getattr(a, "asset_id", None) or getattr(a, "asset_group_id", None))
+    ]
 
     asset_req_str = ", ".join(required_assets[:5])
     if len(required_assets) > 5:
@@ -188,9 +191,12 @@ def list_creative_formats(
         response_json = response.model_dump(mode="json", exclude_none=True)
 
         # Add assets_required for backward compatibility with 2.5.x clients
+        # Only include individual assets (asset_id present); repeatable groups are not understood by old clients
         for fmt_json in response_json.get("formats", []):
             if fmt_json.get("assets"):
-                fmt_json["assets_required"] = [asset for asset in fmt_json["assets"] if asset.get("required", False)]
+                fmt_json["assets_required"] = [
+                    asset for asset in fmt_json["assets"] if asset.get("required", False) and "asset_id" in asset
+                ]
 
         if formats:
             format_details = [_format_to_human_readable(fmt) for fmt in formats]

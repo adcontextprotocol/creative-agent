@@ -122,7 +122,7 @@ class TestListCreativeFormatsResponseFormat:
         )
 
     def test_assets_have_asset_id(self):
-        """Per ADCP PR #135, all assets must have asset_id field."""
+        """Per ADCP PR #135, all assets must have asset_id or asset_group_id field."""
         result = list_creative_formats()
         response = ListCreativeFormatsResponse.model_validate(result.structured_content)
 
@@ -131,10 +131,11 @@ class TestListCreativeFormatsResponseFormat:
 
         for fmt in formats_with_assets:
             for asset in get_required_assets(fmt):
-                # Access asset_id - will raise AttributeError if missing
                 asset_dict = asset.model_dump() if hasattr(asset, "model_dump") else dict(asset)
-                assert "asset_id" in asset_dict, f"Format {fmt.format_id.id} has asset without asset_id: {asset_dict}"
-                assert asset_dict["asset_id"], f"Format {fmt.format_id.id} has empty asset_id: {asset_dict}"
+                has_id = "asset_id" in asset_dict or "asset_group_id" in asset_dict
+                assert has_id, f"Format {fmt.format_id.id} has asset without asset_id or asset_group_id: {asset_dict}"
+                identifier = asset_dict.get("asset_id") or asset_dict.get("asset_group_id")
+                assert identifier, f"Format {fmt.format_id.id} has empty asset identifier: {asset_dict}"
 
     def test_backward_compat_assets_required_field(self):
         """For 2.5.x client compatibility, formats must include assets_required field."""

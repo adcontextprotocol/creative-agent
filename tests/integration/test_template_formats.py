@@ -325,8 +325,9 @@ class TestTemplateFormatValidation:
             if accepts_params and FormatIdParameter.dimensions in accepts_params:
                 output_formats = getattr(fmt, "output_format_ids", None)
 
-                # Generative template might have output formats, but dimension templates shouldn't
-                if fmt.format_id.id not in ["display_generative"]:
+                # Generative templates (e.g. display_generative) have output_format_ids by design;
+                # pure dimension templates should not
+                if fmt.format_id.id != "display_generative":
                     assert output_formats is None or len(output_formats) == 0, (
                         f"{fmt.format_id.id}: dimension template should not have output_format_ids"
                     )
@@ -373,10 +374,10 @@ class TestTemplateFormatCoverage:
         concrete = [f for f in STANDARD_FORMATS if not getattr(f, "accepts_parameters", None)]
 
         # With templates, we should have far fewer total formats than without
-        # Expected: 7 templates + 42 concrete = 49 total
+        # Expected: 7 templates + 43 concrete = 50 total
         assert len(templates) == 7, f"Expected 7 templates, found {len(templates)}"
-        assert len(concrete) == 42, f"Expected 42 concrete formats, found {len(concrete)}"
-        assert len(STANDARD_FORMATS) == 49
+        assert len(concrete) == 43, f"Expected 43 concrete formats, found {len(concrete)}"
+        assert len(STANDARD_FORMATS) == 50
 
         # Ratio should be roughly 1:6 (7 templates replace ~42 potential concrete formats)
         ratio = len(concrete) / len(templates)
