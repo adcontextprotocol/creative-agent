@@ -112,15 +112,13 @@ def validate_url(url: str) -> None:
     try:
         parsed = urlparse(url)
         if not parsed.scheme or not parsed.netloc:
-            # Allow data URIs for images
-            if url_lower.startswith("data:image/"):
-                validate_data_uri(url)
-                return
             raise AssetValidationError("URL must have scheme and host")
 
         if parsed.scheme not in ["http", "https"]:
             raise AssetValidationError(f"URL scheme must be http or https, got: {parsed.scheme}")
 
+    except AssetValidationError:
+        raise
     except Exception as e:
         raise AssetValidationError(f"Invalid URL format: {e}") from e
 
@@ -150,9 +148,9 @@ def validate_data_uri(uri: str) -> None:
     if not any(mime_part == mime for mime in allowed_image_mimes):
         raise AssetValidationError(f"Data URI MIME type not allowed: {mime_part}")
 
-    # Check size (limit to 10MB for data URIs)
+    # Check size (limit to ~10MB of base64-encoded data)
     if len(data) > 10 * 1024 * 1024:
-        raise AssetValidationError("Data URI exceeds 10MB size limit")
+        raise AssetValidationError("Data URI exceeds size limit")
 
 
 def validate_image_url(url: str, check_mime: bool = False) -> None:
@@ -316,34 +314,162 @@ def validate_asset(asset_data: dict[str, Any], asset_type: str, check_remote_mim
             raise AssetValidationError("Webhook url must be a string")
         validate_url(url)
 
-    elif asset_type == "promoted_offerings":
-        # Promoted offerings validation - used for generative creative formats
-        # Contains brand manifest and product selectors
-        # Per spec: can be inline object OR URL reference
-
-        # Check if there's a brand_manifest field (can be URL or object)
-        brand_manifest = asset_data.get("brand_manifest")
-        if brand_manifest:
-            if isinstance(brand_manifest, str):
-                # URL reference to hosted manifest
-                validate_url(brand_manifest)
-            elif isinstance(brand_manifest, dict):
-                # Inline brand manifest - must have url OR name
-                url = brand_manifest.get("url")
-                name = brand_manifest.get("name")
-                if not url and not name:
-                    raise AssetValidationError("Inline brand manifest must have either url or name")
-                if url:
-                    if not isinstance(url, str):
-                        raise AssetValidationError("Brand manifest url must be a string")
-                    validate_url(url)
-                if name and not isinstance(name, str):
-                    raise AssetValidationError("Brand manifest name must be a string")
-            else:
-                raise AssetValidationError("brand_manifest must be a URL string or object")
-
     else:
         raise AssetValidationError(f"Unknown asset_type: {asset_type}")
+
+
+def validate_catalog(
+    catalog_data: dict[str, Any],
+    catalog_requirements: dict[str, Any] | None = None,
+    check_remote_mime: bool = False,
+) -> list[str]:
+    """Validate a catalog entry against optional requirements.
+
+    Args:
+        catalog_data: Catalog dictionary with type, items, url, etc.
+        catalog_requirements: CatalogRequirements dict to validate against (optional)
+        check_remote_mime: If True, verify MIME types for remote URLs
+
+    Returns:
+        List of validation error messages (empty if all valid)
+    """
+    errors: list[str] = []
+
+    # type is required on Catalog
+    catalog_type = catalog_data.get("type")
+    if not catalog_type:
+        errors.append("Catalog must have a 'type' field")
+        return errors
+
+    from adcp import CatalogType
+
+    valid_types = {ct.value for ct in CatalogType}
+    if catalog_type not in valid_types:
+        errors.append(f"Invalid catalog type: '{catalog_type}' (valid: {', '.join(sorted(valid_types))})")
+
+    # Validate URL if provided
+    catalog_url = catalog_data.get("url")
+    if catalog_url:
+        if not isinstance(catalog_url, str):
+            errors.append("Catalog url must be a string")
+        else:
+            try:
+                validate_url(catalog_url)
+            except AssetValidationError as e:
+                errors.append(f"Catalog url: {e}")
+
+    # Validate optional enum fields
+    feed_format = catalog_data.get("feed_format")
+    if feed_format:
+        from adcp import FeedFormat
+
+        valid_feeds = {ff.value for ff in FeedFormat}
+        if feed_format not in valid_feeds:
+            errors.append(f"Invalid feed_format: '{feed_format}' (valid: {', '.join(sorted(valid_feeds))})")
+
+    content_id_type = catalog_data.get("content_id_type")
+    if content_id_type:
+        from adcp import ContentIdType
+
+        valid_cid = {c.value for c in ContentIdType}
+        if content_id_type not in valid_cid:
+            errors.append(f"Invalid content_id_type: '{content_id_type}' (valid: {', '.join(sorted(valid_cid))})")
+
+    update_frequency = catalog_data.get("update_frequency")
+    if update_frequency:
+        from adcp import UpdateFrequency
+
+        valid_uf = {u.value for u in UpdateFrequency}
+        if update_frequency not in valid_uf:
+            errors.append(f"Invalid update_frequency: '{update_frequency}' (valid: {', '.join(sorted(valid_uf))})")
+
+    conversion_events = catalog_data.get("conversion_events")
+    if conversion_events is not None:
+        if not isinstance(conversion_events, list):
+            errors.append("conversion_events must be a list")
+        else:
+            from adcp.types.generated_poc.enums.event_type import EventType
+
+            valid_events = {e.value for e in EventType}
+            for i, evt in enumerate(conversion_events):
+                if evt not in valid_events:
+                    errors.append(f"Invalid conversion_event[{i}]: '{evt}'")
+
+    # Validate items if present
+    items = catalog_data.get("items")
+    if items is not None:
+        if not isinstance(items, list):
+            errors.append("Catalog items must be a list")
+        elif catalog_requirements:
+            # Check required_fields on each item
+            required_fields = catalog_requirements.get("required_fields", []) or []
+            for i, item in enumerate(items):
+                if not isinstance(item, dict):
+                    errors.append(f"Catalog item[{i}] must be a dictionary")
+                    continue
+                for field in required_fields:
+                    if field not in item:
+                        errors.append(f"Catalog item[{i}]: missing required field '{field}'")
+
+    # Validate against requirements
+    if catalog_requirements:
+        # min_items constraint
+        min_items = catalog_requirements.get("min_items")
+        if min_items is not None and items is not None and isinstance(items, list):
+            if len(items) < min_items:
+                errors.append(f"Catalog requires at least {min_items} items, got {len(items)}")
+
+        # offering_asset_constraints: validate item-level assets
+        constraints = catalog_requirements.get("offering_asset_constraints", []) or []
+        if constraints and items and isinstance(items, list):
+            for i, item in enumerate(items):
+                if not isinstance(item, dict):
+                    continue
+                item_assets = item.get("assets", {})
+                if not isinstance(item_assets, dict):
+                    continue
+
+                for constraint in constraints:
+                    group_id = constraint.get("asset_group_id")
+                    if not group_id:
+                        continue
+
+                    is_required = constraint.get("required", True)
+                    group_data = item_assets.get(group_id)
+
+                    if group_data is None:
+                        if is_required:
+                            errors.append(f"Catalog item[{i}]: missing required asset group '{group_id}'")
+                        continue
+
+                    if not isinstance(group_data, list):
+                        group_data = [group_data]
+
+                    min_count = constraint.get("min_count")
+                    max_count = constraint.get("max_count")
+                    if min_count is not None and len(group_data) < min_count:
+                        errors.append(
+                            f"Catalog item[{i}] asset '{group_id}': requires at least {min_count} items, got {len(group_data)}"
+                        )
+                    if max_count is not None and len(group_data) > max_count:
+                        errors.append(
+                            f"Catalog item[{i}] asset '{group_id}': allows at most {max_count} items, got {len(group_data)}"
+                        )
+
+                    # Validate each item against the constraint's asset_type
+                    constraint_type = constraint.get("asset_type")
+                    if constraint_type:
+                        ct_str = constraint_type.value if hasattr(constraint_type, "value") else str(constraint_type)
+                        for j, asset_item in enumerate(group_data):
+                            if not isinstance(asset_item, dict):
+                                errors.append(f"Catalog item[{i}] asset '{group_id}[{j}]': must be a dictionary")
+                                continue
+                            try:
+                                validate_asset(asset_item, ct_str, check_remote_mime=check_remote_mime)
+                            except AssetValidationError as e:
+                                errors.append(f"Catalog item[{i}] asset '{group_id}[{j}]': {e}")
+
+    return errors
 
 
 def validate_manifest_assets(
@@ -351,10 +477,10 @@ def validate_manifest_assets(
     check_remote_mime: bool = False,
     format_obj: Any = None,
 ) -> list[str]:
-    """Validate all assets in a creative manifest.
+    """Validate all assets and catalogs in a creative manifest.
 
     Args:
-        manifest: Creative manifest (should be dictionary with assets field)
+        manifest: Creative manifest (should be dictionary with assets and/or catalogs field)
         check_remote_mime: If True, verify MIME types for remote URLs (slower)
         format_obj: Format object to validate required assets against (optional)
 
@@ -366,62 +492,161 @@ def validate_manifest_assets(
     if not isinstance(manifest, dict):
         return ["Manifest must be a dictionary"]
 
+    # Check whether format requires catalogs
+    has_catalog_requirements = False
+    catalog_req_list: list[dict[str, Any]] = []
+    if format_obj:
+        raw_reqs = getattr(format_obj, "catalog_requirements", None) or []
+        for req in raw_reqs:
+            req_dict = req.model_dump(exclude_none=True) if hasattr(req, "model_dump") else dict(req)
+            catalog_req_list.append(req_dict)
+        has_catalog_requirements = len(catalog_req_list) > 0
+
+    # Validate catalogs if format requires them
+    if has_catalog_requirements:
+        catalogs = manifest.get("catalogs", [])
+        if not catalogs:
+            for req in catalog_req_list:
+                is_required = req.get("required", True)
+                if is_required is not False:
+                    errors.append(f"Required catalog missing for type: {req.get('catalog_type', 'unknown')}")
+        elif isinstance(catalogs, list):
+            # Build lookup of catalogs by type
+            catalog_by_type: dict[str, dict[str, Any]] = {}
+            for catalog in catalogs:
+                if isinstance(catalog, dict) and "type" in catalog:
+                    catalog_by_type[catalog["type"]] = catalog
+
+            for req in catalog_req_list:
+                req_type = req.get("catalog_type")
+                if not req_type:
+                    continue
+                req_type_str = req_type.value if hasattr(req_type, "value") else str(req_type)
+                is_required = req.get("required", True)
+
+                matching_catalog = catalog_by_type.get(req_type_str)
+                if not matching_catalog:
+                    if is_required is not False:
+                        errors.append(f"Required catalog missing for type: {req_type_str}")
+                    continue
+
+                catalog_errors = validate_catalog(matching_catalog, req, check_remote_mime=check_remote_mime)
+                errors.extend(catalog_errors)
+
+                # Check feed_format compatibility
+                req_feed_formats = req.get("feed_formats")
+                catalog_feed = matching_catalog.get("feed_format")
+                if req_feed_formats and catalog_feed:
+                    allowed = [ff.value if hasattr(ff, "value") else str(ff) for ff in req_feed_formats]
+                    if catalog_feed not in allowed:
+                        errors.append(f"Catalog feed_format '{catalog_feed}' not in required formats: {allowed}")
+
+            # Validate any catalogs not covered by requirements
+            req_types: set[str] = set()
+            for r in catalog_req_list:
+                ct = r.get("catalog_type")
+                if ct is not None:
+                    req_types.add(ct.value if hasattr(ct, "value") else str(ct))
+            for catalog in catalogs:
+                if isinstance(catalog, dict):
+                    ct = catalog.get("type")
+                    if ct and ct not in req_types:
+                        catalog_errors = validate_catalog(catalog, check_remote_mime=check_remote_mime)
+                        errors.extend(catalog_errors)
+
     assets = manifest.get("assets")
-    if not assets:
+    if not assets and not has_catalog_requirements:
         return ["Manifest must contain assets field"]
 
-    if not isinstance(assets, dict):
-        return ["Manifest assets must be a dictionary"]
+    if not assets:
+        return errors
 
-    # Build a map of asset_id -> asset_type from format if provided
-    # Uses adcp utilities which handle both new `assets` and deprecated `assets_required` fields
-    asset_type_map = {}
+    if not isinstance(assets, dict):
+        errors.append("Manifest assets must be a dictionary")
+        return errors
+
+    # Build maps from format spec if provided:
+    #   asset_type_map: (asset_id or asset_group_id) -> content type string
+    #   group_counts:   asset_group_id -> (min_count, max_count)
+    asset_type_map: dict[str, str] = {}
+    group_counts: dict[str, tuple[int | None, int | None]] = {}
+
     if format_obj:
         from adcp import get_format_assets, get_required_assets
 
-        # Build asset type map from all format assets
         for asset in get_format_assets(format_obj):
             asset_id = getattr(asset, "asset_id", None)
             asset_type = getattr(asset, "asset_type", None)
-
             if asset_id and asset_type:
-                # Handle enum or string asset_type
-                if hasattr(asset_type, "value"):
-                    asset_type_map[asset_id] = asset_type.value
-                else:
-                    asset_type_map[asset_id] = str(asset_type)
+                asset_type_map[asset_id] = asset_type.value if hasattr(asset_type, "value") else str(asset_type)
+                continue
+
+            asset_group_id = getattr(asset, "asset_group_id", None)
+            if asset_group_id:
+                inner_assets = getattr(asset, "assets", [])
+                if inner_assets:
+                    inner_type = getattr(inner_assets[0], "asset_type", None)
+                    if inner_type:
+                        asset_type_map[asset_group_id] = (
+                            inner_type.value if hasattr(inner_type, "value") else str(inner_type)
+                        )
+                group_counts[asset_group_id] = (
+                    getattr(asset, "min_count", None),
+                    getattr(asset, "max_count", None),
+                )
 
         # Check required assets are present in manifest
         for required_asset in get_required_assets(format_obj):
-            asset_id = getattr(required_asset, "asset_id", None)
+            asset_id = getattr(required_asset, "asset_id", None) or getattr(required_asset, "asset_group_id", None)
             if asset_id and asset_id not in assets:
                 errors.append(f"Required asset missing: {asset_id}")
 
     # Validate each asset
     for asset_id, asset_data in assets.items():
-        # Get expected asset type from format spec
         expected_type = asset_type_map.get(asset_id)
 
-        if not expected_type:
-            # No format provided or asset not in format spec
-            # Try to infer type from asset data (for backward compatibility during transition)
-            if "url" in asset_data and "width" in asset_data and "height" in asset_data:
-                expected_type = "image"
-            elif "url" in asset_data and "duration_seconds" in asset_data:
-                expected_type = "video"  # or audio, hard to distinguish
-            elif "content" in asset_data:
-                expected_type = "text"  # could be html/js/css too
-            elif "url" in asset_data:
-                expected_type = "url"
-            else:
-                errors.append(
-                    f"Asset '{asset_id}': Cannot determine asset type (format not provided or asset_id not in format spec)"
-                )
-                continue
+        if isinstance(asset_data, list):
+            # Repeatable group: validate count constraints and each item
+            min_c, max_c = group_counts.get(asset_id, (None, None))
+            if min_c is not None and len(asset_data) < min_c:
+                errors.append(f"Asset '{asset_id}': requires at least {min_c} items, got {len(asset_data)}")
+            if max_c is not None and len(asset_data) > max_c:
+                errors.append(f"Asset '{asset_id}': allows at most {max_c} items, got {len(asset_data)}")
 
-        try:
-            validate_asset(asset_data, expected_type, check_remote_mime=check_remote_mime)
-        except AssetValidationError as e:
-            errors.append(f"Asset '{asset_id}': {e}")
+            for i, item in enumerate(asset_data):
+                if not isinstance(item, dict) or len(item) != 1:
+                    errors.append(
+                        f"Asset '{asset_id}[{i}]': each item must be a single-key dict like {{\"text\": {{...}}}}"
+                    )
+                    continue
+                item_type_key, item_data = next(iter(item.items()))
+                validate_type = expected_type or item_type_key
+                try:
+                    validate_asset(item_data, validate_type, check_remote_mime=check_remote_mime)
+                except AssetValidationError as e:
+                    errors.append(f"Asset '{asset_id}[{i}]': {e}")
+
+        else:
+            # Individual asset
+            if not expected_type:
+                # Try to infer type from asset data
+                if "url" in asset_data and "width" in asset_data and "height" in asset_data:
+                    expected_type = "image"
+                elif "url" in asset_data and "duration_seconds" in asset_data:
+                    expected_type = "video"
+                elif "content" in asset_data:
+                    expected_type = "text"
+                elif "url" in asset_data:
+                    expected_type = "url"
+                else:
+                    errors.append(
+                        f"Asset '{asset_id}': Cannot determine asset type (format not provided or asset_id not in format spec)"
+                    )
+                    continue
+
+            try:
+                validate_asset(asset_data, expected_type, check_remote_mime=check_remote_mime)
+            except AssetValidationError as e:
+                errors.append(f"Asset '{asset_id}': {e}")
 
     return errors

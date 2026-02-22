@@ -3,10 +3,11 @@
 # mypy: disable-error-code="call-arg"
 # Pydantic models with extra='forbid' trigger false positives when optional fields aren't passed
 
+import typing
 from typing import Any
 
-from adcp import FormatCategory, FormatId, get_required_assets
-from adcp.types.generated_poc.core.format import Assets as LibAssets
+from adcp import CatalogRequirements, CatalogType, FormatCategory, FormatId, get_required_assets
+from adcp.types.generated_poc.core.format import Format as _LibFormat
 from adcp.types.generated_poc.core.format import Renders as LibRender
 from adcp.types.generated_poc.enums.format_id_parameter import FormatIdParameter
 from pydantic import AnyUrl
@@ -16,13 +17,50 @@ from .format_types import (
     AssetType,
 )
 
+# Build asset type -> class mappings dynamically from the Format model's discriminated union.
+# This avoids hardcoding numbered class names (Assets, Assets5, etc.) which change between
+# adcp library versions.
+_list_type = typing.get_args(typing.get_args(_LibFormat.model_fields["assets"].annotation)[0])
+_union_members = typing.get_args(_list_type[0]) if _list_type else ()
+
+_INDIVIDUAL_ASSET_MAP: dict[str, type] = {}
+_REPEATABLE_GROUP_CLASS: type | None = None
+_INNER_ASSET_MAP: dict[str, type] = {}
+
+for _cls in _union_members:
+    if not hasattr(_cls, "model_fields"):
+        continue
+    if "asset_group_id" in _cls.model_fields:
+        _REPEATABLE_GROUP_CLASS = _cls
+        # Build inner asset mapping from the group's assets field
+        _inner_ann = _cls.model_fields["assets"].annotation
+        _inner_args = typing.get_args(_inner_ann)
+        _inner_union = typing.get_args(_inner_args[0]) if _inner_args else ()
+        for _inner_cls in _inner_union:
+            if hasattr(_inner_cls, "model_fields") and "asset_type" in _inner_cls.model_fields:
+                _lit = typing.get_args(_inner_cls.model_fields["asset_type"].annotation)
+                if _lit:
+                    _INNER_ASSET_MAP[_lit[0]] = _inner_cls
+        continue
+    at_field = _cls.model_fields.get("asset_type")
+    if at_field:
+        _lit = typing.get_args(at_field.annotation)
+        if _lit:
+            _INDIVIDUAL_ASSET_MAP[_lit[0]] = _cls
+
+# Fail fast if the introspection didn't find expected types
+if not _INDIVIDUAL_ASSET_MAP:
+    raise ImportError("No individual asset classes found in adcp Format schema")
+if _REPEATABLE_GROUP_CLASS is None:
+    raise ImportError("No repeatable group class found in adcp Format schema")
+
 # Agent configuration
 AGENT_URL = "https://creative.adcontextprotocol.org"
 AGENT_NAME = "AdCP Standard Creative Agent"
 AGENT_CAPABILITIES = ["validation", "assembly", "generation", "preview"]
 
 # Common macros supported across all formats
-COMMON_MACROS = [
+COMMON_MACROS: list[str | Any] = [
     "MEDIA_BUY_ID",
     "CREATIVE_ID",
     "CACHEBUSTER",
@@ -44,28 +82,67 @@ def create_asset(
     asset_id: str,
     asset_type: AssetType,
     required: bool = True,
-    requirements: dict[str, str | int | float | bool | list[str]] | None = None,
-) -> LibAssets:
-    """Create an asset entry using the library's Assets Pydantic model.
+    requirements: Any = None,
+) -> Any:
+    """Create an individual asset using the correct typed model for the given asset_type.
 
-    This creates assets for the new 'assets' field (adcp-client-python 2.18.0+).
-    The library model automatically handles exclude_none serialization and
-    includes the item_type discriminator for union types.
+    The adcp library uses a discriminated union for assets — each asset_type has its own
+    Pydantic model with type-specific requirements. This function resolves the correct
+    class dynamically from the Format schema.
     """
-    from adcp import AssetContentType as LibAssetType
+    cls = _INDIVIDUAL_ASSET_MAP.get(asset_type.value)
+    if cls is None:
+        raise ValueError(f"Unknown asset type: {asset_type.value}")
 
-    lib_asset_type = LibAssetType(asset_type.value)
-
-    return LibAssets(
+    return cls(
         asset_id=asset_id,
-        asset_type=lib_asset_type,
+        asset_type=asset_type.value,
         required=required,
         requirements=requirements,
-        item_type="individual",  # Required discriminator for union types
+        item_type="individual",
     )
 
 
-def create_impression_tracker_asset() -> LibAssets:
+def create_repeatable_group(
+    asset_group_id: str,
+    asset_type: AssetType,
+    required: bool,
+    min_count: int,
+    max_count: int,
+    requirements: Any = None,
+) -> Any:
+    """Create a repeatable group asset that allows multiple values of the same type.
+
+    Used for asset pools like headlines (up to 15) or images (up to 20), where
+    publishers pick the best combination for each placement.
+
+    Each group instance contains a single inner asset whose asset_id matches the
+    content type string (e.g. "text", "image", "video").
+    """
+    if _REPEATABLE_GROUP_CLASS is None:
+        raise RuntimeError("Repeatable group class not found in adcp format schema")
+
+    inner_cls = _INNER_ASSET_MAP.get(asset_type.value)
+    if inner_cls is None:
+        raise ValueError(f"Unknown inner asset type: {asset_type.value}")
+
+    inner = inner_cls(
+        asset_id=asset_type.value,
+        asset_type=asset_type.value,
+        required=True,
+        requirements=requirements,
+    )
+    return _REPEATABLE_GROUP_CLASS(
+        asset_group_id=asset_group_id,
+        assets=[inner],
+        item_type="repeatable_group",
+        min_count=min_count,
+        max_count=max_count,
+        required=required,
+    )
+
+
+def create_impression_tracker_asset() -> Any:
     """Create an optional impression tracker asset for 3rd party tracking.
 
     This creates a URL asset with url_type='tracker_pixel' that can be used
@@ -82,7 +159,7 @@ def create_impression_tracker_asset() -> LibAssets:
     )
 
 
-def create_click_url_asset() -> LibAssets:
+def create_click_url_asset() -> Any:
     """Create a required clickthrough URL asset.
 
     This creates a URL asset with url_type='clickthrough' for the landing page
@@ -146,9 +223,9 @@ def create_responsive_render(
 
 
 # Generative Formats - AI-powered creative generation
-# These use promoted_offerings asset type which provides brand context and product info
-# Template format that accepts dimension parameters (for new integrations)
-# Plus concrete formats (for backward compatibility)
+# Generative formats use catalog_requirements to declare what offering data they need.
+# The AI generates creative from the catalog context + a generation prompt.
+# Template format accepts dimension parameters; concrete formats are for backward compatibility.
 GENERATIVE_FORMATS = [
     # Template format - supports any dimensions
     CreativeFormat(
@@ -158,13 +235,13 @@ GENERATIVE_FORMATS = [
         description="AI-generated display banner from brand context and prompt (supports any dimensions)",
         accepts_parameters=[FormatIdParameter.dimensions],
         supported_macros=COMMON_MACROS,
-        assets=[
-            create_asset(
-                asset_id="promoted_offerings",
-                asset_type=AssetType.promoted_offerings,
-                required=True,
-                requirements={"description": "Brand manifest and product offerings for AI generation"},
+        catalog_requirements=[
+            CatalogRequirements(
+                catalog_type=CatalogType.offering,
+                required_fields=["name"],
             ),
+        ],
+        assets=[
             create_asset(
                 asset_id="generation_prompt",
                 asset_type=AssetType.text,
@@ -183,13 +260,13 @@ GENERATIVE_FORMATS = [
         renders=[create_fixed_render(300, 250)],
         output_format_ids=[create_format_id("display_300x250_image")],
         supported_macros=COMMON_MACROS,
-        assets=[
-            create_asset(
-                asset_id="promoted_offerings",
-                asset_type=AssetType.promoted_offerings,
-                required=True,
-                requirements={"description": "Brand manifest and product offerings for AI generation"},
+        catalog_requirements=[
+            CatalogRequirements(
+                catalog_type=CatalogType.offering,
+                required_fields=["name"],
             ),
+        ],
+        assets=[
             create_asset(
                 asset_id="generation_prompt",
                 asset_type=AssetType.text,
@@ -207,13 +284,13 @@ GENERATIVE_FORMATS = [
         renders=[create_fixed_render(728, 90)],
         output_format_ids=[create_format_id("display_728x90_image")],
         supported_macros=COMMON_MACROS,
-        assets=[
-            create_asset(
-                asset_id="promoted_offerings",
-                asset_type=AssetType.promoted_offerings,
-                required=True,
-                requirements={"description": "Brand manifest and product offerings for AI generation"},
+        catalog_requirements=[
+            CatalogRequirements(
+                catalog_type=CatalogType.offering,
+                required_fields=["name"],
             ),
+        ],
+        assets=[
             create_asset(
                 asset_id="generation_prompt",
                 asset_type=AssetType.text,
@@ -231,13 +308,13 @@ GENERATIVE_FORMATS = [
         renders=[create_fixed_render(320, 50)],
         output_format_ids=[create_format_id("display_320x50_image")],
         supported_macros=COMMON_MACROS,
-        assets=[
-            create_asset(
-                asset_id="promoted_offerings",
-                asset_type=AssetType.promoted_offerings,
-                required=True,
-                requirements={"description": "Brand manifest and product offerings for AI generation"},
+        catalog_requirements=[
+            CatalogRequirements(
+                catalog_type=CatalogType.offering,
+                required_fields=["name"],
             ),
+        ],
+        assets=[
             create_asset(
                 asset_id="generation_prompt",
                 asset_type=AssetType.text,
@@ -255,13 +332,13 @@ GENERATIVE_FORMATS = [
         renders=[create_fixed_render(160, 600)],
         output_format_ids=[create_format_id("display_160x600_image")],
         supported_macros=COMMON_MACROS,
-        assets=[
-            create_asset(
-                asset_id="promoted_offerings",
-                asset_type=AssetType.promoted_offerings,
-                required=True,
-                requirements={"description": "Brand manifest and product offerings for AI generation"},
+        catalog_requirements=[
+            CatalogRequirements(
+                catalog_type=CatalogType.offering,
+                required_fields=["name"],
             ),
+        ],
+        assets=[
             create_asset(
                 asset_id="generation_prompt",
                 asset_type=AssetType.text,
@@ -279,13 +356,13 @@ GENERATIVE_FORMATS = [
         renders=[create_fixed_render(336, 280)],
         output_format_ids=[create_format_id("display_336x280_image")],
         supported_macros=COMMON_MACROS,
-        assets=[
-            create_asset(
-                asset_id="promoted_offerings",
-                asset_type=AssetType.promoted_offerings,
-                required=True,
-                requirements={"description": "Brand manifest and product offerings for AI generation"},
+        catalog_requirements=[
+            CatalogRequirements(
+                catalog_type=CatalogType.offering,
+                required_fields=["name"],
             ),
+        ],
+        assets=[
             create_asset(
                 asset_id="generation_prompt",
                 asset_type=AssetType.text,
@@ -303,13 +380,13 @@ GENERATIVE_FORMATS = [
         renders=[create_fixed_render(300, 600)],
         output_format_ids=[create_format_id("display_300x600_image")],
         supported_macros=COMMON_MACROS,
-        assets=[
-            create_asset(
-                asset_id="promoted_offerings",
-                asset_type=AssetType.promoted_offerings,
-                required=True,
-                requirements={"description": "Brand manifest and product offerings for AI generation"},
+        catalog_requirements=[
+            CatalogRequirements(
+                catalog_type=CatalogType.offering,
+                required_fields=["name"],
             ),
+        ],
+        assets=[
             create_asset(
                 asset_id="generation_prompt",
                 asset_type=AssetType.text,
@@ -327,13 +404,13 @@ GENERATIVE_FORMATS = [
         renders=[create_fixed_render(970, 250)],
         output_format_ids=[create_format_id("display_970x250_image")],
         supported_macros=COMMON_MACROS,
-        assets=[
-            create_asset(
-                asset_id="promoted_offerings",
-                asset_type=AssetType.promoted_offerings,
-                required=True,
-                requirements={"description": "Brand manifest and product offerings for AI generation"},
+        catalog_requirements=[
+            CatalogRequirements(
+                catalog_type=CatalogType.offering,
+                required_fields=["name"],
             ),
+        ],
+        assets=[
             create_asset(
                 asset_id="generation_prompt",
                 asset_type=AssetType.text,
@@ -1489,7 +1566,7 @@ def filter_formats(
         # fmt.type is always a Type enum (adcp 2.1.0+)
         if isinstance(type, str):
             # Compare enum value to string
-            results = [fmt for fmt in results if fmt.type.value == type]
+            results = [fmt for fmt in results if fmt.type is not None and fmt.type.value == type]
         else:
             # Compare enum to enum
             results = [fmt for fmt in results if fmt.type == type]
@@ -1589,18 +1666,17 @@ def filter_formats(
             # Compare string values
             target_str = target_type.value if isinstance(target_type, AssetType) else target_type
 
-            # assets_required are always Pydantic models (adcp 2.2.0+)
-            req_asset_type = req.asset_type
-            # Handle enum type
-            if hasattr(req_asset_type, "value"):
-                req_asset_type = req_asset_type.value
-            if req_asset_type == target_str:
-                return True
-            # Check if it's a grouped asset requirement with assets array
+            # Individual assets have asset_type directly; repeatable groups do not
+            req_asset_type = getattr(req, "asset_type", None)
+            if req_asset_type is not None:
+                if hasattr(req_asset_type, "value"):
+                    req_asset_type = req_asset_type.value
+                if req_asset_type == target_str:
+                    return True
+            # Repeatable groups carry inner assets — check those
             if hasattr(req, "assets"):
                 for asset in req.assets:
                     asset_type: Any = getattr(asset, "asset_type", None)
-                    # Handle enum type
                     if asset_type is not None and hasattr(asset_type, "value"):
                         asset_type = asset_type.value
                     if asset_type == target_str:

@@ -1,7 +1,9 @@
 """AdCP Creative Agent MCP Server - Spec Compliant Implementation."""
 
 import json
+import logging
 import os
+import re
 import uuid
 from datetime import UTC, datetime, timedelta
 from typing import Any
@@ -26,6 +28,8 @@ from .schemas import (
     ListCreativeFormatsResponse,
     PreviewCreativeRequest,
 )
+
+logger = logging.getLogger(__name__)
 
 mcp = FastMCP("adcp-creative-agent")
 
@@ -77,10 +81,13 @@ def _format_to_human_readable(fmt: Any) -> str:
     macros = fmt.supported_macros or []
     macro_count_str = f"{len(macros)} supported macros" if macros else "no macros"
 
-    # Extract assets info using adcp 2.18.0 utilities
-    # Filter to individual assets (Assets) which have asset_id, skip repeatable groups (Assets1)
-    required_assets = [a.asset_id for a in get_required_assets(fmt) if hasattr(a, "asset_id")]
-    optional_assets = [a.asset_id for a in get_optional_assets(fmt) if hasattr(a, "asset_id")]
+    # Extract assets info using adcp utilities — handles both individual (asset_id) and repeatable groups (asset_group_id)
+    required_assets: list[str] = [
+        x for a in get_required_assets(fmt) if (x := getattr(a, "asset_id", None) or getattr(a, "asset_group_id", None))
+    ]
+    optional_assets: list[str] = [
+        x for a in get_optional_assets(fmt) if (x := getattr(a, "asset_id", None) or getattr(a, "asset_group_id", None))
+    ]
 
     asset_req_str = ", ".join(required_assets[:5])
     if len(required_assets) > 5:
@@ -188,9 +195,12 @@ def list_creative_formats(
         response_json = response.model_dump(mode="json", exclude_none=True)
 
         # Add assets_required for backward compatibility with 2.5.x clients
+        # Only include individual assets (asset_id present); repeatable groups are not understood by old clients
         for fmt_json in response_json.get("formats", []):
             if fmt_json.get("assets"):
-                fmt_json["assets_required"] = [asset for asset in fmt_json["assets"] if asset.get("required", False)]
+                fmt_json["assets_required"] = [
+                    asset for asset in fmt_json["assets"] if asset.get("required", False) and "asset_id" in asset
+                ]
 
         if formats:
             format_details = [_format_to_human_readable(fmt) for fmt in formats]
@@ -209,9 +219,8 @@ def list_creative_formats(
             structured_content=error_response,
         )
     except Exception as e:
-        import traceback
-
-        error_response = {"error": f"Server error: {e}", "traceback": traceback.format_exc()[-500:]}
+        logger.exception("Server error in list_creative_formats")
+        error_response = {"error": f"Server error: {e}"}
         return ToolResult(
             content=[TextContent(type="text", text=f"Error: Server error - {e}")],
             structured_content=error_response,
@@ -244,6 +253,16 @@ def preview_creative(
     Returns:
         ToolResult with human-readable message and structured preview data
     """
+    valid_output_formats = {"url", "html"}
+    if output_format not in valid_output_formats:
+        error_msg = (
+            f"Invalid output_format '{output_format}'. Must be one of: {', '.join(sorted(valid_output_formats))}"
+        )
+        return ToolResult(
+            content=[TextContent(type="text", text=f"Error: {error_msg}")],
+            structured_content={"error": error_msg},
+        )
+
     try:
         # Determine mode: batch or single
         is_batch_mode = requests is not None
@@ -272,12 +291,11 @@ def preview_creative(
             structured_content={"error": error_msg},
         )
     except Exception as e:
-        import traceback
-
+        logger.exception("Preview generation failed")
         error_msg = f"Preview generation failed: {e}"
         return ToolResult(
             content=[TextContent(type="text", text=f"Error: {error_msg}")],
-            structured_content={"error": error_msg, "traceback": traceback.format_exc()[-500:]},
+            structured_content={"error": error_msg},
         )
 
 
@@ -393,17 +411,7 @@ def _handle_single_preview(
     # Calculate expiration
     expires_at = datetime.now(UTC) + timedelta(hours=24)
 
-    from pydantic import ValidationError
-
-    # Prepare response - validation happens when creating PreviewCreativeResponse
-    try:
-        interactive_url = f"{AGENT_URL}/preview/{preview_id}/interactive"
-    except ValidationError as e:
-        error_msg = f"Invalid URL construction: {e}"
-        return ToolResult(
-            content=[TextContent(type="text", text=f"Error: {error_msg}")],
-            structured_content={"error": error_msg},
-        )
+    interactive_url = f"{AGENT_URL}/preview/{preview_id}/interactive"
 
     # Build response dict for single mode
     response_dict = {
@@ -430,7 +438,7 @@ def _handle_batch_preview(
 ) -> ToolResult:
     """Handle batch preview requests."""
 
-    if not requests or len(requests) == 0:
+    if not requests:
         error_msg = "Batch mode requires at least one request"
         return ToolResult(
             content=[TextContent(type="text", text=f"Error: {error_msg}")],
@@ -567,7 +575,7 @@ def _generate_preview_variant(
     embedding = {
         "recommended_sandbox": "allow-scripts allow-same-origin",
         "requires_https": False,
-        "supports_fullscreen": format_obj.type in ["video", "rich_media"],
+        "supports_fullscreen": format_obj.type is not None and format_obj.type.value in ("video", "rich_media"),
     }
 
     # Create the single render (all formats render as HTML pages)
@@ -618,13 +626,15 @@ def build_creative(
     target_format_id: str | dict[str, Any],
     creative_manifest: dict[str, Any] | None = None,
     message: str | None = None,
+    brand: str | dict[str, Any] | None = None,
 ) -> ToolResult:
     """Transform or generate a creative manifest using AI.
 
     Args:
         target_format_id: Format ID to generate (string or FormatId object with agent_url and id)
-        creative_manifest: Source creative manifest with input assets (e.g., promoted_offerings for generative formats)
+        creative_manifest: Source creative manifest with input assets and catalogs for generative formats
         message: Natural language instructions for transformation or generation
+        brand: Brand reference — domain string (e.g. "acme.com") or {"domain": "acme.com", "brand_id": "..."}
 
     Returns:
         ToolResult with creative_manifest in structured_content
@@ -688,8 +698,6 @@ def build_creative(
             # Extract input assets from manifest
             input_assets = creative_manifest.get("assets", {})
 
-            # Extract promoted_offerings if present
-            promoted_offerings = input_assets.get("promoted_offerings")
             generation_prompt_asset = input_assets.get("generation_prompt")
 
             # Build generation prompt
@@ -710,7 +718,7 @@ def build_creative(
 
             # Build prompt
             format_spec = f"""Format: {output_fmt.name}
-Type: {output_fmt.type.value}
+Type: {output_fmt.type.value if output_fmt.type else "unknown"}
 Description: {output_fmt.description}
 """
 
@@ -727,17 +735,27 @@ Description: {output_fmt.description}
                 if asset_id:
                     format_spec += f"- {asset_id} ({asset_type})\n"
 
-            # Add brand context if provided
+            # Build context from brand reference and catalog
             brand_context = ""
-            if promoted_offerings:
-                brand_context = "\n\nBrand Context:\n"
-                brand_manifest = promoted_offerings.get("brand_manifest", {})
-                if "name" in brand_manifest:
-                    brand_context += f"Brand: {brand_manifest['name']}\n"
-                if "description" in brand_manifest:
-                    brand_context += f"Description: {brand_manifest['description']}\n"
-                if "tagline" in brand_manifest:
-                    brand_context += f"Tagline: {brand_manifest['tagline']}\n"
+            if brand:
+                brand_domain = brand if isinstance(brand, str) else brand.get("domain", "")
+                if brand_domain:
+                    brand_context += f"\n\nBrand: {brand_domain}\n"
+
+            catalogs = creative_manifest.get("catalogs", []) if creative_manifest else []
+            if catalogs and isinstance(catalogs, list):
+                catalog = catalogs[0]
+                if isinstance(catalog, dict):
+                    items = catalog.get("items", [])
+                    if items and isinstance(items, list):
+                        brand_context += "\n\nCatalog Context:\n" if not brand_context else "\nCatalog Items:\n"
+                        for item in items[:3]:
+                            if isinstance(item, dict):
+                                if "name" in item:
+                                    brand_context += f"- {item['name']}"
+                                    if "description" in item:
+                                        brand_context += f": {item['description']}"
+                                    brand_context += "\n"
 
             prompt = f"""You are a creative generation AI for advertising. Generate a creative manifest for the following request:
 
@@ -770,8 +788,6 @@ Return ONLY the JSON manifest, no additional text."""
                         generated_text += part.text
 
             # Extract JSON from response
-            import re
-
             json_match = re.search(r"```json\s*(.*?)\s*```", generated_text, re.DOTALL)
             if json_match:
                 manifest_json = json_match.group(1)
@@ -823,15 +839,11 @@ Return ONLY the JSON manifest, no additional text."""
             structured_content={"error": error_msg},
         )
     except Exception as e:
-        import traceback
-
+        logger.exception("Creative generation failed")
         error_msg = f"Creative generation failed: {e}"
         return ToolResult(
             content=[TextContent(type="text", text=f"Error: {error_msg}")],
-            structured_content={
-                "error": error_msg,
-                "traceback": traceback.format_exc()[-500:],
-            },
+            structured_content={"error": error_msg},
         )
 
 
@@ -883,9 +895,8 @@ def get_adcp_capabilities(
             structured_content=error_response,
         )
     except Exception as e:
-        import traceback
-
-        error_response = {"error": f"Server error: {e}", "traceback": traceback.format_exc()[-500:]}
+        logger.exception("Server error in get_adcp_capabilities")
+        error_response = {"error": f"Server error: {e}"}
         return ToolResult(
             content=[TextContent(type="text", text=f"Error: Server error - {e}")],
             structured_content=error_response,

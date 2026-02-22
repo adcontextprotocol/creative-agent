@@ -41,7 +41,6 @@ class AssetType(Enum):
     javascript = "javascript"
     url = "url"
     webhook = "webhook"
-    promoted_offerings = "promoted_offerings"
 
 
 class Unit(Enum):

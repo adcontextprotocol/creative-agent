@@ -258,10 +258,10 @@ class TestTemplateAssetRequirements:
         # Should have explicit width/height requirements
         requirements = getattr(image_asset, "requirements", None)
         assert requirements is not None
-        assert "width" in requirements, "Concrete format should have explicit width"
-        assert "height" in requirements, "Concrete format should have explicit height"
-        assert requirements["width"] == 300
-        assert requirements["height"] == 250
+        assert hasattr(requirements, "width"), "Concrete format should have explicit width"
+        assert hasattr(requirements, "height"), "Concrete format should have explicit height"
+        assert requirements.width == 300
+        assert requirements.height == 250
 
 
 class TestTemplateFormatSerialization:
@@ -325,8 +325,9 @@ class TestTemplateFormatValidation:
             if accepts_params and FormatIdParameter.dimensions in accepts_params:
                 output_formats = getattr(fmt, "output_format_ids", None)
 
-                # Generative template might have output formats, but dimension templates shouldn't
-                if fmt.format_id.id not in ["display_generative"]:
+                # Generative templates (e.g. display_generative) have output_format_ids by design;
+                # pure dimension templates should not
+                if fmt.format_id.id != "display_generative":
                     assert output_formats is None or len(output_formats) == 0, (
                         f"{fmt.format_id.id}: dimension template should not have output_format_ids"
                     )
