@@ -716,7 +716,7 @@ def build_creative(
 
             # Build prompt
             format_spec = f"""Format: {output_fmt.name}
-Type: {output_fmt.type.value}
+Type: {output_fmt.type.value if output_fmt.type else "unknown"}
 Description: {output_fmt.description}
 """
 

@@ -60,7 +60,7 @@ AGENT_NAME = "AdCP Standard Creative Agent"
 AGENT_CAPABILITIES = ["validation", "assembly", "generation", "preview"]
 
 # Common macros supported across all formats
-COMMON_MACROS = [
+COMMON_MACROS: list[str | Any] = [
     "MEDIA_BUY_ID",
     "CREATIVE_ID",
     "CACHEBUSTER",
@@ -1566,7 +1566,7 @@ def filter_formats(
         # fmt.type is always a Type enum (adcp 2.1.0+)
         if isinstance(type, str):
             # Compare enum value to string
-            results = [fmt for fmt in results if fmt.type.value == type]
+            results = [fmt for fmt in results if fmt.type is not None and fmt.type.value == type]
         else:
             # Compare enum to enum
             results = [fmt for fmt in results if fmt.type == type]
