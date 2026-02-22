@@ -179,8 +179,24 @@ class TestDataURIValidation:
         """Data URI exceeding size limit should fail."""
         large_data = "x" * (11 * 1024 * 1024)  # 11MB
         uri = f"data:image/png;base64,{large_data}"
-        with pytest.raises(AssetValidationError, match="exceeds 10MB"):
+        with pytest.raises(AssetValidationError, match="exceeds size limit"):
             validate_data_uri(uri)
+
+
+class TestDataURIInValidateURL:
+    """Verify data URIs are rejected by validate_url (only allowed via validate_image_url)."""
+
+    def test_data_uri_rejected_by_validate_url(self):
+        """data: URIs should not pass through the general validate_url function."""
+        uri = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+        with pytest.raises(AssetValidationError):
+            validate_url(uri)
+
+    def test_data_uri_svg_rejected_by_validate_url(self):
+        """data:image/svg+xml URIs should not pass through validate_url."""
+        uri = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjwvc3ZnPg=="
+        with pytest.raises(AssetValidationError):
+            validate_url(uri)
 
 
 class TestImageURLValidation:

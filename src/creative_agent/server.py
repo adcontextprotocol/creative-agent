@@ -1,7 +1,9 @@
 """AdCP Creative Agent MCP Server - Spec Compliant Implementation."""
 
 import json
+import logging
 import os
+import re
 import uuid
 from datetime import UTC, datetime, timedelta
 from typing import Any
@@ -26,6 +28,8 @@ from .schemas import (
     ListCreativeFormatsResponse,
     PreviewCreativeRequest,
 )
+
+logger = logging.getLogger(__name__)
 
 mcp = FastMCP("adcp-creative-agent")
 
@@ -215,9 +219,8 @@ def list_creative_formats(
             structured_content=error_response,
         )
     except Exception as e:
-        import traceback
-
-        error_response = {"error": f"Server error: {e}", "traceback": traceback.format_exc()[-500:]}
+        logger.exception("Server error in list_creative_formats")
+        error_response = {"error": f"Server error: {e}"}
         return ToolResult(
             content=[TextContent(type="text", text=f"Error: Server error - {e}")],
             structured_content=error_response,
@@ -250,6 +253,16 @@ def preview_creative(
     Returns:
         ToolResult with human-readable message and structured preview data
     """
+    valid_output_formats = {"url", "html"}
+    if output_format not in valid_output_formats:
+        error_msg = (
+            f"Invalid output_format '{output_format}'. Must be one of: {', '.join(sorted(valid_output_formats))}"
+        )
+        return ToolResult(
+            content=[TextContent(type="text", text=f"Error: {error_msg}")],
+            structured_content={"error": error_msg},
+        )
+
     try:
         # Determine mode: batch or single
         is_batch_mode = requests is not None
@@ -278,12 +291,11 @@ def preview_creative(
             structured_content={"error": error_msg},
         )
     except Exception as e:
-        import traceback
-
+        logger.exception("Preview generation failed")
         error_msg = f"Preview generation failed: {e}"
         return ToolResult(
             content=[TextContent(type="text", text=f"Error: {error_msg}")],
-            structured_content={"error": error_msg, "traceback": traceback.format_exc()[-500:]},
+            structured_content={"error": error_msg},
         )
 
 
@@ -399,17 +411,7 @@ def _handle_single_preview(
     # Calculate expiration
     expires_at = datetime.now(UTC) + timedelta(hours=24)
 
-    from pydantic import ValidationError
-
-    # Prepare response - validation happens when creating PreviewCreativeResponse
-    try:
-        interactive_url = f"{AGENT_URL}/preview/{preview_id}/interactive"
-    except ValidationError as e:
-        error_msg = f"Invalid URL construction: {e}"
-        return ToolResult(
-            content=[TextContent(type="text", text=f"Error: {error_msg}")],
-            structured_content={"error": error_msg},
-        )
+    interactive_url = f"{AGENT_URL}/preview/{preview_id}/interactive"
 
     # Build response dict for single mode
     response_dict = {
@@ -436,7 +438,7 @@ def _handle_batch_preview(
 ) -> ToolResult:
     """Handle batch preview requests."""
 
-    if not requests or len(requests) == 0:
+    if not requests:
         error_msg = "Batch mode requires at least one request"
         return ToolResult(
             content=[TextContent(type="text", text=f"Error: {error_msg}")],
@@ -573,7 +575,7 @@ def _generate_preview_variant(
     embedding = {
         "recommended_sandbox": "allow-scripts allow-same-origin",
         "requires_https": False,
-        "supports_fullscreen": format_obj.type in ["video", "rich_media"],
+        "supports_fullscreen": format_obj.type is not None and format_obj.type.value in ("video", "rich_media"),
     }
 
     # Create the single render (all formats render as HTML pages)
@@ -786,8 +788,6 @@ Return ONLY the JSON manifest, no additional text."""
                         generated_text += part.text
 
             # Extract JSON from response
-            import re
-
             json_match = re.search(r"```json\s*(.*?)\s*```", generated_text, re.DOTALL)
             if json_match:
                 manifest_json = json_match.group(1)
@@ -839,15 +839,11 @@ Return ONLY the JSON manifest, no additional text."""
             structured_content={"error": error_msg},
         )
     except Exception as e:
-        import traceback
-
+        logger.exception("Creative generation failed")
         error_msg = f"Creative generation failed: {e}"
         return ToolResult(
             content=[TextContent(type="text", text=f"Error: {error_msg}")],
-            structured_content={
-                "error": error_msg,
-                "traceback": traceback.format_exc()[-500:],
-            },
+            structured_content={"error": error_msg},
         )
 
 
@@ -899,9 +895,8 @@ def get_adcp_capabilities(
             structured_content=error_response,
         )
     except Exception as e:
-        import traceback
-
-        error_response = {"error": f"Server error: {e}", "traceback": traceback.format_exc()[-500:]}
+        logger.exception("Server error in get_adcp_capabilities")
+        error_response = {"error": f"Server error: {e}"}
         return ToolResult(
             content=[TextContent(type="text", text=f"Error: Server error - {e}")],
             structured_content=error_response,

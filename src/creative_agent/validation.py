@@ -148,9 +148,9 @@ def validate_data_uri(uri: str) -> None:
     if not any(mime_part == mime for mime in allowed_image_mimes):
         raise AssetValidationError(f"Data URI MIME type not allowed: {mime_part}")
 
-    # Check size (limit to 10MB for data URIs)
+    # Check size (limit to ~10MB of base64-encoded data)
     if len(data) > 10 * 1024 * 1024:
-        raise AssetValidationError("Data URI exceeds 10MB size limit")
+        raise AssetValidationError("Data URI exceeds size limit")
 
 
 def validate_image_url(url: str, check_mime: bool = False) -> None:
