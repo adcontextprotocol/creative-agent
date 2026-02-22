@@ -24,8 +24,8 @@ wheels = [
 
 [[package]]
 name = "adcp"
-version = "3.2.0"
-source = { registry = "https://pypi.org/simple" }
+version = "3.5.0"
+source = { git = "https://github.com/adcontextprotocol/adcp-client-python?tag=v3.5.0#5576bf42f26f0b0748587be65930c4c4cbeb7c30" }
 dependencies = [
     { name = "a2a-sdk" },
     { name = "email-validator" },
@@ -33,10 +33,6 @@ dependencies = [
     { name = "mcp" },
     { name = "pydantic" },
     { name = "typing-extensions" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/08/9b/283f9efa8d904d8edb111a922ad2c415ee50134f4f5b3a6db3049c8e9b66/adcp-3.2.0.tar.gz", hash = "sha256:2113bfda4f4dd1fe690ed698ed0ec5b30447be3a5328a4ad5ab5a02c308f6083", size = 245028, upload-time = "2026-02-04T02:06:07.139Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/f4/b7/4f0eaad37a01aab12fef1a09900a7ca0ae947c2cc9f7964c208c689d054c/adcp-3.2.0-py3-none-any.whl", hash = "sha256:e3ed195ad9bce525e976d148d9d092ce705f7246ef54f1cc3e7aea30186dd483", size = 308217, upload-time = "2026-02-04T02:06:05.531Z" },
 ]
 
 [[package]]
@@ -47,7 +43,6 @@ dependencies = [
     { name = "adcp" },
     { name = "bleach" },
     { name = "boto3" },
-    { name = "fastapi" },
     { name = "fastmcp" },
     { name = "google-genai" },
     { name = "httpx" },
@@ -73,10 +68,9 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "adcp", specifier = ">=3.2.0" },
+    { name = "adcp", git = "https://github.com/adcontextprotocol/adcp-client-python?tag=v3.5.0" },
     { name = "bleach", specifier = ">=6.3.0" },
     { name = "boto3", specifier = ">=1.35.0" },
-    { name = "fastapi", specifier = ">=0.100.0" },
     { name = "fastmcp", specifier = ">=2.11.0" },
     { name = "google-genai", specifier = ">=1.0.0" },
     { name = "httpx", specifier = ">=0.28.1" },
@@ -547,20 +541,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/0b/9f/a65090624ecf468cdca03533906e7c69ed7588582240cfe7cc9e770b50eb/exceptiongroup-1.3.0.tar.gz", hash = "sha256:b241f5885f560bc56a59ee63ca4c6a8bfa46ae4ad651af316d4e81817bb9fd88", size = 29749, upload-time = "2025-05-10T17:42:51.123Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/36/f4/c6e662dade71f56cd2f3735141b265c3c79293c109549c1e6933b0651ffc/exceptiongroup-1.3.0-py3-none-any.whl", hash = "sha256:4d111e6e0c13d0644cad6ddaa7ed0261a0b36971f6d23e7ec9b4b9097da78a10", size = 16674, upload-time = "2025-05-10T17:42:49.33Z" },
-]
-
-[[package]]
-name = "fastapi"
-version = "0.118.1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "pydantic" },
-    { name = "starlette" },
-    { name = "typing-extensions" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/ff/1b/6cbc5bc6d7a07a506c2275d443e4517adb4e02ab42e0a6486568e1749896/fastapi-0.118.1.tar.gz", hash = "sha256:063f9d4ff5bcdfd1ef6e4e6b44ed5fb5f4bf370b39cdce1c9aed22413c371cfe", size = 311185, upload-time = "2025-10-08T09:07:24.199Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/fb/29/9bf43b2fe09854a4c743eed5ef9b6a84bab39b05bfd46aea7ce6c7bf97f1/fastapi-0.118.1-py3-none-any.whl", hash = "sha256:be88c15c995464d14d2be1d7059860551aeffb9df889688bcea7050c9635badf", size = 97933, upload-time = "2025-10-08T09:07:22.003Z" },
 ]
 
 [[package]]

@@ -163,11 +163,12 @@ class TestAssetParameterMatching:
         fmt = get_format_by_id(format_id)
         image_asset = next(a for a in get_required_assets(fmt) if a.asset_id == "banner_image")
 
-        requirements = getattr(image_asset, "requirements", {})
+        requirements = getattr(image_asset, "requirements", None)
+        assert requirements is not None
 
         # Concrete format has explicit values in requirements
-        assert requirements.get("width") == 300
-        assert requirements.get("height") == 250
+        assert requirements.width == 300
+        assert requirements.height == 250
 
 
 class TestParameterValidationEdgeCases:

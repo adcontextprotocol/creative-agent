@@ -3,13 +3,11 @@
 # mypy: disable-error-code="call-arg"
 # Pydantic models with extra='forbid' trigger false positives when optional fields aren't passed
 
+import typing
 from typing import Any
 
-from adcp import AssetContentType as LibAssetType
-from adcp import FormatCategory, FormatId, get_required_assets
-from adcp.types.generated_poc.core.format import Asset as LibInnerAsset
-from adcp.types.generated_poc.core.format import Assets as LibAssets
-from adcp.types.generated_poc.core.format import Assets5 as LibAssetsGroup
+from adcp import CatalogRequirements, CatalogType, FormatCategory, FormatId, get_required_assets
+from adcp.types.generated_poc.core.format import Format as _LibFormat
 from adcp.types.generated_poc.core.format import Renders as LibRender
 from adcp.types.generated_poc.enums.format_id_parameter import FormatIdParameter
 from pydantic import AnyUrl
@@ -18,6 +16,43 @@ from ..schemas import CreativeFormat
 from .format_types import (
     AssetType,
 )
+
+# Build asset type -> class mappings dynamically from the Format model's discriminated union.
+# This avoids hardcoding numbered class names (Assets, Assets5, etc.) which change between
+# adcp library versions.
+_list_type = typing.get_args(typing.get_args(_LibFormat.model_fields["assets"].annotation)[0])
+_union_members = typing.get_args(_list_type[0]) if _list_type else ()
+
+_INDIVIDUAL_ASSET_MAP: dict[str, type] = {}
+_REPEATABLE_GROUP_CLASS: type | None = None
+_INNER_ASSET_MAP: dict[str, type] = {}
+
+for _cls in _union_members:
+    if not hasattr(_cls, "model_fields"):
+        continue
+    if "asset_group_id" in _cls.model_fields:
+        _REPEATABLE_GROUP_CLASS = _cls
+        # Build inner asset mapping from the group's assets field
+        _inner_ann = _cls.model_fields["assets"].annotation
+        _inner_args = typing.get_args(_inner_ann)
+        _inner_union = typing.get_args(_inner_args[0]) if _inner_args else ()
+        for _inner_cls in _inner_union:
+            if hasattr(_inner_cls, "model_fields") and "asset_type" in _inner_cls.model_fields:
+                _lit = typing.get_args(_inner_cls.model_fields["asset_type"].annotation)
+                if _lit:
+                    _INNER_ASSET_MAP[_lit[0]] = _inner_cls
+        continue
+    at_field = _cls.model_fields.get("asset_type")
+    if at_field:
+        _lit = typing.get_args(at_field.annotation)
+        if _lit:
+            _INDIVIDUAL_ASSET_MAP[_lit[0]] = _cls
+
+# Fail fast if the introspection didn't find expected types
+if not _INDIVIDUAL_ASSET_MAP:
+    raise ImportError("No individual asset classes found in adcp Format schema")
+if _REPEATABLE_GROUP_CLASS is None:
+    raise ImportError("No repeatable group class found in adcp Format schema")
 
 # Agent configuration
 AGENT_URL = "https://creative.adcontextprotocol.org"
@@ -47,22 +82,24 @@ def create_asset(
     asset_id: str,
     asset_type: AssetType,
     required: bool = True,
-    requirements: dict[str, str | int | float | bool | list[str]] | None = None,
-) -> LibAssets:
-    """Create an asset entry using the library's Assets Pydantic model.
+    requirements: Any = None,
+) -> Any:
+    """Create an individual asset using the correct typed model for the given asset_type.
 
-    This creates assets for the new 'assets' field (adcp-client-python 2.18.0+).
-    The library model automatically handles exclude_none serialization and
-    includes the item_type discriminator for union types.
+    The adcp library uses a discriminated union for assets — each asset_type has its own
+    Pydantic model with type-specific requirements. This function resolves the correct
+    class dynamically from the Format schema.
     """
-    lib_asset_type = LibAssetType(asset_type.value)
+    cls = _INDIVIDUAL_ASSET_MAP.get(asset_type.value)
+    if cls is None:
+        raise ValueError(f"Unknown asset type: {asset_type.value}")
 
-    return LibAssets(
+    return cls(
         asset_id=asset_id,
-        asset_type=lib_asset_type,
+        asset_type=asset_type.value,
         required=required,
         requirements=requirements,
-        item_type="individual",  # Required discriminator for union types
+        item_type="individual",
     )
 
 
@@ -72,8 +109,8 @@ def create_repeatable_group(
     required: bool,
     min_count: int,
     max_count: int,
-    requirements: dict[str, str | int | float | bool | list[str]] | None = None,
-) -> LibAssetsGroup:
+    requirements: Any = None,
+) -> Any:
     """Create a repeatable group asset that allows multiple values of the same type.
 
     Used for asset pools like headlines (up to 15) or images (up to 20), where
@@ -82,14 +119,20 @@ def create_repeatable_group(
     Each group instance contains a single inner asset whose asset_id matches the
     content type string (e.g. "text", "image", "video").
     """
-    lib_asset_type = LibAssetType(asset_type.value)
-    inner = LibInnerAsset(
-        asset_id=asset_type.value,  # "text", "image", or "video" — inner id within each instance
-        asset_type=lib_asset_type,
+    if _REPEATABLE_GROUP_CLASS is None:
+        raise RuntimeError("Repeatable group class not found in adcp format schema")
+
+    inner_cls = _INNER_ASSET_MAP.get(asset_type.value)
+    if inner_cls is None:
+        raise ValueError(f"Unknown inner asset type: {asset_type.value}")
+
+    inner = inner_cls(
+        asset_id=asset_type.value,
+        asset_type=asset_type.value,
         required=True,
         requirements=requirements,
     )
-    return LibAssetsGroup(
+    return _REPEATABLE_GROUP_CLASS(
         asset_group_id=asset_group_id,
         assets=[inner],
         item_type="repeatable_group",
@@ -99,7 +142,7 @@ def create_repeatable_group(
     )
 
 
-def create_impression_tracker_asset() -> LibAssets:
+def create_impression_tracker_asset() -> Any:
     """Create an optional impression tracker asset for 3rd party tracking.
 
     This creates a URL asset with url_type='tracker_pixel' that can be used
@@ -116,7 +159,7 @@ def create_impression_tracker_asset() -> LibAssets:
     )
 
 
-def create_click_url_asset() -> LibAssets:
+def create_click_url_asset() -> Any:
     """Create a required clickthrough URL asset.
 
     This creates a URL asset with url_type='clickthrough' for the landing page
@@ -180,9 +223,9 @@ def create_responsive_render(
 
 
 # Generative Formats - AI-powered creative generation
-# These use promoted_offerings asset type which provides brand context and product info
-# Template format that accepts dimension parameters (for new integrations)
-# Plus concrete formats (for backward compatibility)
+# Generative formats use catalog_requirements to declare what offering data they need.
+# The AI generates creative from the catalog context + a generation prompt.
+# Template format accepts dimension parameters; concrete formats are for backward compatibility.
 GENERATIVE_FORMATS = [
     # Template format - supports any dimensions
     CreativeFormat(
@@ -192,13 +235,13 @@ GENERATIVE_FORMATS = [
         description="AI-generated display banner from brand context and prompt (supports any dimensions)",
         accepts_parameters=[FormatIdParameter.dimensions],
         supported_macros=COMMON_MACROS,
-        assets=[
-            create_asset(
-                asset_id="promoted_offerings",
-                asset_type=AssetType.promoted_offerings,
-                required=True,
-                requirements={"description": "Brand manifest and product offerings for AI generation"},
+        catalog_requirements=[
+            CatalogRequirements(
+                catalog_type=CatalogType.offering,
+                required_fields=["name"],
             ),
+        ],
+        assets=[
             create_asset(
                 asset_id="generation_prompt",
                 asset_type=AssetType.text,
@@ -217,13 +260,13 @@ GENERATIVE_FORMATS = [
         renders=[create_fixed_render(300, 250)],
         output_format_ids=[create_format_id("display_300x250_image")],
         supported_macros=COMMON_MACROS,
-        assets=[
-            create_asset(
-                asset_id="promoted_offerings",
-                asset_type=AssetType.promoted_offerings,
-                required=True,
-                requirements={"description": "Brand manifest and product offerings for AI generation"},
+        catalog_requirements=[
+            CatalogRequirements(
+                catalog_type=CatalogType.offering,
+                required_fields=["name"],
             ),
+        ],
+        assets=[
             create_asset(
                 asset_id="generation_prompt",
                 asset_type=AssetType.text,
@@ -241,13 +284,13 @@ GENERATIVE_FORMATS = [
         renders=[create_fixed_render(728, 90)],
         output_format_ids=[create_format_id("display_728x90_image")],
         supported_macros=COMMON_MACROS,
-        assets=[
-            create_asset(
-                asset_id="promoted_offerings",
-                asset_type=AssetType.promoted_offerings,
-                required=True,
-                requirements={"description": "Brand manifest and product offerings for AI generation"},
+        catalog_requirements=[
+            CatalogRequirements(
+                catalog_type=CatalogType.offering,
+                required_fields=["name"],
             ),
+        ],
+        assets=[
             create_asset(
                 asset_id="generation_prompt",
                 asset_type=AssetType.text,
@@ -265,13 +308,13 @@ GENERATIVE_FORMATS = [
         renders=[create_fixed_render(320, 50)],
         output_format_ids=[create_format_id("display_320x50_image")],
         supported_macros=COMMON_MACROS,
-        assets=[
-            create_asset(
-                asset_id="promoted_offerings",
-                asset_type=AssetType.promoted_offerings,
-                required=True,
-                requirements={"description": "Brand manifest and product offerings for AI generation"},
+        catalog_requirements=[
+            CatalogRequirements(
+                catalog_type=CatalogType.offering,
+                required_fields=["name"],
             ),
+        ],
+        assets=[
             create_asset(
                 asset_id="generation_prompt",
                 asset_type=AssetType.text,
@@ -289,13 +332,13 @@ GENERATIVE_FORMATS = [
         renders=[create_fixed_render(160, 600)],
         output_format_ids=[create_format_id("display_160x600_image")],
         supported_macros=COMMON_MACROS,
-        assets=[
-            create_asset(
-                asset_id="promoted_offerings",
-                asset_type=AssetType.promoted_offerings,
-                required=True,
-                requirements={"description": "Brand manifest and product offerings for AI generation"},
+        catalog_requirements=[
+            CatalogRequirements(
+                catalog_type=CatalogType.offering,
+                required_fields=["name"],
             ),
+        ],
+        assets=[
             create_asset(
                 asset_id="generation_prompt",
                 asset_type=AssetType.text,
@@ -313,13 +356,13 @@ GENERATIVE_FORMATS = [
         renders=[create_fixed_render(336, 280)],
         output_format_ids=[create_format_id("display_336x280_image")],
         supported_macros=COMMON_MACROS,
-        assets=[
-            create_asset(
-                asset_id="promoted_offerings",
-                asset_type=AssetType.promoted_offerings,
-                required=True,
-                requirements={"description": "Brand manifest and product offerings for AI generation"},
+        catalog_requirements=[
+            CatalogRequirements(
+                catalog_type=CatalogType.offering,
+                required_fields=["name"],
             ),
+        ],
+        assets=[
             create_asset(
                 asset_id="generation_prompt",
                 asset_type=AssetType.text,
@@ -337,13 +380,13 @@ GENERATIVE_FORMATS = [
         renders=[create_fixed_render(300, 600)],
         output_format_ids=[create_format_id("display_300x600_image")],
         supported_macros=COMMON_MACROS,
-        assets=[
-            create_asset(
-                asset_id="promoted_offerings",
-                asset_type=AssetType.promoted_offerings,
-                required=True,
-                requirements={"description": "Brand manifest and product offerings for AI generation"},
+        catalog_requirements=[
+            CatalogRequirements(
+                catalog_type=CatalogType.offering,
+                required_fields=["name"],
             ),
+        ],
+        assets=[
             create_asset(
                 asset_id="generation_prompt",
                 asset_type=AssetType.text,
@@ -361,13 +404,13 @@ GENERATIVE_FORMATS = [
         renders=[create_fixed_render(970, 250)],
         output_format_ids=[create_format_id("display_970x250_image")],
         supported_macros=COMMON_MACROS,
-        assets=[
-            create_asset(
-                asset_id="promoted_offerings",
-                asset_type=AssetType.promoted_offerings,
-                required=True,
-                requirements={"description": "Brand manifest and product offerings for AI generation"},
+        catalog_requirements=[
+            CatalogRequirements(
+                catalog_type=CatalogType.offering,
+                required_fields=["name"],
             ),
+        ],
+        assets=[
             create_asset(
                 asset_id="generation_prompt",
                 asset_type=AssetType.text,
@@ -1440,164 +1483,9 @@ INFO_CARD_FORMATS = [
     ),
 ]
 
-# Universal Format - multi-channel asset pool
-# Publishers assemble from this pool into whatever placements they support.
-# No output_format_ids — this is a submission container, not a generative format.
-UNIVERSAL_FORMATS = [
-    CreativeFormat(
-        format_id=create_format_id("universal"),
-        name="Universal Creative",
-        type=FormatCategory.universal,
-        description=(
-            "Multi-channel asset pool. Provide headlines, descriptions, images, logos, videos, "
-            "and optional product catalog. Publishers assemble the right combination for each placement."
-        ),
-        supported_macros=COMMON_MACROS,
-        assets=[
-            # Text assets
-            # Single-value text assets
-            create_asset(
-                asset_id="brand_name",
-                asset_type=AssetType.text,
-                required=True,
-                requirements={"max_length": 25, "description": "Business or brand name"},
-            ),
-            create_asset(
-                asset_id="cta",
-                asset_type=AssetType.text,
-                required=False,
-                requirements={"max_length": 15, "description": "Call-to-action button text"},
-            ),
-            # Repeatable text asset pools
-            create_repeatable_group(
-                asset_group_id="headlines",
-                asset_type=AssetType.text,
-                required=True,
-                min_count=1,
-                max_count=15,
-                requirements={"max_length": 30, "description": "Short headline (max 30 chars)"},
-            ),
-            create_repeatable_group(
-                asset_group_id="long_headlines",
-                asset_type=AssetType.text,
-                required=False,
-                min_count=0,
-                max_count=5,
-                requirements={"max_length": 90, "description": "Long headline (max 90 chars)"},
-            ),
-            create_repeatable_group(
-                asset_group_id="descriptions",
-                asset_type=AssetType.text,
-                required=True,
-                min_count=1,
-                max_count=5,
-                requirements={"max_length": 90, "description": "Description (max 90 chars)"},
-            ),
-            # Repeatable image asset pools
-            create_repeatable_group(
-                asset_group_id="images_landscape",
-                asset_type=AssetType.image,
-                required=True,
-                min_count=1,
-                max_count=20,
-                requirements={
-                    "aspect_ratio": "1.91:1",
-                    "min_width": 600,
-                    "description": "Landscape image (1.91:1 ratio, min 600px wide)",
-                },
-            ),
-            create_repeatable_group(
-                asset_group_id="images_square",
-                asset_type=AssetType.image,
-                required=True,
-                min_count=1,
-                max_count=20,
-                requirements={
-                    "aspect_ratio": "1:1",
-                    "min_width": 300,
-                    "description": "Square image (min 300x300px)",
-                },
-            ),
-            create_repeatable_group(
-                asset_group_id="images_portrait",
-                asset_type=AssetType.image,
-                required=False,
-                min_count=0,
-                max_count=20,
-                requirements={
-                    "aspect_ratio": "4:5",
-                    "description": "Portrait image (4:5 ratio)",
-                },
-            ),
-            # Repeatable logo asset pools
-            create_repeatable_group(
-                asset_group_id="logos_square",
-                asset_type=AssetType.image,
-                required=False,
-                min_count=0,
-                max_count=5,
-                requirements={"aspect_ratio": "1:1", "description": "Square logo"},
-            ),
-            create_repeatable_group(
-                asset_group_id="logos_landscape",
-                asset_type=AssetType.image,
-                required=False,
-                min_count=0,
-                max_count=5,
-                requirements={"aspect_ratio": "4:1", "description": "Landscape logo"},
-            ),
-            # Repeatable video asset pools
-            create_repeatable_group(
-                asset_group_id="videos_landscape",
-                asset_type=AssetType.video,
-                required=False,
-                min_count=0,
-                max_count=15,
-                requirements={
-                    "aspect_ratio": "16:9",
-                    "description": "Landscape video (16:9, min 10s)",
-                },
-            ),
-            create_repeatable_group(
-                asset_group_id="videos_portrait",
-                asset_type=AssetType.video,
-                required=False,
-                min_count=0,
-                max_count=15,
-                requirements={
-                    "aspect_ratio": "9:16",
-                    "description": "Portrait/vertical video (9:16, min 10s) for Shorts, Reels, Stories",
-                },
-            ),
-            create_repeatable_group(
-                asset_group_id="videos_square",
-                asset_type=AssetType.video,
-                required=False,
-                min_count=0,
-                max_count=5,
-                requirements={
-                    "aspect_ratio": "1:1",
-                    "description": "Square video (1:1)",
-                },
-            ),
-            # Product catalog — for retail/e-commerce advertisers
-            create_asset(
-                asset_id="promoted_offerings",
-                asset_type=AssetType.promoted_offerings,
-                required=False,
-                requirements={"description": "Product catalog and brand manifest for retail advertisers"},
-            ),
-            # Tracking
-            create_impression_tracker_asset(),
-            create_click_url_asset(),
-        ],
-    ),
-]
-
 # Combine all formats
 STANDARD_FORMATS = (
     GENERATIVE_FORMATS
-    + UNIVERSAL_FORMATS
     + VIDEO_FORMATS
     + DISPLAY_IMAGE_FORMATS
     + DISPLAY_HTML_FORMATS

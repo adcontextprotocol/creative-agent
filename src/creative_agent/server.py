@@ -624,13 +624,15 @@ def build_creative(
     target_format_id: str | dict[str, Any],
     creative_manifest: dict[str, Any] | None = None,
     message: str | None = None,
+    brand: str | dict[str, Any] | None = None,
 ) -> ToolResult:
     """Transform or generate a creative manifest using AI.
 
     Args:
         target_format_id: Format ID to generate (string or FormatId object with agent_url and id)
-        creative_manifest: Source creative manifest with input assets (e.g., promoted_offerings for generative formats)
+        creative_manifest: Source creative manifest with input assets and catalogs for generative formats
         message: Natural language instructions for transformation or generation
+        brand: Brand reference — domain string (e.g. "acme.com") or {"domain": "acme.com", "brand_id": "..."}
 
     Returns:
         ToolResult with creative_manifest in structured_content
@@ -694,8 +696,6 @@ def build_creative(
             # Extract input assets from manifest
             input_assets = creative_manifest.get("assets", {})
 
-            # Extract promoted_offerings if present
-            promoted_offerings = input_assets.get("promoted_offerings")
             generation_prompt_asset = input_assets.get("generation_prompt")
 
             # Build generation prompt
@@ -733,17 +733,27 @@ Description: {output_fmt.description}
                 if asset_id:
                     format_spec += f"- {asset_id} ({asset_type})\n"
 
-            # Add brand context if provided
+            # Build context from brand reference and catalog
             brand_context = ""
-            if promoted_offerings:
-                brand_context = "\n\nBrand Context:\n"
-                brand_manifest = promoted_offerings.get("brand_manifest", {})
-                if "name" in brand_manifest:
-                    brand_context += f"Brand: {brand_manifest['name']}\n"
-                if "description" in brand_manifest:
-                    brand_context += f"Description: {brand_manifest['description']}\n"
-                if "tagline" in brand_manifest:
-                    brand_context += f"Tagline: {brand_manifest['tagline']}\n"
+            if brand:
+                brand_domain = brand if isinstance(brand, str) else brand.get("domain", "")
+                if brand_domain:
+                    brand_context += f"\n\nBrand: {brand_domain}\n"
+
+            catalogs = creative_manifest.get("catalogs", []) if creative_manifest else []
+            if catalogs and isinstance(catalogs, list):
+                catalog = catalogs[0]
+                if isinstance(catalog, dict):
+                    items = catalog.get("items", [])
+                    if items and isinstance(items, list):
+                        brand_context += "\n\nCatalog Context:\n" if not brand_context else "\nCatalog Items:\n"
+                        for item in items[:3]:
+                            if isinstance(item, dict):
+                                if "name" in item:
+                                    brand_context += f"- {item['name']}"
+                                    if "description" in item:
+                                        brand_context += f": {item['description']}"
+                                    brand_context += "\n"
 
             prompt = f"""You are a creative generation AI for advertising. Generate a creative manifest for the following request:
 

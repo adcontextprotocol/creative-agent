@@ -444,39 +444,3 @@ class TestManifestValidation:
         errors = validate_manifest_assets("not a dict")
         assert len(errors) == 1
         assert "must be a dictionary" in errors[0]
-
-    def test_valid_promoted_offerings_with_url(self):
-        """Valid promoted offerings with brand manifest URL should pass."""
-        asset = {
-            "brand_manifest": "https://brand.example.com/manifest.json",
-        }
-        validate_asset(asset, "promoted_offerings")
-
-    def test_valid_promoted_offerings_with_inline_manifest(self):
-        """Valid promoted offerings with inline brand manifest should pass."""
-        asset = {
-            "brand_manifest": {
-                "url": "https://brand.example.com",
-                "name": "ACME Corp",
-            },
-        }
-        validate_asset(asset, "promoted_offerings")
-
-    def test_valid_promoted_offerings_with_name_only(self):
-        """Valid promoted offerings with name-only brand manifest should pass."""
-        asset = {
-            "brand_manifest": {
-                "name": "ACME Corp",
-            },
-        }
-        validate_asset(asset, "promoted_offerings")
-
-    def test_promoted_offerings_inline_manifest_without_url_or_name_fails(self):
-        """Promoted offerings with inline manifest missing url and name should fail."""
-        asset = {
-            "brand_manifest": {
-                "colors": {"primary": "#FF0000"},
-            },
-        }
-        with pytest.raises(AssetValidationError, match="must have either url or name"):
-            validate_asset(asset, "promoted_offerings")

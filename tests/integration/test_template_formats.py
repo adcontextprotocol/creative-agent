@@ -258,10 +258,10 @@ class TestTemplateAssetRequirements:
         # Should have explicit width/height requirements
         requirements = getattr(image_asset, "requirements", None)
         assert requirements is not None
-        assert "width" in requirements, "Concrete format should have explicit width"
-        assert "height" in requirements, "Concrete format should have explicit height"
-        assert requirements["width"] == 300
-        assert requirements["height"] == 250
+        assert hasattr(requirements, "width"), "Concrete format should have explicit width"
+        assert hasattr(requirements, "height"), "Concrete format should have explicit height"
+        assert requirements.width == 300
+        assert requirements.height == 250
 
 
 class TestTemplateFormatSerialization:
@@ -374,10 +374,10 @@ class TestTemplateFormatCoverage:
         concrete = [f for f in STANDARD_FORMATS if not getattr(f, "accepts_parameters", None)]
 
         # With templates, we should have far fewer total formats than without
-        # Expected: 7 templates + 43 concrete = 50 total
+        # Expected: 7 templates + 42 concrete = 49 total
         assert len(templates) == 7, f"Expected 7 templates, found {len(templates)}"
-        assert len(concrete) == 43, f"Expected 43 concrete formats, found {len(concrete)}"
-        assert len(STANDARD_FORMATS) == 50
+        assert len(concrete) == 42, f"Expected 42 concrete formats, found {len(concrete)}"
+        assert len(STANDARD_FORMATS) == 49
 
         # Ratio should be roughly 1:6 (7 templates replace ~42 potential concrete formats)
         ratio = len(concrete) / len(templates)
