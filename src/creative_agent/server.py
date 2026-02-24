@@ -17,14 +17,14 @@ from fastmcp.tools.tool import ToolResult
 from mcp.types import TextContent
 from pydantic import AnyUrl
 
-from .data.standard_formats import (
+from creative_agent.data.standard_formats import (
     AGENT_CAPABILITIES,
     AGENT_NAME,
     AGENT_URL,
     filter_formats,
     get_format_by_id,
 )
-from .schemas import (
+from creative_agent.schemas import (
     ListCreativeFormatsResponse,
     PreviewCreativeRequest,
 )
@@ -307,7 +307,7 @@ def _handle_single_preview(
     output_format: str,
 ) -> ToolResult:
     """Handle a single preview request."""
-    from .schemas.manifest import PreviewInput
+    from creative_agent.schemas.manifest import PreviewInput
 
     # Parse inputs if provided
     inputs_obj: list[PreviewInput] | None = None
@@ -352,7 +352,7 @@ def _handle_single_preview(
             )
 
     # Validate manifest assets
-    from .validation import validate_manifest_assets
+    from creative_agent.validation import validate_manifest_assets
 
     validation_errors = validate_manifest_assets(
         request.creative_manifest,
@@ -378,7 +378,7 @@ def _handle_single_preview(
         ]
 
     # Generate previews for each input set
-    from .storage import generate_preview_html, upload_preview_html
+    from creative_agent.storage import generate_preview_html, upload_preview_html
 
     previews = []
     for input_set in request.inputs:
@@ -798,7 +798,7 @@ Return ONLY the JSON manifest, no additional text."""
             output_manifest = json.loads(manifest_json)
 
             # Validate against output format
-            from .validation import validate_manifest_assets
+            from creative_agent.validation import validate_manifest_assets
 
             validation_errors = validate_manifest_assets(
                 output_manifest,
